@@ -85,7 +85,7 @@ export default function USAMapGame() {
 
   const handleClickState = useCallback(
     (stateName: string) => {
-      if (clickResult !== null || answered.has(stateName)) return;
+      if (clickResult !== null || answered.has(stateName) || missed.has(stateName)) return;
       const isCorrect = stateName === target;
       setClickedState(stateName);
       setClickResult(isCorrect ? 'correct' : 'wrong');
@@ -97,7 +97,7 @@ export default function USAMapGame() {
       }
       setTimeout(advance, 1500);
     },
-    [clickResult, answered, target, advance]
+    [clickResult, answered, missed, target, advance]
   );
 
   useEffect(() => {
@@ -260,7 +260,7 @@ export default function USAMapGame() {
                       hover: {
                         outline: 'none',
                         fill: mode === 'click' && clickResult === null && !answered.has(name) && !missed.has(name) ? '#4338ca' : fill,
-                        cursor: mode === 'click' && !answered.has(name) ? 'pointer' : 'default',
+                        cursor: mode === 'click' && !answered.has(name) && !missed.has(name) ? 'pointer' : 'default',
                       },
                       pressed: { outline: 'none' },
                     }}
