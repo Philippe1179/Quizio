@@ -183,6 +183,18 @@ function displayName(geo: string) {
   return DISPLAY_NAMES[geo] ?? geo;
 }
 
+type ProjectionConfig = { scale: number; center: [number, number] };
+
+const WORLD_PROJECTION: ProjectionConfig = { scale: 147, center: [0, 10] };
+
+const CONTINENT_PROJECTIONS: Record<Continent, ProjectionConfig> = {
+  americas: { scale: 290, center: [-78,  5]  },
+  europe:   { scale: 620, center: [ 15, 52]  },
+  africa:   { scale: 380, center: [ 22,  2]  },
+  asia:     { scale: 270, center: [ 95, 32]  },
+  oceania:  { scale: 490, center: [148,-27]  },
+};
+
 const CONTINENT_META: Record<Continent, { label: string; description: string; color: string }> = {
   americas: { label: 'Americas',  description: 'North, Central & South America', color: '#1d4ed8' },
   europe:   { label: 'Europe',    description: 'All European nations',            color: '#7c3aed' },
@@ -239,6 +251,11 @@ export default function WorldMapGame() {
   const [clickResult, setClickResult] = useState<'correct' | 'wrong' | null>(null);
 
   const queueSet = useMemo(() => new Set(queue), [queue]);
+
+  const projectionConfig = useMemo<ProjectionConfig>(() => {
+    if (filter.type === 'continent') return CONTINENT_PROJECTIONS[filter.value];
+    return WORLD_PROJECTION;
+  }, [filter]);
   const target = queue[index] ?? '';
 
   const startGame = useCallback((f: Filter) => {
@@ -426,7 +443,11 @@ export default function WorldMapGame() {
       </div>
 
       <div className="rounded-xl overflow-hidden border border-white/10 bg-[#0a0918]">
-        <ComposableMap projection="geoNaturalEarth1" style={{ width: '100%', height: 'auto' }}>
+        <ComposableMap
+          projection="geoNaturalEarth1"
+          projectionConfig={projectionConfig}
+          style={{ width: '100%', height: 'auto' }}
+        >
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>
               geographies.map((geo) => {
