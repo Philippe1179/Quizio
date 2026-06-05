@@ -42,6 +42,8 @@ export default function USAMapGame() {
   const [submitted, setSubmitted] = useState(false);
   const [nameResult, setNameResult] = useState<'correct' | 'wrong' | null>(null);
 
+  const [answered, setAnswered] = useState<Set<string>>(new Set());
+
   const inputRef = useRef<HTMLInputElement>(null);
   const target = queue[index] ?? '';
 
@@ -61,6 +63,7 @@ export default function USAMapGame() {
     setInput('');
     setSubmitted(false);
     setNameResult(null);
+    setAnswered(new Set());
     setPhase('game');
   };
 
@@ -79,14 +82,17 @@ export default function USAMapGame() {
 
   const handleClickState = useCallback(
     (stateName: string) => {
-      if (clickResult !== null) return;
+      if (clickResult !== null || answered.has(stateName)) return;
       const isCorrect = stateName === target;
       setClickedState(stateName);
       setClickResult(isCorrect ? 'correct' : 'wrong');
-      if (isCorrect) setScore((s) => s + 1);
+      if (isCorrect) {
+        setScore((s) => s + 1);
+        setAnswered((prev) => new Set([...prev, stateName]));
+      }
       setTimeout(advance, 1500);
     },
-    [clickResult, target, advance]
+    [clickResult, answered, target, advance]
   );
 
   const handleSubmit = useCallback(() => {
@@ -94,11 +100,15 @@ export default function USAMapGame() {
     const isCorrect = normalize(input) === normalize(target);
     setNameResult(isCorrect ? 'correct' : 'wrong');
     setSubmitted(true);
-    if (isCorrect) setScore((s) => s + 1);
+    if (isCorrect) {
+      setScore((s) => s + 1);
+      setAnswered((prev) => new Set([...prev, target]));
+    }
   }, [submitted, input, target]);
 
   const getStateFill = useCallback(
     (stateName: string): string => {
+      if (answered.has(stateName)) return '#22c55e';
       if (mode === 'click') {
         if (clickResult === null) return '#1e1b4b';
         if (stateName === target) return '#22c55e';
@@ -110,7 +120,7 @@ export default function USAMapGame() {
         return nameResult === 'correct' ? '#22c55e' : '#ef4444';
       }
     },
-    [mode, clickResult, target, clickedState, submitted, nameResult]
+    [answered, mode, clickResult, target, clickedState, submitted, nameResult]
   );
 
   // ── Mode select ──
@@ -236,8 +246,8 @@ export default function USAMapGame() {
                       default: { outline: 'none' },
                       hover: {
                         outline: 'none',
-                        fill: mode === 'click' && clickResult === null ? '#4338ca' : fill,
-                        cursor: mode === 'click' ? 'pointer' : 'default',
+                        fill: mode === 'click' && clickResult === null && !answered.has(name) ? '#4338ca' : fill,
+                        cursor: mode === 'click' && !answered.has(name) ? 'pointer' : 'default',
                       },
                       pressed: { outline: 'none' },
                     }}
