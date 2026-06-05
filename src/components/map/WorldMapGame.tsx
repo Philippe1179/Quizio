@@ -307,6 +307,7 @@ export default function WorldMapGame() {
     coordinates: [0, 0],
     zoom: 1,
   });
+  const [homePosition, setHomePosition] = useState<[number, number]>([0, 0]);
 
   const queueSet = useMemo(() => new Set(queue), [queue]);
 
@@ -325,7 +326,11 @@ export default function WorldMapGame() {
     setFound(new Set());
     setMissed(new Set());
     setClickResult(null);
-    setPosition({ coordinates: [0, 0], zoom: 1 });
+    const home: [number, number] = f.type === 'continent'
+      ? CONTINENT_PROJECTIONS[f.value].center
+      : WORLD_PROJECTION.center;
+    setHomePosition(home);
+    setPosition({ coordinates: home, zoom: 1 });
     setPhase('game');
   }, []);
 
@@ -539,7 +544,7 @@ export default function WorldMapGame() {
           >−</button>
           {position.zoom > 1.1 && (
             <button
-              onClick={() => setPosition({ coordinates: [0, 0], zoom: 1 })}
+              onClick={() => setPosition({ coordinates: homePosition, zoom: 1 })}
               className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-zinc-300 text-sm flex items-center justify-center transition-colors"
               title="Reset zoom"
             >↺</button>
