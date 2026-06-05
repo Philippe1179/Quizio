@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 import Link from 'next/link';
@@ -209,26 +209,102 @@ function displayName(geo: string) {
   return DISPLAY_NAMES[geo] ?? geo;
 }
 
+// Extra countries for type mode only (too small / not in click-mode list)
+interface TypeExtra { name: string; geo: string | null; iso: string; }
+const TYPE_EXTRA: TypeExtra[] = [
+  // Americas
+  { name: 'Trinidad and Tobago',          geo: 'Trinidad and Tobago', iso: 'tt' },
+  { name: 'Bahamas',                       geo: 'Bahamas',             iso: 'bs' },
+  { name: 'Barbados',                      geo: null,                  iso: 'bb' },
+  { name: 'Saint Lucia',                   geo: null,                  iso: 'lc' },
+  { name: 'Saint Vincent and the Grenadines', geo: null,               iso: 'vc' },
+  { name: 'Grenada',                       geo: null,                  iso: 'gd' },
+  { name: 'Antigua and Barbuda',           geo: null,                  iso: 'ag' },
+  { name: 'Dominica',                      geo: null,                  iso: 'dm' },
+  { name: 'Saint Kitts and Nevis',         geo: null,                  iso: 'kn' },
+  // Europe
+  { name: 'Luxembourg',                    geo: 'Luxembourg',          iso: 'lu' },
+  { name: 'Kosovo',                        geo: 'Kosovo',              iso: 'xk' },
+  { name: 'Malta',                         geo: null,                  iso: 'mt' },
+  { name: 'Andorra',                       geo: null,                  iso: 'ad' },
+  { name: 'Monaco',                        geo: null,                  iso: 'mc' },
+  { name: 'Liechtenstein',                 geo: null,                  iso: 'li' },
+  { name: 'San Marino',                    geo: null,                  iso: 'sm' },
+  { name: 'Vatican City',                  geo: null,                  iso: 'va' },
+  // Africa
+  { name: 'Cape Verde',                    geo: null,                  iso: 'cv' },
+  { name: 'São Tomé and Príncipe',         geo: null,                  iso: 'st' },
+  { name: 'Comoros',                       geo: null,                  iso: 'km' },
+  { name: 'Mauritius',                     geo: null,                  iso: 'mu' },
+  { name: 'Seychelles',                    geo: null,                  iso: 'sc' },
+  // Asia
+  { name: 'Brunei',                        geo: 'Brunei',              iso: 'bn' },
+  { name: 'Singapore',                     geo: null,                  iso: 'sg' },
+  { name: 'Bahrain',                       geo: null,                  iso: 'bh' },
+  { name: 'Maldives',                      geo: null,                  iso: 'mv' },
+  { name: 'Palestine',                     geo: null,                  iso: 'ps' },
+  { name: 'Taiwan',                        geo: 'Taiwan',              iso: 'tw' },
+  // Oceania
+  { name: 'Solomon Islands',               geo: 'Solomon Is.',         iso: 'sb' },
+  { name: 'Vanuatu',                       geo: 'Vanuatu',             iso: 'vu' },
+  { name: 'Samoa',                         geo: null,                  iso: 'ws' },
+  { name: 'Tonga',                         geo: null,                  iso: 'to' },
+  { name: 'Kiribati',                      geo: null,                  iso: 'ki' },
+  { name: 'Micronesia',                    geo: null,                  iso: 'fm' },
+  { name: 'Marshall Islands',              geo: null,                  iso: 'mh' },
+  { name: 'Palau',                         geo: null,                  iso: 'pw' },
+  { name: 'Nauru',                         geo: null,                  iso: 'nr' },
+  { name: 'Tuvalu',                        geo: null,                  iso: 'tv' },
+];
+
+// geo name → display name for map highlighting in type mode
+const TYPE_DISPLAY_TO_GEO: Record<string, string> = {};
+for (const c of ALL_COUNTRIES) {
+  TYPE_DISPLAY_TO_GEO[displayName(c.geo)] = c.geo;
+}
+for (const e of TYPE_EXTRA) {
+  if (e.geo) TYPE_DISPLAY_TO_GEO[e.name] = e.geo;
+}
+
+// Display names of countries with no map geometry (show notification when typed)
+const TYPE_NO_GEO = new Set(TYPE_EXTRA.filter((e) => !e.geo).map((e) => e.name));
+
+const TYPE_TOTAL = ALL_COUNTRIES.length + TYPE_EXTRA.length;
+
+// NAME_LOOKUP maps typed strings → canonical display names
 const NAME_LOOKUP: Record<string, string> = {};
 for (const c of ALL_COUNTRIES) {
-  NAME_LOOKUP[displayName(c.geo).toLowerCase()] = c.geo;
+  NAME_LOOKUP[displayName(c.geo).toLowerCase()] = displayName(c.geo);
 }
-// Common alternate names / abbreviations
+for (const e of TYPE_EXTRA) {
+  NAME_LOOKUP[e.name.toLowerCase()] = e.name;
+}
+// Common alternate names / abbreviations → display names
 Object.assign(NAME_LOOKUP, {
-  'usa':                              'United States of America',
-  'uk':                               'United Kingdom',
-  'great britain':                    'United Kingdom',
-  'dr congo':                         'Dem. Rep. Congo',
-  'drc':                              'Dem. Rep. Congo',
-  'democratic republic of the congo': 'Dem. Rep. Congo',
-  'republic of the congo':            'Congo',
-  'east timor':                       'Timor-Leste',
-  'bosnia':                           'Bosnia and Herz.',
-  'the gambia':                       'Gambia',
-  'czechia':                          'Czechia',
-  'holland':                          'Netherlands',
-  'persia':                           'Iran',
-  'burma':                            'Myanmar',
+  'usa':                                  'United States',
+  'uk':                                   'United Kingdom',
+  'great britain':                        'United Kingdom',
+  'dr congo':                             'DR Congo',
+  'drc':                                  'DR Congo',
+  'democratic republic of the congo':     'DR Congo',
+  'republic of the congo':               'Republic of Congo',
+  'east timor':                           'Timor-Leste',
+  'bosnia':                               'Bosnia and Herzegovina',
+  'the gambia':                           'Gambia',
+  'czechia':                              'Czech Republic',
+  'holland':                              'Netherlands',
+  'persia':                               'Iran',
+  'burma':                                'Myanmar',
+  'the bahamas':                          'Bahamas',
+  'sao tome and principe':               'São Tomé and Príncipe',
+  'federated states of micronesia':       'Micronesia',
+  'saint vincent':                        'Saint Vincent and the Grenadines',
+  'st vincent':                           'Saint Vincent and the Grenadines',
+  'st lucia':                             'Saint Lucia',
+  'st kitts':                             'Saint Kitts and Nevis',
+  'st kitts and nevis':                   'Saint Kitts and Nevis',
+  'holy see':                             'Vatican City',
+  'ivory coast':                          'Ivory Coast',
 });
 
 // ISO 3166-1 alpha-2 codes keyed by geo name
@@ -369,8 +445,19 @@ export default function WorldMapGame() {
 
   // Type mode state
   const [typeInput, setTypeInput] = useState('');
-  const [typeFound, setTypeFound] = useState<Set<string>>(new Set());
+  const [typeFound, setTypeFound] = useState<Set<string>>(new Set()); // stores display names
   const [timeLeft, setTimeLeft] = useState(TYPE_DURATION);
+  const [notification, setNotification] = useState<string | null>(null);
+  const notifTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const typeFoundGeos = useMemo(() => {
+    const s = new Set<string>();
+    for (const dn of typeFound) {
+      const geo = TYPE_DISPLAY_TO_GEO[dn];
+      if (geo) s.add(geo);
+    }
+    return s;
+  }, [typeFound]);
   useEffect(() => {
     if (phase !== 'game' || mode !== 'type') return;
     if (timeLeft <= 0) { setPhase('done'); return; }
@@ -409,6 +496,7 @@ export default function WorldMapGame() {
     setTypeInput('');
     setTypeFound(new Set());
     setTimeLeft(TYPE_DURATION);
+    setNotification(null);
     setHomePosition(WORLD_PROJECTION.center);
     setPosition({ coordinates: WORLD_PROJECTION.center, zoom: 1 });
     setPhase('game');
@@ -416,12 +504,17 @@ export default function WorldMapGame() {
 
   const handleTypeInput = useCallback((value: string) => {
     setTypeInput(value);
-    const geoName = NAME_LOOKUP[value.toLowerCase().trim()];
-    if (geoName && !typeFound.has(geoName)) {
-      const next = new Set([...typeFound, geoName]);
+    const found = NAME_LOOKUP[value.toLowerCase().trim()];
+    if (found && !typeFound.has(found)) {
+      const next = new Set([...typeFound, found]);
       setTypeFound(next);
       setTypeInput('');
-      if (next.size === ALL_COUNTRIES.length) setPhase('done');
+      if (TYPE_NO_GEO.has(found)) {
+        setNotification(found);
+        if (notifTimer.current) clearTimeout(notifTimer.current);
+        notifTimer.current = setTimeout(() => setNotification(null), 2000);
+      }
+      if (next.size === TYPE_TOTAL) setPhase('done');
     }
   }, [typeFound]);
 
@@ -481,7 +574,7 @@ export default function WorldMapGame() {
             className="w-full rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-5 text-left hover:border-emerald-500/60 hover:bg-emerald-950/30 transition-all"
           >
             <p className="text-lg font-bold">Type Mode</p>
-            <p className="text-sm text-zinc-400 mt-0.5">Name all {ALL_COUNTRIES.length} countries from memory — 15 minute timer</p>
+            <p className="text-sm text-zinc-400 mt-0.5">Name all {TYPE_TOTAL} countries from memory — 15 minute timer</p>
           </button>
 
           {/* Click Mode — All */}
@@ -544,12 +637,15 @@ export default function WorldMapGame() {
   // ── Done ──
   if (phase === 'done') {
     const isType = mode === 'type';
-    const total = isType ? ALL_COUNTRIES.length : queue.length;
+    const total = isType ? TYPE_TOTAL : queue.length;
     const correct = isType ? typeFound.size : score;
     const pct = Math.round((correct / total) * 100);
-    const missedList = isType
-      ? ALL_COUNTRIES.filter((c) => !typeFound.has(c.geo)).map((c) => c.geo)
-      : queue.filter((n) => missed.has(n));
+    const missedList: string[] = isType
+      ? [
+          ...ALL_COUNTRIES.filter((c) => !typeFound.has(displayName(c.geo))).map((c) => displayName(c.geo)),
+          ...TYPE_EXTRA.filter((e) => !typeFound.has(e.name)).map((e) => e.name),
+        ]
+      : queue.filter((n) => missed.has(n)).map((n) => displayName(n));
     const label = isType ? 'Type Mode' : filterLabel(filter);
     const message = pct >= 80 ? 'Excellent!' : pct >= 50 ? 'Good effort!' : 'Keep practicing!';
     return (
@@ -567,7 +663,7 @@ export default function WorldMapGame() {
               <div className="flex flex-wrap gap-2">
                 {missedList.map((n) => (
                   <span key={n} className="text-xs px-2 py-1 rounded bg-white/10 text-zinc-300">
-                    {displayName(n)}
+                    {n}
                   </span>
                 ))}
               </div>
@@ -641,7 +737,7 @@ export default function WorldMapGame() {
             placeholder="Type a country name…"
             className="flex-1 bg-transparent outline-none text-base placeholder:text-zinc-600"
           />
-          <span className="text-sm text-zinc-400 whitespace-nowrap">{typeFound.size} / {ALL_COUNTRIES.length}</span>
+          <span className="text-sm text-zinc-400 whitespace-nowrap">{typeFound.size} / {TYPE_TOTAL}</span>
           <span className={`text-sm font-mono font-bold whitespace-nowrap ${timeLeft < 60 ? 'text-red-400' : 'text-zinc-300'}`}>
             {typeMinutes}:{typeSecs.toString().padStart(2, '0')}
           </span>
@@ -682,6 +778,11 @@ export default function WorldMapGame() {
       {/* Map */}
       <div className="flex-1 min-h-0 rounded-xl overflow-hidden border border-white/10 bg-[#0a0918] relative">
         {zoomControls}
+        {isType && notification && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 bg-emerald-900/90 text-emerald-300 text-sm font-semibold px-4 py-2 rounded-lg border border-emerald-700/50 whitespace-nowrap pointer-events-none">
+            ✓ {notification} — too small to show on map
+          </div>
+        )}
         <ComposableMap
           projection="geoNaturalEarth1"
           projectionConfig={projectionConfig}
@@ -698,7 +799,7 @@ export default function WorldMapGame() {
                 geographies.map((geo) => {
                   const name: string = geo.properties.name;
                   const fill = isType
-                    ? (typeFound.has(name) ? '#22c55e' : '#0f0e20')
+                    ? (typeFoundGeos.has(name) ? '#22c55e' : '#0f0e20')
                     : getCountryFill(name, queueSet, found, missed, clickResult, target);
                   const isClickable =
                     !isType && queueSet.has(name) && clickResult === null && !found.has(name) && !missed.has(name);
