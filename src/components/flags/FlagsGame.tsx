@@ -111,13 +111,12 @@ export default function FlagsGame() {
       {/* Flag */}
       <div className="flex flex-col items-center gap-3 py-4">
         <p className="text-xs text-zinc-500 uppercase tracking-widest">Which country is this?</p>
-        <div className="rounded-xl overflow-hidden shadow-2xl border border-white/10">
+        <div className="relative w-72 h-48 rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-white/5">
           <Image
             src={flagUrl(current.country.iso)}
             alt="Country flag"
-            width={320}
-            height={213}
-            className="object-cover"
+            fill
+            className="object-contain p-3"
             priority
           />
         </div>
