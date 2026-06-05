@@ -1,0 +1,9 @@
+{
+  "name": "Quizio",
+  "short_name": "Quizio",
+  "description": "A trivia and learning app with multiple game modes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#0f0f1a"
+}
