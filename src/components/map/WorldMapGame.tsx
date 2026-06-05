@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 import Link from 'next/link';
@@ -209,6 +209,28 @@ function displayName(geo: string) {
   return DISPLAY_NAMES[geo] ?? geo;
 }
 
+const NAME_LOOKUP: Record<string, string> = {};
+for (const c of ALL_COUNTRIES) {
+  NAME_LOOKUP[displayName(c.geo).toLowerCase()] = c.geo;
+}
+// Common alternate names / abbreviations
+Object.assign(NAME_LOOKUP, {
+  'usa':                              'United States of America',
+  'uk':                               'United Kingdom',
+  'great britain':                    'United Kingdom',
+  'dr congo':                         'Dem. Rep. Congo',
+  'drc':                              'Dem. Rep. Congo',
+  'democratic republic of the congo': 'Dem. Rep. Congo',
+  'republic of the congo':            'Congo',
+  'east timor':                       'Timor-Leste',
+  'bosnia':                           'Bosnia and Herz.',
+  'the gambia':                       'Gambia',
+  'czechia':                          'Czechia',
+  'holland':                          'Netherlands',
+  'persia':                           'Iran',
+  'burma':                            'Myanmar',
+});
+
 // ISO 3166-1 alpha-2 codes keyed by geo name
 const ISO_CODES: Record<string, string> = {
   // Americas
@@ -325,8 +347,13 @@ function getCountryFill(
   return '#0f0e20';
 }
 
+type Mode = 'click' | 'type';
+
+const TYPE_DURATION = 900; // 15 minutes in seconds
+
 export default function WorldMapGame() {
   const [phase, setPhase] = useState<Phase>('select');
+  const [mode, setMode] = useState<Mode>('click');
   const [filter, setFilter] = useState<Filter>({ type: 'all' });
   const [queue, setQueue] = useState<string[]>([]);
   const [index, setIndex] = useState(0);
@@ -340,6 +367,17 @@ export default function WorldMapGame() {
   });
   const [homePosition, setHomePosition] = useState<[number, number]>([0, 0]);
 
+  // Type mode state
+  const [typeInput, setTypeInput] = useState('');
+  const [typeFound, setTypeFound] = useState<Set<string>>(new Set());
+  const [timeLeft, setTimeLeft] = useState(TYPE_DURATION);
+  useEffect(() => {
+    if (phase !== 'game' || mode !== 'type') return;
+    if (timeLeft <= 0) { setPhase('done'); return; }
+    const id = window.setTimeout(() => setTimeLeft((t) => t - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [phase, mode, timeLeft]);
+
   const queueSet = useMemo(() => new Set(queue), [queue]);
 
   const projectionConfig = useMemo<ProjectionConfig>(() => {
@@ -350,6 +388,7 @@ export default function WorldMapGame() {
 
   const startGame = useCallback((f: Filter) => {
     const q = filterToQueue(f);
+    setMode('click');
     setFilter(f);
     setQueue(q);
     setIndex(0);
@@ -364,6 +403,27 @@ export default function WorldMapGame() {
     setPosition({ coordinates: home, zoom: 1 });
     setPhase('game');
   }, []);
+
+  const startTypeMode = useCallback(() => {
+    setMode('type');
+    setTypeInput('');
+    setTypeFound(new Set());
+    setTimeLeft(TYPE_DURATION);
+    setHomePosition(WORLD_PROJECTION.center);
+    setPosition({ coordinates: WORLD_PROJECTION.center, zoom: 1 });
+    setPhase('game');
+  }, []);
+
+  const handleTypeInput = useCallback((value: string) => {
+    setTypeInput(value);
+    const geoName = NAME_LOOKUP[value.toLowerCase().trim()];
+    if (geoName && !typeFound.has(geoName)) {
+      const next = new Set([...typeFound, geoName]);
+      setTypeFound(next);
+      setTypeInput('');
+      if (next.size === ALL_COUNTRIES.length) setPhase('done');
+    }
+  }, [typeFound]);
 
   const advance = useCallback(() => {
     if (index + 1 >= queue.length) {
@@ -415,13 +475,22 @@ export default function WorldMapGame() {
             <p className="text-sm text-zinc-500 mt-1">Find {ALL_COUNTRIES.length} countries on the map</p>
           </div>
 
-          {/* All */}
+          {/* Type Mode */}
+          <button
+            onClick={startTypeMode}
+            className="w-full rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-5 text-left hover:border-emerald-500/60 hover:bg-emerald-950/30 transition-all"
+          >
+            <p className="text-lg font-bold">Type Mode</p>
+            <p className="text-sm text-zinc-400 mt-0.5">Name all {ALL_COUNTRIES.length} countries from memory — 15 minute timer</p>
+          </button>
+
+          {/* Click Mode — All */}
           <button
             onClick={() => startGame({ type: 'all' })}
             className="w-full rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-5 text-left hover:border-indigo-500/60 hover:bg-indigo-950/30 transition-all"
           >
-            <p className="text-lg font-bold">All Countries</p>
-            <p className="text-sm text-zinc-400 mt-0.5">{ALL_COUNTRIES.length} countries — the full challenge</p>
+            <p className="text-lg font-bold">All Countries — Click Mode</p>
+            <p className="text-sm text-zinc-400 mt-0.5">{ALL_COUNTRIES.length} countries — find each one on the map</p>
           </button>
 
           {/* By continent */}
@@ -474,17 +543,22 @@ export default function WorldMapGame() {
 
   // ── Done ──
   if (phase === 'done') {
-    const total = queue.length;
-    const pct = Math.round((score / total) * 100);
-    const missedList = queue.filter((n) => missed.has(n));
+    const isType = mode === 'type';
+    const total = isType ? ALL_COUNTRIES.length : queue.length;
+    const correct = isType ? typeFound.size : score;
+    const pct = Math.round((correct / total) * 100);
+    const missedList = isType
+      ? ALL_COUNTRIES.filter((c) => !typeFound.has(c.geo)).map((c) => c.geo)
+      : queue.filter((n) => missed.has(n));
+    const label = isType ? 'Type Mode' : filterLabel(filter);
     const message = pct >= 80 ? 'Excellent!' : pct >= 50 ? 'Good effort!' : 'Keep practicing!';
     return (
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="flex flex-col gap-6 py-4">
           <div className="flex flex-col items-center text-center gap-2">
-            <p className="text-xs text-zinc-500 uppercase tracking-widest">{filterLabel(filter)}</p>
+            <p className="text-xs text-zinc-500 uppercase tracking-widest">{label}</p>
             <div className="text-7xl font-bold tracking-tight">{pct}%</div>
-            <p className="text-xl font-semibold">{score} / {total} correct</p>
+            <p className="text-xl font-semibold">{correct} / {total} correct</p>
             <p className="text-zinc-400">{message}</p>
           </div>
           {missedList.length > 0 && (
@@ -501,7 +575,7 @@ export default function WorldMapGame() {
           )}
           <div className="flex gap-3 justify-center flex-wrap">
             <button
-              onClick={() => startGame(filter)}
+              onClick={isType ? startTypeMode : () => startGame(filter)}
               className="px-5 py-2.5 rounded-lg border border-white/20 font-medium hover:border-white/40 transition-colors"
             >
               Play Again
@@ -510,7 +584,7 @@ export default function WorldMapGame() {
               onClick={() => setPhase('select')}
               className="px-5 py-2.5 rounded-lg bg-white/10 font-medium hover:bg-white/15 transition-colors"
             >
-              Change Filter
+              {isType ? 'Back' : 'Change Filter'}
             </button>
             <Link href="/" className="px-5 py-2.5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-500 transition-colors">
               Home
@@ -522,67 +596,92 @@ export default function WorldMapGame() {
   }
 
   // ── Game ──
-  const progress = (index / queue.length) * 100;
+  const isType = mode === 'type';
+  const progress = isType
+    ? (typeFound.size / ALL_COUNTRIES.length) * 100
+    : (index / queue.length) * 100;
+  const typeMinutes = Math.floor(timeLeft / 60);
+  const typeSecs = timeLeft % 60;
+
+  const zoomControls = (
+    <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+      <button
+        onClick={() => setPosition((p) => ({ ...p, zoom: Math.min(p.zoom * 1.5, 12) }))}
+        className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-zinc-300 font-bold text-base flex items-center justify-center transition-colors"
+        title="Zoom in"
+      >+</button>
+      <button
+        onClick={() => setPosition((p) => ({ ...p, zoom: Math.max(p.zoom / 1.5, 1) }))}
+        className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-zinc-300 font-bold text-base flex items-center justify-center transition-colors"
+        title="Zoom out"
+      >−</button>
+      {(position.zoom > 1.1 ||
+        Math.abs(position.coordinates[0] - homePosition[0]) > 2 ||
+        Math.abs(position.coordinates[1] - homePosition[1]) > 2) && (
+        <button
+          onClick={() => setPosition({ coordinates: homePosition, zoom: 1 })}
+          className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-zinc-300 text-sm flex items-center justify-center transition-colors"
+          title="Reset zoom"
+        >↺</button>
+      )}
+    </div>
+  );
 
   return (
     <div className="flex flex-col flex-1 min-h-0 gap-2">
-      {/* Header */}
-      <div className="flex items-center justify-between text-sm text-zinc-400 flex-shrink-0">
-        <span>{index + 1} / {queue.length}</span>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-zinc-600">{filterLabel(filter)}</span>
-          <span>{score} correct</span>
-        </div>
-      </div>
 
-      {/* Progress bar */}
-      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden flex-shrink-0">
-        <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
-      </div>
-
-      {/* Compact prompt */}
-      <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-2 flex-shrink-0">
-        <p className="text-[10px] text-zinc-500 uppercase tracking-widest whitespace-nowrap">Find</p>
-        {flagUrl(target) && (
-          <Image
-            src={flagUrl(target)!}
-            alt={`Flag of ${displayName(target)}`}
-            width={56}
-            height={38}
-            className="rounded shadow-sm object-cover flex-shrink-0"
+      {isType ? (
+        /* ── Type mode top bar ── */
+        <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-2 flex-shrink-0">
+          <input
+            autoFocus
+            type="text"
+            value={typeInput}
+            onChange={(e) => handleTypeInput(e.target.value)}
+            placeholder="Type a country name…"
+            className="flex-1 bg-transparent outline-none text-base placeholder:text-zinc-600"
           />
-        )}
-        <p className="text-xl font-bold flex-1">{displayName(target)}</p>
-        <p className="text-sm font-medium w-36 text-right">
-          {clickResult === 'correct' && <span className="text-green-400">✓ Correct!</span>}
-          {clickResult === 'wrong' && <span className="text-red-400">✗ Missed</span>}
-        </p>
-      </div>
+          <span className="text-sm text-zinc-400 whitespace-nowrap">{typeFound.size} / {ALL_COUNTRIES.length}</span>
+          <span className={`text-sm font-mono font-bold whitespace-nowrap ${timeLeft < 60 ? 'text-red-400' : 'text-zinc-300'}`}>
+            {typeMinutes}:{typeSecs.toString().padStart(2, '0')}
+          </span>
+        </div>
+      ) : (
+        /* ── Click mode top bars ── */
+        <>
+          <div className="flex items-center justify-between text-sm text-zinc-400 flex-shrink-0">
+            <span>{index + 1} / {queue.length}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-zinc-600">{filterLabel(filter)}</span>
+              <span>{score} correct</span>
+            </div>
+          </div>
+          <div className="h-1.5 rounded-full bg-white/10 overflow-hidden flex-shrink-0">
+            <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-2 flex-shrink-0">
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest whitespace-nowrap">Find</p>
+            {flagUrl(target) && (
+              <Image
+                src={flagUrl(target)!}
+                alt={`Flag of ${displayName(target)}`}
+                width={56}
+                height={38}
+                className="rounded shadow-sm object-cover flex-shrink-0"
+              />
+            )}
+            <p className="text-xl font-bold flex-1">{displayName(target)}</p>
+            <p className="text-sm font-medium w-36 text-right">
+              {clickResult === 'correct' && <span className="text-green-400">✓ Correct!</span>}
+              {clickResult === 'wrong' && <span className="text-red-400">✗ Missed</span>}
+            </p>
+          </div>
+        </>
+      )}
 
       {/* Map */}
       <div className="flex-1 min-h-0 rounded-xl overflow-hidden border border-white/10 bg-[#0a0918] relative">
-        {/* Zoom controls */}
-        <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
-          <button
-            onClick={() => setPosition((p) => ({ ...p, zoom: Math.min(p.zoom * 1.5, 12) }))}
-            className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-zinc-300 font-bold text-base flex items-center justify-center transition-colors"
-            title="Zoom in"
-          >+</button>
-          <button
-            onClick={() => setPosition((p) => ({ ...p, zoom: Math.max(p.zoom / 1.5, 1) }))}
-            className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-zinc-300 font-bold text-base flex items-center justify-center transition-colors"
-            title="Zoom out"
-          >−</button>
-          {(position.zoom > 1.1 ||
-            Math.abs(position.coordinates[0] - homePosition[0]) > 2 ||
-            Math.abs(position.coordinates[1] - homePosition[1]) > 2) && (
-            <button
-              onClick={() => setPosition({ coordinates: homePosition, zoom: 1 })}
-              className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-zinc-300 text-sm flex items-center justify-center transition-colors"
-              title="Reset zoom"
-            >↺</button>
-          )}
-        </div>
+        {zoomControls}
         <ComposableMap
           projection="geoNaturalEarth1"
           projectionConfig={projectionConfig}
@@ -598,14 +697,16 @@ export default function WorldMapGame() {
               {({ geographies }) =>
                 geographies.map((geo) => {
                   const name: string = geo.properties.name;
-                  const fill = getCountryFill(name, queueSet, found, missed, clickResult, target);
+                  const fill = isType
+                    ? (typeFound.has(name) ? '#22c55e' : '#0f0e20')
+                    : getCountryFill(name, queueSet, found, missed, clickResult, target);
                   const isClickable =
-                    queueSet.has(name) && clickResult === null && !found.has(name) && !missed.has(name);
+                    !isType && queueSet.has(name) && clickResult === null && !found.has(name) && !missed.has(name);
                   return (
                     <Geography
                       key={geo.rsmKey}
                       geography={geo}
-                      onClick={() => handleClick(name)}
+                      onClick={isType ? undefined : () => handleClick(name)}
                       fill={fill}
                       stroke="#07060f"
                       strokeWidth={0.4}
@@ -627,12 +728,23 @@ export default function WorldMapGame() {
         </ComposableMap>
       </div>
 
-      {/* Legend */}
-      <div className="flex gap-4 text-xs text-zinc-500 justify-center flex-wrap flex-shrink-0">
-        <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#1e1b4b]" /> Active</div>
-        <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#22c55e]" /> Correct</div>
-        <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#7f1d1d]" /> Missed</div>
-      </div>
+      {/* Footer */}
+      {isType ? (
+        <div className="flex justify-center flex-shrink-0">
+          <button
+            onClick={() => setPhase('done')}
+            className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+          >
+            Give up
+          </button>
+        </div>
+      ) : (
+        <div className="flex gap-4 text-xs text-zinc-500 justify-center flex-wrap flex-shrink-0">
+          <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#1e1b4b]" /> Active</div>
+          <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#22c55e]" /> Correct</div>
+          <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#7f1d1d]" /> Missed</div>
+        </div>
+      )}
     </div>
   );
 }
