@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import type { Question } from '@/lib/questions';
 import { shuffleArray } from '@/lib/questions';
@@ -8,11 +8,29 @@ import { shuffleArray } from '@/lib/questions';
 type GameQuestion = Question & { shuffledOptions: string[] };
 
 const QUESTIONS_PER_ROUND = 10;
+const STORAGE_KEY = (category: string) => `quizio-quiz-${category}`;
 
 function prepareRound(questions: Question[]): GameQuestion[] {
   return shuffleArray(questions)
     .slice(0, QUESTIONS_PER_ROUND)
     .map((q) => ({ ...q, shuffledOptions: shuffleArray(q.options) }));
+}
+
+function loadProgress(category: string, questions: Question[]): { round: GameQuestion[]; index: number; score: number } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY(category));
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as { deckIds: string[]; index: number; score: number };
+    const round = saved.deckIds
+      .map((id) => questions.find((q) => q.id === id))
+      .filter(Boolean)
+      .map((q) => ({ ...(q as Question), shuffledOptions: shuffleArray((q as Question).options) }));
+    if (round.length !== saved.deckIds.length || saved.index >= round.length) return null;
+    return { round, index: saved.index, score: saved.score };
+  } catch {
+    return null;
+  }
 }
 
 export default function QuizGame({
@@ -24,13 +42,30 @@ export default function QuizGame({
   category: string;
   categoryLabel: string;
 }) {
-  const [round, setRound] = useState<GameQuestion[]>(() => prepareRound(questions));
-  const [index, setIndex] = useState(0);
+  const [round, setRound] = useState<GameQuestion[]>(() => {
+    const saved = loadProgress(category, questions);
+    return saved?.round ?? prepareRound(questions);
+  });
+  const [index, setIndex] = useState(() => loadProgress(category, questions)?.index ?? 0);
+  const [score, setScore] = useState(() => loadProgress(category, questions)?.score ?? 0);
   const [selected, setSelected] = useState<string | null>(null);
-  const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
+  const [resumed] = useState(() => (loadProgress(category, questions)?.index ?? 0) > 0);
 
   const current = round[index];
+
+  useEffect(() => {
+    if (done) {
+      localStorage.removeItem(STORAGE_KEY(category));
+      return;
+    }
+    try {
+      localStorage.setItem(
+        STORAGE_KEY(category),
+        JSON.stringify({ deckIds: round.map((q) => q.id), index, score })
+      );
+    } catch {}
+  }, [index, score, done, round, category]);
 
   const handleSelect = useCallback(
     (option: string) => {
@@ -52,12 +87,13 @@ export default function QuizGame({
   );
 
   const restart = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY(category));
     setRound(prepareRound(questions));
     setIndex(0);
     setSelected(null);
     setScore(0);
     setDone(false);
-  }, [questions]);
+  }, [questions, category]);
 
   if (done) {
     const pct = Math.round((score / round.length) * 100);
@@ -65,20 +101,18 @@ export default function QuizGame({
     return (
       <div className="flex flex-col items-center text-center gap-4 py-8">
         <div className="text-7xl font-bold tracking-tight">{pct}%</div>
-        <p className="text-xl font-semibold">
-          {score} / {round.length} correct
-        </p>
-        <p className="text-zinc-500 dark:text-zinc-400">{message}</p>
+        <p className="text-xl font-semibold">{score} / {round.length} correct</p>
+        <p className="text-zinc-400">{message}</p>
         <div className="flex gap-3 mt-6">
           <button
             onClick={restart}
-            className="px-5 py-2.5 rounded-lg border border-black/20 dark:border-white/20 font-medium hover:border-black/40 dark:hover:border-white/40 transition-colors"
+            className="px-5 py-2.5 rounded-lg border border-white/20 font-medium hover:border-white/40 transition-colors"
           >
             Play Again
           </button>
           <Link
             href={`/categories/${category}`}
-            className="px-5 py-2.5 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-medium hover:opacity-90 transition-opacity"
+            className="px-5 py-2.5 rounded-lg bg-white/10 font-medium hover:bg-white/15 transition-colors"
           >
             Choose Mode
           </Link>
@@ -87,18 +121,23 @@ export default function QuizGame({
     );
   }
 
-  const progress = (index / round.length) * 100;
-
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400">
-        <span>Question {index + 1} of {round.length}</span>
+      <div className="flex items-center justify-between text-sm text-zinc-400">
+        <div className="flex items-center gap-2">
+          <span>Question {index + 1} of {round.length}</span>
+          {resumed && (
+            <span className="text-xs text-indigo-400 border border-indigo-500/30 rounded px-1.5 py-0.5">
+              resumed
+            </span>
+          )}
+        </div>
         <span>{score} correct</span>
       </div>
-      <div className="h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
         <div
-          className="h-full bg-zinc-900 dark:bg-white rounded-full transition-all duration-500"
-          style={{ width: `${progress}%` }}
+          className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+          style={{ width: `${(index / round.length) * 100}%` }}
         />
       </div>
 
@@ -106,20 +145,16 @@ export default function QuizGame({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {current.shuffledOptions.map((option) => {
-          let style =
-            'border border-black/10 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30 cursor-pointer';
+          let style = 'border border-white/10 hover:border-white/30 cursor-pointer';
           if (selected !== null) {
             if (option === current.answer) {
-              style =
-                'border-2 border-green-500 bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400';
+              style = 'border-2 border-green-500 bg-green-950/40 text-green-400';
             } else if (option === selected) {
-              style =
-                'border-2 border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400';
+              style = 'border-2 border-red-500 bg-red-950/40 text-red-400';
             } else {
-              style = 'border border-black/5 dark:border-white/5 opacity-40';
+              style = 'border border-white/5 opacity-40';
             }
           }
-
           return (
             <button
               key={option}

@@ -6,6 +6,7 @@ import type { Question } from '@/lib/questions';
 import { shuffleArray, isCorrectAnswer } from '@/lib/questions';
 
 const QUESTIONS_PER_ROUND = 10;
+const STORAGE_KEY = (category: string) => `quizio-type-${category}`;
 
 type Result = {
   question: string;
@@ -14,6 +15,29 @@ type Result = {
   correct: boolean;
 };
 
+type SavedProgress = {
+  deckIds: string[];
+  index: number;
+  score: number;
+  results: Result[];
+};
+
+function loadProgress(category: string, questions: Question[]): { deck: Question[]; index: number; score: number; results: Result[] } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY(category));
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as SavedProgress;
+    const deck = saved.deckIds
+      .map((id) => questions.find((q) => q.id === id))
+      .filter(Boolean) as Question[];
+    if (deck.length !== saved.deckIds.length || saved.index >= deck.length) return null;
+    return { deck, index: saved.index, score: saved.score, results: saved.results };
+  } catch {
+    return null;
+  }
+}
+
 export default function TypeGame({
   questions,
   category,
@@ -21,23 +45,38 @@ export default function TypeGame({
   questions: Question[];
   category: string;
 }) {
-  const [round, setRound] = useState<Question[]>(() =>
-    shuffleArray(questions).slice(0, QUESTIONS_PER_ROUND)
-  );
-  const [index, setIndex] = useState(0);
+  const [deck, setDeck] = useState<Question[]>(() => {
+    const saved = loadProgress(category, questions);
+    return saved?.deck ?? shuffleArray(questions).slice(0, QUESTIONS_PER_ROUND);
+  });
+  const [index, setIndex] = useState(() => loadProgress(category, questions)?.index ?? 0);
+  const [score, setScore] = useState(() => loadProgress(category, questions)?.score ?? 0);
+  const [results, setResults] = useState<Result[]>(() => loadProgress(category, questions)?.results ?? []);
   const [input, setInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [correct, setCorrect] = useState(false);
-  const [score, setScore] = useState(0);
-  const [results, setResults] = useState<Result[]>([]);
   const [done, setDone] = useState(false);
+  const [resumed] = useState(() => (loadProgress(category, questions)?.index ?? 0) > 0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const current = round[index];
+  const current = deck[index];
 
   useEffect(() => {
     if (!submitted) inputRef.current?.focus();
   }, [index, submitted]);
+
+  useEffect(() => {
+    if (done) {
+      localStorage.removeItem(STORAGE_KEY(category));
+      return;
+    }
+    try {
+      localStorage.setItem(
+        STORAGE_KEY(category),
+        JSON.stringify({ deckIds: deck.map((q) => q.id), index, score, results })
+      );
+    } catch {}
+  }, [index, score, results, done, deck, category]);
 
   const submit = useCallback(() => {
     if (!input.trim() || submitted) return;
@@ -52,7 +91,7 @@ export default function TypeGame({
   }, [input, submitted, current]);
 
   const next = useCallback(() => {
-    if (index + 1 >= round.length) {
+    if (index + 1 >= deck.length) {
       setDone(true);
     } else {
       setIndex((i) => i + 1);
@@ -60,7 +99,7 @@ export default function TypeGame({
       setSubmitted(false);
       setCorrect(false);
     }
-  }, [index, round.length]);
+  }, [index, deck.length]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -73,7 +112,8 @@ export default function TypeGame({
   );
 
   const restart = useCallback(() => {
-    setRound(shuffleArray(questions).slice(0, QUESTIONS_PER_ROUND));
+    localStorage.removeItem(STORAGE_KEY(category));
+    setDeck(shuffleArray(questions).slice(0, QUESTIONS_PER_ROUND));
     setIndex(0);
     setInput('');
     setSubmitted(false);
@@ -81,16 +121,16 @@ export default function TypeGame({
     setScore(0);
     setResults([]);
     setDone(false);
-  }, [questions]);
+  }, [questions, category]);
 
   if (done) {
-    const pct = Math.round((score / round.length) * 100);
+    const pct = Math.round((score / deck.length) * 100);
     const message = pct >= 80 ? 'Excellent!' : pct >= 50 ? 'Good effort!' : 'Keep practicing!';
     return (
       <div className="flex flex-col gap-8">
         <div className="flex flex-col items-center text-center gap-3 py-4">
           <div className="text-7xl font-bold tracking-tight">{pct}%</div>
-          <p className="text-xl font-semibold">{score} / {round.length} correct</p>
+          <p className="text-xl font-semibold">{score} / {deck.length} correct</p>
           <p className="text-zinc-400">{message}</p>
           <div className="flex gap-3 mt-4">
             <button
@@ -114,9 +154,7 @@ export default function TypeGame({
             <div
               key={i}
               className={`rounded-xl p-4 border text-sm ${
-                r.correct
-                  ? 'border-green-500/20 bg-green-950/20'
-                  : 'border-red-500/20 bg-red-950/20'
+                r.correct ? 'border-green-500/20 bg-green-950/20' : 'border-red-500/20 bg-red-950/20'
               }`}
             >
               <p className="text-zinc-300 mb-1">{r.question}</p>
@@ -135,18 +173,23 @@ export default function TypeGame({
     );
   }
 
-  const progress = (index / round.length) * 100;
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between text-sm text-zinc-400">
-        <span>Question {index + 1} of {round.length}</span>
+        <div className="flex items-center gap-2">
+          <span>Question {index + 1} of {deck.length}</span>
+          {resumed && (
+            <span className="text-xs text-indigo-400 border border-indigo-500/30 rounded px-1.5 py-0.5">
+              resumed
+            </span>
+          )}
+        </div>
         <span>{score} correct</span>
       </div>
       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
         <div
           className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-          style={{ width: `${progress}%` }}
+          style={{ width: `${(index / deck.length) * 100}%` }}
         />
       </div>
 
@@ -194,7 +237,7 @@ export default function TypeGame({
               onClick={next}
               className="w-full py-3 rounded-xl border border-white/20 font-medium hover:border-white/40 transition-colors"
             >
-              {index + 1 >= round.length ? 'See Results' : 'Next →'}
+              {index + 1 >= deck.length ? 'See Results' : 'Next →'}
             </button>
             <p className="text-xs text-center text-zinc-600">or press Enter</p>
           </div>
