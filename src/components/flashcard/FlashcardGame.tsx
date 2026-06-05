@@ -1,9 +1,52 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import type { Question } from '@/lib/questions';
 import { shuffleArray } from '@/lib/questions';
+
+type ProgressState = {
+  deck: Question[];
+  index: number;
+  known: string[];
+  unknown: string[];
+};
+
+function loadProgress(category: string, questions: Question[]): ProgressState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(`quizio-flashcard-${category}`);
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as { deckIds: string[]; index: number; known: string[]; unknown: string[] };
+    const deck = saved.deckIds
+      .map((id) => questions.find((q) => q.id === id))
+      .filter(Boolean) as Question[];
+    if (deck.length !== saved.deckIds.length || saved.index >= deck.length) return null;
+    return { deck, index: saved.index, known: saved.known, unknown: saved.unknown };
+  } catch {
+    return null;
+  }
+}
+
+function saveProgress(category: string, state: ProgressState) {
+  try {
+    localStorage.setItem(
+      `quizio-flashcard-${category}`,
+      JSON.stringify({
+        deckIds: state.deck.map((q) => q.id),
+        index: state.index,
+        known: state.known,
+        unknown: state.unknown,
+      })
+    );
+  } catch {}
+}
+
+function clearProgress(category: string) {
+  try {
+    localStorage.removeItem(`quizio-flashcard-${category}`);
+  } catch {}
+}
 
 export default function FlashcardGame({
   questions,
@@ -12,45 +55,47 @@ export default function FlashcardGame({
   questions: Question[];
   category: string;
 }) {
-  const [deck, setDeck] = useState<Question[]>(() => shuffleArray(questions));
-  const [index, setIndex] = useState(0);
+  const [progress, setProgress] = useState<ProgressState>(() => {
+    const saved = loadProgress(category, questions);
+    return saved ?? { deck: shuffleArray(questions), index: 0, known: [], unknown: [] };
+  });
   const [flipped, setFlipped] = useState(false);
-  const [known, setKnown] = useState<string[]>([]);
-  const [unknown, setUnknown] = useState<string[]>([]);
   const [done, setDone] = useState(false);
 
+  const { deck, index, known, unknown } = progress;
   const current = deck[index];
+  const resumed = known.length + unknown.length > 0;
+
+  useEffect(() => {
+    if (!done) saveProgress(category, progress);
+  }, [progress, done, category]);
 
   const advance = useCallback(
     (wasKnown: boolean) => {
-      if (wasKnown) {
-        setKnown((k) => [...k, current.id]);
-      } else {
-        setUnknown((u) => [...u, current.id]);
-      }
+      const newKnown = wasKnown ? [...known, current.id] : known;
+      const newUnknown = wasKnown ? unknown : [...unknown, current.id];
+
       if (index + 1 >= deck.length) {
+        clearProgress(category);
+        setProgress((p) => ({ ...p, known: newKnown, unknown: newUnknown }));
         setDone(true);
       } else {
-        setIndex((i) => i + 1);
+        setProgress((p) => ({ ...p, index: p.index + 1, known: newKnown, unknown: newUnknown }));
         setFlipped(false);
       }
     },
-    [current, index, deck.length]
+    [known, unknown, current, index, deck.length, category]
   );
 
   const restart = useCallback(
     (reviewOnly: boolean) => {
-      const pool = reviewOnly
-        ? questions.filter((q) => unknown.includes(q.id))
-        : questions;
-      setDeck(shuffleArray(pool));
-      setIndex(0);
+      const pool = reviewOnly ? questions.filter((q) => unknown.includes(q.id)) : questions;
+      clearProgress(category);
+      setProgress({ deck: shuffleArray(pool), index: 0, known: [], unknown: [] });
       setFlipped(false);
-      setKnown([]);
-      setUnknown([]);
       setDone(false);
     },
-    [questions, unknown]
+    [questions, unknown, category]
   );
 
   if (done) {
@@ -91,7 +136,14 @@ export default function FlashcardGame({
   return (
     <div className="flex flex-col items-center gap-6">
       <div className="w-full flex items-center justify-between text-sm text-zinc-400">
-        <span>{index + 1} / {deck.length}</span>
+        <div className="flex items-center gap-2">
+          <span>{index + 1} / {deck.length}</span>
+          {resumed && (
+            <span className="text-xs text-indigo-400 border border-indigo-500/30 rounded px-1.5 py-0.5">
+              resumed
+            </span>
+          )}
+        </div>
         <div className="flex gap-4">
           <span className="text-green-400">{known.length} got it</span>
           <span className="text-red-400">{unknown.length} learning</span>
@@ -104,10 +156,9 @@ export default function FlashcardGame({
         />
       </div>
 
-      {/* Flip card */}
       <div
         className="card-container w-full cursor-pointer select-none"
-        onClick={() => !flipped && setFlipped(true)}
+        onClick={() => setFlipped((f) => !f)}
       >
         <div
           className="card-inner w-full"
@@ -121,6 +172,7 @@ export default function FlashcardGame({
           <div className="card-face card-back-face flex flex-col items-center justify-center text-center p-8 rounded-2xl border border-indigo-500/30 bg-indigo-950/40">
             <p className="text-xs text-indigo-400 uppercase tracking-widest mb-6">Answer</p>
             <p className="text-2xl font-bold">{current.answer}</p>
+            <p className="text-sm text-zinc-600 mt-8">Tap to flip back</p>
           </div>
         </div>
       </div>
