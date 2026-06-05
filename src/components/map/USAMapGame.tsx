@@ -43,6 +43,7 @@ export default function USAMapGame() {
   const [nameResult, setNameResult] = useState<'correct' | 'wrong' | null>(null);
 
   const [answered, setAnswered] = useState<Set<string>>(new Set());
+  const [wrongClicks, setWrongClicks] = useState<Set<string>>(new Set());
 
   const inputRef = useRef<HTMLInputElement>(null);
   const target = queue[index] ?? '';
@@ -64,6 +65,7 @@ export default function USAMapGame() {
     setSubmitted(false);
     setNameResult(null);
     setAnswered(new Set());
+    setWrongClicks(new Set());
     setPhase('game');
   };
 
@@ -89,6 +91,8 @@ export default function USAMapGame() {
       if (isCorrect) {
         setScore((s) => s + 1);
         setAnswered((prev) => new Set([...prev, stateName]));
+      } else {
+        setWrongClicks((prev) => new Set([...prev, stateName]));
       }
       setTimeout(advance, 1500);
     },
@@ -103,6 +107,8 @@ export default function USAMapGame() {
     if (isCorrect) {
       setScore((s) => s + 1);
       setAnswered((prev) => new Set([...prev, target]));
+    } else {
+      setWrongClicks((prev) => new Set([...prev, target]));
     }
   }, [submitted, input, target]);
 
@@ -110,17 +116,21 @@ export default function USAMapGame() {
     (stateName: string): string => {
       if (answered.has(stateName)) return '#22c55e';
       if (mode === 'click') {
-        if (clickResult === null) return '#1e1b4b';
-        if (stateName === target) return '#22c55e';
-        if (stateName === clickedState && clickResult === 'wrong') return '#ef4444';
+        if (clickResult !== null) {
+          if (stateName === target) return '#22c55e';
+          if (stateName === clickedState) return '#ef4444';
+        }
+        // exclude current target so it stays findable even if previously wrong-clicked
+        if (wrongClicks.has(stateName) && stateName !== target) return '#7f1d1d';
         return '#1e1b4b';
       } else {
+        if (wrongClicks.has(stateName) && stateName !== target) return '#7f1d1d';
         if (stateName !== target) return '#1e1b4b';
         if (!submitted) return '#6366f1';
         return nameResult === 'correct' ? '#22c55e' : '#ef4444';
       }
     },
-    [answered, mode, clickResult, target, clickedState, submitted, nameResult]
+    [answered, wrongClicks, mode, clickResult, target, clickedState, submitted, nameResult]
   );
 
   // ── Mode select ──
