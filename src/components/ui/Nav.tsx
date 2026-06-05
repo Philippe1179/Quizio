@@ -3,13 +3,15 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, LogOut } from 'lucide-react';
+import { ArrowLeft, LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import { signOut } from '@/lib/auth';
 import AuthModal from './AuthModal';
 
 export default function Nav({ backHref }: { backHref?: string }) {
   const { user, loading } = useAuth();
+  const { theme, toggle } = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -45,7 +47,15 @@ export default function Nav({ backHref }: { backHref?: string }) {
             Quizio
           </Link>
 
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={toggle}
+              aria-label="Toggle theme"
+              className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors p-1"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
             {!loading && !user && (
               <button
                 onClick={() => setModalOpen(true)}
