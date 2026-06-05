@@ -214,14 +214,10 @@ export default function USAMapGame() {
         <div className="rounded-xl border border-white/10 bg-white/5 px-6 py-4 text-center">
           <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Find the state</p>
           <p className="text-2xl font-bold">{target}</p>
-          {clickResult === 'wrong' && clickedState && (
-            <p className="text-sm text-red-400 mt-2">
-              You clicked <span className="font-semibold">{clickedState}</span> — highlighting the correct state
-            </p>
-          )}
-          {clickResult === 'correct' && (
-            <p className="text-sm text-green-400 mt-2">✓ Correct!</p>
-          )}
+          <p className="text-sm mt-2 h-5">
+            {clickResult === 'correct' && <span className="text-green-400">✓ Correct!</span>}
+            {clickResult === 'wrong' && <span className="text-red-400">✗ Wrong — state highlighted in red</span>}
+          </p>
         </div>
       ) : (
         <div className="rounded-xl border border-indigo-500/30 bg-indigo-950/20 px-6 py-4 text-center">
