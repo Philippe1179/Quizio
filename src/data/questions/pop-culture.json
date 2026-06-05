@@ -1,0 +1,153 @@
+[
+  {
+    "id": "pop-001",
+    "question": "Who played Iron Man in the Marvel Cinematic Universe?",
+    "answer": "Robert Downey Jr.",
+    "options": ["Robert Downey Jr.", "Chris Evans", "Chris Hemsworth", "Mark Ruffalo"]
+  },
+  {
+    "id": "pop-002",
+    "question": "What TV show features the Stark family and the Iron Throne?",
+    "answer": "Game of Thrones",
+    "options": ["Game of Thrones", "The Witcher", "House of the Dragon", "Vikings"]
+  },
+  {
+    "id": "pop-003",
+    "question": "Who sang the 1982 hit song 'Thriller'?",
+    "answer": "Michael Jackson",
+    "options": ["Michael Jackson", "Prince", "David Bowie", "Elton John"]
+  },
+  {
+    "id": "pop-004",
+    "question": "What streaming platform produces 'Stranger Things'?",
+    "answer": "Netflix",
+    "options": ["Netflix", "HBO Max", "Hulu", "Disney+"]
+  },
+  {
+    "id": "pop-005",
+    "question": "Who voiced Woody in the Toy Story films?",
+    "answer": "Tom Hanks",
+    "options": ["Tom Hanks", "Tim Allen", "Billy Crystal", "John Goodman"]
+  },
+  {
+    "id": "pop-006",
+    "question": "Which band was Freddie Mercury the lead singer of?",
+    "answer": "Queen",
+    "options": ["Queen", "The Rolling Stones", "Led Zeppelin", "Aerosmith"]
+  },
+  {
+    "id": "pop-007",
+    "question": "In which film does Leonardo DiCaprio play a man who enters people's dreams?",
+    "answer": "Inception",
+    "options": ["Inception", "Interstellar", "The Matrix", "Shutter Island"]
+  },
+  {
+    "id": "pop-008",
+    "question": "Who wrote the Harry Potter book series?",
+    "answer": "J.K. Rowling",
+    "options": ["J.K. Rowling", "Suzanne Collins", "Stephenie Meyer", "Rick Riordan"]
+  },
+  {
+    "id": "pop-009",
+    "question": "What is the best-selling video game of all time?",
+    "answer": "Minecraft",
+    "options": ["Minecraft", "Tetris", "Grand Theft Auto V", "Wii Sports"]
+  },
+  {
+    "id": "pop-010",
+    "question": "Who plays Walter White in Breaking Bad?",
+    "answer": "Bryan Cranston",
+    "options": ["Bryan Cranston", "Aaron Paul", "Bob Odenkirk", "Dean Norris"]
+  },
+  {
+    "id": "pop-011",
+    "question": "In what year was the first iPhone released?",
+    "answer": "2007",
+    "options": ["2007", "2008", "2006", "2009"]
+  },
+  {
+    "id": "pop-012",
+    "question": "Who directed the film Jurassic Park?",
+    "answer": "Steven Spielberg",
+    "options": ["Steven Spielberg", "James Cameron", "George Lucas", "Peter Jackson"]
+  },
+  {
+    "id": "pop-013",
+    "question": "What is the name of Batman's butler?",
+    "answer": "Alfred",
+    "options": ["Alfred", "James", "Edwin", "Arthur"],
+    "acceptedAnswers": ["Alfred Pennyworth"]
+  },
+  {
+    "id": "pop-014",
+    "question": "Which Disney film features the song 'Let It Go'?",
+    "answer": "Frozen",
+    "options": ["Frozen", "Tangled", "Moana", "Brave"]
+  },
+  {
+    "id": "pop-015",
+    "question": "Who played Jack Dawson in the 1997 film Titanic?",
+    "answer": "Leonardo DiCaprio",
+    "options": ["Leonardo DiCaprio", "Brad Pitt", "Johnny Depp", "Matt Damon"]
+  },
+  {
+    "id": "pop-016",
+    "question": "Who created the social media platform Facebook?",
+    "answer": "Mark Zuckerberg",
+    "options": ["Mark Zuckerberg", "Jack Dorsey", "Elon Musk", "Jeff Bezos"]
+  },
+  {
+    "id": "pop-017",
+    "question": "What is the rapper Drake's real first name?",
+    "answer": "Aubrey",
+    "options": ["Aubrey", "Marcus", "Denzell", "Jarvis"]
+  },
+  {
+    "id": "pop-018",
+    "question": "In what year did the TV series Friends air its final episode?",
+    "answer": "2004",
+    "options": ["2004", "2003", "2005", "2002"]
+  },
+  {
+    "id": "pop-019",
+    "question": "Who sang the 2017 hit 'Shape of You'?",
+    "answer": "Ed Sheeran",
+    "options": ["Ed Sheeran", "Justin Bieber", "Shawn Mendes", "Harry Styles"]
+  },
+  {
+    "id": "pop-020",
+    "question": "What is the name of the fictional African country in Black Panther?",
+    "answer": "Wakanda",
+    "options": ["Wakanda", "Zamunda", "Genosha", "Latveria"]
+  },
+  {
+    "id": "pop-021",
+    "question": "Who wrote the novel 'The Great Gatsby'?",
+    "answer": "F. Scott Fitzgerald",
+    "options": ["F. Scott Fitzgerald", "Ernest Hemingway", "John Steinbeck", "William Faulkner"]
+  },
+  {
+    "id": "pop-022",
+    "question": "Which superhero is also known as the 'Caped Crusader'?",
+    "answer": "Batman",
+    "options": ["Batman", "Superman", "Spider-Man", "Captain America"]
+  },
+  {
+    "id": "pop-023",
+    "question": "What animated film features the song 'Remember Me'?",
+    "answer": "Coco",
+    "options": ["Coco", "Moana", "Encanto", "Brave"]
+  },
+  {
+    "id": "pop-024",
+    "question": "What is the name of the coffee shop in the TV series Friends?",
+    "answer": "Central Perk",
+    "options": ["Central Perk", "The Grind", "Java City", "Brew Haven"]
+  },
+  {
+    "id": "pop-025",
+    "question": "Who sang 'Rolling in the Deep' in 2010?",
+    "answer": "Adele",
+    "options": ["Adele", "Beyoncé", "Rihanna", "Amy Winehouse"]
+  }
+]

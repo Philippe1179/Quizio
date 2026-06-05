@@ -1,0 +1,155 @@
+[
+  {
+    "id": "history-001",
+    "question": "In what year did World War II end?",
+    "answer": "1945",
+    "options": ["1945", "1944", "1946", "1943"]
+  },
+  {
+    "id": "history-002",
+    "question": "Who was the first President of the United States?",
+    "answer": "George Washington",
+    "options": ["George Washington", "John Adams", "Thomas Jefferson", "Benjamin Franklin"]
+  },
+  {
+    "id": "history-003",
+    "question": "In what year did the Berlin Wall fall?",
+    "answer": "1989",
+    "options": ["1989", "1991", "1987", "1985"]
+  },
+  {
+    "id": "history-004",
+    "question": "Who wrote the US Declaration of Independence?",
+    "answer": "Thomas Jefferson",
+    "options": ["Thomas Jefferson", "Benjamin Franklin", "John Adams", "Alexander Hamilton"]
+  },
+  {
+    "id": "history-005",
+    "question": "In what year did the Titanic sink?",
+    "answer": "1912",
+    "options": ["1912", "1910", "1914", "1908"]
+  },
+  {
+    "id": "history-006",
+    "question": "Who was the first person to walk on the Moon?",
+    "answer": "Neil Armstrong",
+    "options": ["Neil Armstrong", "Buzz Aldrin", "Yuri Gagarin", "John Glenn"]
+  },
+  {
+    "id": "history-007",
+    "question": "In what year did World War I begin?",
+    "answer": "1914",
+    "options": ["1914", "1912", "1916", "1910"]
+  },
+  {
+    "id": "history-008",
+    "question": "Which Egyptian pharaoh is associated with the famous golden death mask?",
+    "answer": "Tutankhamun",
+    "options": ["Tutankhamun", "Ramesses II", "Cleopatra", "Nefertiti"],
+    "acceptedAnswers": ["King Tut", "Tut"]
+  },
+  {
+    "id": "history-009",
+    "question": "In what year did the French Revolution begin?",
+    "answer": "1789",
+    "options": ["1789", "1776", "1804", "1799"]
+  },
+  {
+    "id": "history-010",
+    "question": "Who invented the telephone?",
+    "answer": "Alexander Graham Bell",
+    "options": ["Alexander Graham Bell", "Thomas Edison", "Nikola Tesla", "Guglielmo Marconi"]
+  },
+  {
+    "id": "history-011",
+    "question": "In what year did the United States declare independence?",
+    "answer": "1776",
+    "options": ["1776", "1783", "1775", "1781"]
+  },
+  {
+    "id": "history-012",
+    "question": "Who painted the Mona Lisa?",
+    "answer": "Leonardo da Vinci",
+    "options": ["Leonardo da Vinci", "Michelangelo", "Raphael", "Botticelli"]
+  },
+  {
+    "id": "history-013",
+    "question": "Who was the first woman to win a Nobel Prize?",
+    "answer": "Marie Curie",
+    "options": ["Marie Curie", "Rosalind Franklin", "Ada Lovelace", "Florence Nightingale"]
+  },
+  {
+    "id": "history-014",
+    "question": "In what year did the Soviet Union collapse?",
+    "answer": "1991",
+    "options": ["1991", "1989", "1993", "1987"]
+  },
+  {
+    "id": "history-015",
+    "question": "What city was divided by a wall from 1961 to 1989?",
+    "answer": "Berlin",
+    "options": ["Berlin", "Vienna", "Warsaw", "Prague"]
+  },
+  {
+    "id": "history-016",
+    "question": "In what year did humans first land on the Moon?",
+    "answer": "1969",
+    "options": ["1969", "1967", "1971", "1965"]
+  },
+  {
+    "id": "history-017",
+    "question": "Who assassinated Abraham Lincoln?",
+    "answer": "John Wilkes Booth",
+    "options": ["John Wilkes Booth", "Lee Harvey Oswald", "Charles Guiteau", "Leon Czolgosz"]
+  },
+  {
+    "id": "history-018",
+    "question": "What empire was Julius Caesar a leader of?",
+    "answer": "Roman Empire",
+    "options": ["Roman Empire", "Greek Empire", "Ottoman Empire", "Byzantine Empire"]
+  },
+  {
+    "id": "history-019",
+    "question": "Which ship did Charles Darwin sail on during his voyage of discovery?",
+    "answer": "HMS Beagle",
+    "options": ["HMS Beagle", "HMS Victory", "HMS Endeavour", "HMS Bounty"]
+  },
+  {
+    "id": "history-020",
+    "question": "Who was the first Emperor of unified China?",
+    "answer": "Qin Shi Huang",
+    "options": ["Qin Shi Huang", "Wu Zetian", "Kublai Khan", "Emperor Taizong"]
+  },
+  {
+    "id": "history-021",
+    "question": "In what year was the Magna Carta signed?",
+    "answer": "1215",
+    "options": ["1215", "1066", "1189", "1307"]
+  },
+  {
+    "id": "history-022",
+    "question": "Which ancient wonder was located in Alexandria, Egypt?",
+    "answer": "Lighthouse of Alexandria",
+    "options": ["Lighthouse of Alexandria", "Library of Alexandria", "Colossus of Rhodes", "Hanging Gardens"],
+    "acceptedAnswers": ["Lighthouse"]
+  },
+  {
+    "id": "history-023",
+    "question": "Who led the Cuban Revolution?",
+    "answer": "Fidel Castro",
+    "options": ["Fidel Castro", "Che Guevara", "Fulgencio Batista", "Raúl Castro"]
+  },
+  {
+    "id": "history-024",
+    "question": "In what year did Napoleon Bonaparte die?",
+    "answer": "1821",
+    "options": ["1821", "1815", "1830", "1812"]
+  },
+  {
+    "id": "history-025",
+    "question": "What disease caused a global pandemic in 1918?",
+    "answer": "Spanish Flu",
+    "options": ["Spanish Flu", "Bubonic Plague", "Cholera", "Smallpox"],
+    "acceptedAnswers": ["Influenza", "Spanish influenza"]
+  }
+]

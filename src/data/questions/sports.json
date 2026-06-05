@@ -1,0 +1,155 @@
+[
+  {
+    "id": "sports-001",
+    "question": "How many players from one team are on the court in basketball?",
+    "answer": "5",
+    "options": ["5", "6", "4", "7"]
+  },
+  {
+    "id": "sports-002",
+    "question": "In which sport is the Stanley Cup awarded?",
+    "answer": "Ice hockey",
+    "options": ["Ice hockey", "Basketball", "Baseball", "American football"]
+  },
+  {
+    "id": "sports-003",
+    "question": "Which country has won the most FIFA World Cups?",
+    "answer": "Brazil",
+    "options": ["Brazil", "Germany", "Italy", "Argentina"]
+  },
+  {
+    "id": "sports-004",
+    "question": "How many holes are in a standard round of golf?",
+    "answer": "18",
+    "options": ["18", "9", "27", "36"]
+  },
+  {
+    "id": "sports-005",
+    "question": "Approximately how long is a marathon in miles?",
+    "answer": "26.2",
+    "options": ["26.2", "25.0", "27.5", "24.8"],
+    "acceptedAnswers": ["26", "26.2 miles"]
+  },
+  {
+    "id": "sports-006",
+    "question": "In which sport do you use a shuttlecock?",
+    "answer": "Badminton",
+    "options": ["Badminton", "Tennis", "Squash", "Pickleball"]
+  },
+  {
+    "id": "sports-007",
+    "question": "How many players are on the field per team in soccer?",
+    "answer": "11",
+    "options": ["11", "10", "12", "9"]
+  },
+  {
+    "id": "sports-008",
+    "question": "At which tournament is tennis played on grass courts?",
+    "answer": "Wimbledon",
+    "options": ["Wimbledon", "US Open", "French Open", "Australian Open"]
+  },
+  {
+    "id": "sports-009",
+    "question": "How many points is a touchdown worth in American football?",
+    "answer": "6",
+    "options": ["6", "7", "3", "4"]
+  },
+  {
+    "id": "sports-010",
+    "question": "How many rings are on the Olympic flag?",
+    "answer": "5",
+    "options": ["5", "6", "4", "7"]
+  },
+  {
+    "id": "sports-011",
+    "question": "What is the maximum score in a single game of bowling?",
+    "answer": "300",
+    "options": ["300", "250", "320", "200"]
+  },
+  {
+    "id": "sports-012",
+    "question": "In what year were the first modern Olympic Games held?",
+    "answer": "1896",
+    "options": ["1896", "1900", "1904", "1888"]
+  },
+  {
+    "id": "sports-013",
+    "question": "Which sport uses the terms birdie, eagle, and bogey?",
+    "answer": "Golf",
+    "options": ["Golf", "Tennis", "Cricket", "Badminton"]
+  },
+  {
+    "id": "sports-014",
+    "question": "In baseball, how many strikes does it take to strike out?",
+    "answer": "3",
+    "options": ["3", "2", "4", "1"]
+  },
+  {
+    "id": "sports-015",
+    "question": "What sport is raced on a velodrome?",
+    "answer": "Cycling",
+    "options": ["Cycling", "Roller skating", "Skateboarding", "Running"]
+  },
+  {
+    "id": "sports-016",
+    "question": "How many players are on the court per team in volleyball?",
+    "answer": "6",
+    "options": ["6", "5", "7", "4"]
+  },
+  {
+    "id": "sports-017",
+    "question": "Which country has won the most all-time Olympic gold medals?",
+    "answer": "United States",
+    "options": ["United States", "Russia", "China", "Germany"],
+    "acceptedAnswers": ["USA", "US", "America"]
+  },
+  {
+    "id": "sports-018",
+    "question": "Who holds the men's record for most Grand Slam tennis titles?",
+    "answer": "Novak Djokovic",
+    "options": ["Novak Djokovic", "Rafael Nadal", "Roger Federer", "Pete Sampras"]
+  },
+  {
+    "id": "sports-019",
+    "question": "In American football, how many players per team are on the field?",
+    "answer": "11",
+    "options": ["11", "12", "10", "9"]
+  },
+  {
+    "id": "sports-020",
+    "question": "What is the national sport of Japan?",
+    "answer": "Sumo wrestling",
+    "options": ["Sumo wrestling", "Judo", "Karate", "Baseball"],
+    "acceptedAnswers": ["Sumo"]
+  },
+  {
+    "id": "sports-021",
+    "question": "How many sets must a player win in a standard men's Grand Slam match?",
+    "answer": "3",
+    "options": ["3", "2", "4", "5"]
+  },
+  {
+    "id": "sports-022",
+    "question": "Which team has won the most Super Bowl championships?",
+    "answer": "New England Patriots",
+    "options": ["New England Patriots", "Pittsburgh Steelers", "San Francisco 49ers", "Dallas Cowboys"]
+  },
+  {
+    "id": "sports-023",
+    "question": "In which sport would you perform a slam dunk?",
+    "answer": "Basketball",
+    "options": ["Basketball", "Volleyball", "Handball", "Water polo"]
+  },
+  {
+    "id": "sports-024",
+    "question": "What is the diameter of a basketball hoop in inches?",
+    "answer": "18",
+    "options": ["18", "16", "20", "15"]
+  },
+  {
+    "id": "sports-025",
+    "question": "How many players are on a baseball team's roster on the field at one time?",
+    "answer": "9",
+    "options": ["9", "10", "11", "8"]
+  }
+]

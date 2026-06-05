@@ -1,0 +1,155 @@
+[
+  {
+    "id": "science-001",
+    "question": "What is the chemical symbol for gold?",
+    "answer": "Au",
+    "options": ["Au", "Ag", "Fe", "Pb"]
+  },
+  {
+    "id": "science-002",
+    "question": "How many bones are in the adult human body?",
+    "answer": "206",
+    "options": ["206", "212", "198", "215"]
+  },
+  {
+    "id": "science-003",
+    "question": "Which planet is closest to the Sun?",
+    "answer": "Mercury",
+    "options": ["Mercury", "Venus", "Earth", "Mars"]
+  },
+  {
+    "id": "science-004",
+    "question": "What gas do plants absorb during photosynthesis?",
+    "answer": "Carbon dioxide",
+    "options": ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"],
+    "acceptedAnswers": ["CO2", "co2"]
+  },
+  {
+    "id": "science-005",
+    "question": "What is the atomic number of carbon?",
+    "answer": "6",
+    "options": ["6", "12", "8", "14"]
+  },
+  {
+    "id": "science-006",
+    "question": "Who developed the theory of general relativity?",
+    "answer": "Albert Einstein",
+    "options": ["Albert Einstein", "Isaac Newton", "Niels Bohr", "Max Planck"]
+  },
+  {
+    "id": "science-007",
+    "question": "What organ in the human body produces insulin?",
+    "answer": "Pancreas",
+    "options": ["Pancreas", "Liver", "Kidney", "Spleen"]
+  },
+  {
+    "id": "science-008",
+    "question": "What is the most abundant gas in Earth's atmosphere?",
+    "answer": "Nitrogen",
+    "options": ["Nitrogen", "Oxygen", "Carbon dioxide", "Argon"]
+  },
+  {
+    "id": "science-009",
+    "question": "How many chromosomes do humans normally have?",
+    "answer": "46",
+    "options": ["46", "44", "48", "23"]
+  },
+  {
+    "id": "science-010",
+    "question": "What is often called the powerhouse of the cell?",
+    "answer": "Mitochondria",
+    "options": ["Mitochondria", "Nucleus", "Ribosome", "Chloroplast"]
+  },
+  {
+    "id": "science-011",
+    "question": "What is H2O more commonly known as?",
+    "answer": "Water",
+    "options": ["Water", "Hydrogen peroxide", "Saline", "Ammonia"]
+  },
+  {
+    "id": "science-012",
+    "question": "Who discovered penicillin?",
+    "answer": "Alexander Fleming",
+    "options": ["Alexander Fleming", "Louis Pasteur", "Joseph Lister", "Robert Koch"]
+  },
+  {
+    "id": "science-013",
+    "question": "What is the hardest natural substance on Earth?",
+    "answer": "Diamond",
+    "options": ["Diamond", "Quartz", "Corundum", "Topaz"]
+  },
+  {
+    "id": "science-014",
+    "question": "What is the largest organ in the human body?",
+    "answer": "Skin",
+    "options": ["Skin", "Liver", "Brain", "Lungs"]
+  },
+  {
+    "id": "science-015",
+    "question": "What gas makes up most of the Sun?",
+    "answer": "Hydrogen",
+    "options": ["Hydrogen", "Helium", "Oxygen", "Carbon"]
+  },
+  {
+    "id": "science-016",
+    "question": "How many elements are currently on the periodic table?",
+    "answer": "118",
+    "options": ["118", "112", "120", "108"]
+  },
+  {
+    "id": "science-017",
+    "question": "What is the center of an atom called?",
+    "answer": "Nucleus",
+    "options": ["Nucleus", "Electron", "Proton", "Core"]
+  },
+  {
+    "id": "science-018",
+    "question": "What type of blood cells carry oxygen through the body?",
+    "answer": "Red blood cells",
+    "options": ["Red blood cells", "White blood cells", "Platelets", "Plasma cells"],
+    "acceptedAnswers": ["RBC", "erythrocytes"]
+  },
+  {
+    "id": "science-019",
+    "question": "What is the chemical symbol for sodium?",
+    "answer": "Na",
+    "options": ["Na", "So", "Sd", "Nm"]
+  },
+  {
+    "id": "science-020",
+    "question": "What is the closest star to Earth other than the Sun?",
+    "answer": "Proxima Centauri",
+    "options": ["Proxima Centauri", "Sirius", "Alpha Centauri A", "Betelgeuse"]
+  },
+  {
+    "id": "science-021",
+    "question": "Which scientist is known for his three laws of motion?",
+    "answer": "Isaac Newton",
+    "options": ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Johannes Kepler"]
+  },
+  {
+    "id": "science-022",
+    "question": "What process do plants use to convert sunlight into food?",
+    "answer": "Photosynthesis",
+    "options": ["Photosynthesis", "Respiration", "Transpiration", "Osmosis"]
+  },
+  {
+    "id": "science-023",
+    "question": "What planet has the most moons in our solar system?",
+    "answer": "Saturn",
+    "options": ["Saturn", "Jupiter", "Uranus", "Neptune"]
+  },
+  {
+    "id": "science-024",
+    "question": "What is the speed of light approximately equal to?",
+    "answer": "300,000 km/s",
+    "options": ["300,000 km/s", "150,000 km/s", "500,000 km/s", "200,000 km/s"],
+    "acceptedAnswers": ["300000 km/s", "3×10^8 m/s"]
+  },
+  {
+    "id": "science-025",
+    "question": "What is the chemical formula for table salt?",
+    "answer": "NaCl",
+    "options": ["NaCl", "KCl", "CaCl2", "MgCl2"]
+  }
+]
