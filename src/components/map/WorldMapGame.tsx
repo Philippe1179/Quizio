@@ -542,7 +542,9 @@ export default function WorldMapGame() {
             className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-zinc-300 font-bold text-base flex items-center justify-center transition-colors"
             title="Zoom out"
           >−</button>
-          {position.zoom > 1.1 && (
+          {(position.zoom > 1.1 ||
+            Math.abs(position.coordinates[0] - homePosition[0]) > 2 ||
+            Math.abs(position.coordinates[1] - homePosition[1]) > 2) && (
             <button
               onClick={() => setPosition({ coordinates: homePosition, zoom: 1 })}
               className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-zinc-300 text-sm flex items-center justify-center transition-colors"
