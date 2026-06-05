@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Globe2, BookOpen, FlaskConical, Trophy, Clapperboard, Map, Atom } from 'lucide-react';
+import { Globe2, BookOpen, FlaskConical, Trophy, Clapperboard, Map, Atom, Earth } from 'lucide-react';
 import Nav from '@/components/ui/Nav';
 import { categories } from '@/lib/categories';
 import type { LucideIcon } from 'lucide-react';
@@ -43,6 +43,14 @@ export default function Home() {
             <Map className="w-6 h-6 mb-3 text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors" />
             <h3 className="font-semibold mb-1">USA Map</h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Click or type each US state on a blank map</p>
+          </Link>
+          <Link
+            href="/map/world"
+            className="group border border-black/10 dark:border-white/10 rounded-xl p-5 hover:border-black/30 dark:hover:border-white/30 hover:shadow-sm transition-all"
+          >
+            <Earth className="w-6 h-6 mb-3 text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors" />
+            <h3 className="font-semibold mb-1">World Map</h3>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">Find countries on a blank world map</p>
           </Link>
           <Link
             href="/periodic"
