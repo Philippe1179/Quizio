@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
+import Image from 'next/image';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import Link from 'next/link';
 import { shuffleArray } from '@/lib/questions';
@@ -181,6 +182,59 @@ const DISPLAY_NAMES: Record<string, string> = {
 
 function displayName(geo: string) {
   return DISPLAY_NAMES[geo] ?? geo;
+}
+
+// ISO 3166-1 alpha-2 codes keyed by geo name
+const ISO_CODES: Record<string, string> = {
+  // Americas
+  'Canada': 'ca', 'United States of America': 'us', 'Mexico': 'mx',
+  'Cuba': 'cu', 'Haiti': 'ht', 'Jamaica': 'jm', 'Dominican Rep.': 'do',
+  'Guatemala': 'gt', 'Honduras': 'hn', 'Nicaragua': 'ni', 'Costa Rica': 'cr',
+  'Panama': 'pa', 'Colombia': 'co', 'Venezuela': 've', 'Guyana': 'gy',
+  'Suriname': 'sr', 'Ecuador': 'ec', 'Peru': 'pe', 'Brazil': 'br',
+  'Bolivia': 'bo', 'Chile': 'cl', 'Argentina': 'ar', 'Uruguay': 'uy',
+  'Paraguay': 'py',
+  // Europe
+  'Iceland': 'is', 'United Kingdom': 'gb', 'Ireland': 'ie', 'Norway': 'no',
+  'Sweden': 'se', 'Finland': 'fi', 'Denmark': 'dk', 'Netherlands': 'nl',
+  'Belgium': 'be', 'France': 'fr', 'Spain': 'es', 'Portugal': 'pt',
+  'Germany': 'de', 'Switzerland': 'ch', 'Austria': 'at', 'Italy': 'it',
+  'Greece': 'gr', 'Poland': 'pl', 'Czechia': 'cz', 'Slovakia': 'sk',
+  'Hungary': 'hu', 'Romania': 'ro', 'Bulgaria': 'bg', 'Serbia': 'rs',
+  'Croatia': 'hr', 'Bosnia and Herz.': 'ba', 'Albania': 'al',
+  'N. Macedonia': 'mk', 'Slovenia': 'si', 'Ukraine': 'ua', 'Belarus': 'by',
+  'Lithuania': 'lt', 'Latvia': 'lv', 'Estonia': 'ee', 'Russia': 'ru',
+  'Turkey': 'tr', 'Cyprus': 'cy',
+  // Africa
+  'Morocco': 'ma', 'Algeria': 'dz', 'Tunisia': 'tn', 'Libya': 'ly',
+  'Egypt': 'eg', 'Mauritania': 'mr', 'Mali': 'ml', 'Niger': 'ne',
+  'Chad': 'td', 'Sudan': 'sd', 'Ethiopia': 'et', 'Somalia': 'so',
+  'Senegal': 'sn', 'Guinea': 'gn', 'Sierra Leone': 'sl', 'Liberia': 'lr',
+  "Côte d'Ivoire": 'ci', 'Ghana': 'gh', 'Nigeria': 'ng', 'Cameroon': 'cm',
+  'Gabon': 'ga', 'Dem. Rep. Congo': 'cd', 'Congo': 'cg', 'Angola': 'ao',
+  'Zambia': 'zm', 'Zimbabwe': 'zw', 'Mozambique': 'mz', 'Namibia': 'na',
+  'Botswana': 'bw', 'South Africa': 'za', 'Madagascar': 'mg', 'Kenya': 'ke',
+  'Tanzania': 'tz', 'Uganda': 'ug', 'Rwanda': 'rw', 'S. Sudan': 'ss',
+  'Eritrea': 'er',
+  // Asia
+  'Saudi Arabia': 'sa', 'Yemen': 'ye', 'Oman': 'om',
+  'United Arab Emirates': 'ae', 'Qatar': 'qa', 'Kuwait': 'kw', 'Iraq': 'iq',
+  'Iran': 'ir', 'Syria': 'sy', 'Lebanon': 'lb', 'Jordan': 'jo',
+  'Israel': 'il', 'Afghanistan': 'af', 'Pakistan': 'pk', 'India': 'in',
+  'Nepal': 'np', 'Bangladesh': 'bd', 'Myanmar': 'mm', 'Thailand': 'th',
+  'Vietnam': 'vn', 'Cambodia': 'kh', 'Laos': 'la', 'Malaysia': 'my',
+  'Indonesia': 'id', 'Philippines': 'ph', 'China': 'cn', 'Mongolia': 'mn',
+  'Kazakhstan': 'kz', 'Uzbekistan': 'uz', 'Turkmenistan': 'tm',
+  'Kyrgyzstan': 'kg', 'Tajikistan': 'tj', 'Japan': 'jp',
+  'South Korea': 'kr', 'North Korea': 'kp', 'Sri Lanka': 'lk',
+  // Oceania
+  'Australia': 'au', 'New Zealand': 'nz', 'Papua New Guinea': 'pg',
+};
+
+function flagUrl(geo: string) {
+  const code = ISO_CODES[geo];
+  if (!code) return null;
+  return `https://flagcdn.com/w160/${code}.png`;
 }
 
 type ProjectionConfig = { scale: number; center: [number, number] };
@@ -434,9 +488,20 @@ export default function WorldMapGame() {
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/5 px-6 py-4 text-center">
-        <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Find the country</p>
-        <p className="text-2xl font-bold">{displayName(target)}</p>
-        <p className="h-5 mt-2 text-sm font-medium">
+        <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">Find the country</p>
+        <div className="flex items-center justify-center gap-4">
+          {flagUrl(target) && (
+            <Image
+              src={flagUrl(target)!}
+              alt={`Flag of ${displayName(target)}`}
+              width={80}
+              height={54}
+              className="rounded shadow-md object-cover"
+            />
+          )}
+          <p className="text-2xl font-bold">{displayName(target)}</p>
+        </div>
+        <p className="h-5 mt-3 text-sm font-medium">
           {clickResult === 'correct' && <span className="text-green-400">✓ Correct!</span>}
           {clickResult === 'wrong' && <span className="text-red-400">✗ Wrong — highlighted in red</span>}
         </p>

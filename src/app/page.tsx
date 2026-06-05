@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Globe2, BookOpen, FlaskConical, Trophy, Clapperboard, Map, Atom, Earth } from 'lucide-react';
+import { Globe2, BookOpen, FlaskConical, Trophy, Clapperboard, Map, Atom, Earth, Flag } from 'lucide-react';
 import Nav from '@/components/ui/Nav';
 import { categories } from '@/lib/categories';
 import type { LucideIcon } from 'lucide-react';
@@ -57,6 +57,11 @@ export default function Home() {
               <Earth className={iconClass} />
               <h3 className="font-semibold mb-1">World Map</h3>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">Find countries on a blank world map</p>
+            </Link>
+            <Link href="/flags" className={cardClass}>
+              <Flag className={iconClass} />
+              <h3 className="font-semibold mb-1">Flag Quiz</h3>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">Identify countries from their flags</p>
             </Link>
             <Link href="/periodic" className={cardClass}>
               <Atom className={iconClass} />
