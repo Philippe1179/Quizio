@@ -54,6 +54,7 @@ export default function USAMapGame() {
     }
   }, [phase, mode, submitted, index]);
 
+
   const startGame = (selectedMode: Mode) => {
     setMode(selectedMode);
     setQueue(shuffleArray(US_STATES));
@@ -98,6 +99,15 @@ export default function USAMapGame() {
     },
     [clickResult, answered, target, advance]
   );
+
+  useEffect(() => {
+    if (!submitted || mode !== 'name') return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') advance();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [submitted, mode, advance]);
 
   const handleSubmit = useCallback(() => {
     if (submitted || !input.trim()) return;
