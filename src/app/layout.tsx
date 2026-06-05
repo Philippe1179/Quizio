@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +44,7 @@ export default function RootLayout({
               "radial-gradient(ellipse 80% 60% at 15% 0%, rgba(99,102,241,0.13) 0%, transparent 100%), radial-gradient(ellipse 60% 50% at 85% 100%, rgba(139,92,246,0.09) 0%, transparent 100%)",
           }}
         />
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
