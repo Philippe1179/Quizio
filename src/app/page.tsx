@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Globe2, BookOpen, FlaskConical, Trophy, Clapperboard, Map, Atom, Earth, Flag } from 'lucide-react';
+import { Globe2, BookOpen, FlaskConical, Trophy, Clapperboard, Map, Atom, Earth, Flag, Landmark } from 'lucide-react';
 import Nav from '@/components/ui/Nav';
 import { categories } from '@/lib/categories';
 import type { LucideIcon } from 'lucide-react';
@@ -67,6 +67,11 @@ export default function Home() {
               <Atom className={iconClass} />
               <h3 className="font-semibold mb-1">Periodic Table</h3>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">Find all 118 elements on an interactive periodic table</p>
+            </Link>
+            <Link href="/presidents" className={cardClass}>
+              <Landmark className={iconClass} />
+              <h3 className="font-semibold mb-1">US Presidents</h3>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">Portrait quiz or type all 45 presidents from memory</p>
             </Link>
           </div>
         </section>
