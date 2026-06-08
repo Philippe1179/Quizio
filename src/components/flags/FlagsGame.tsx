@@ -41,6 +41,7 @@ export default function FlagsGame() {
   const scoreSaved = useRef(false);
   const [phase, setPhase] = useState<Phase>('start');
   const [isRanked, setIsRanked] = useState(false);
+  const [savedToBoard, setSavedToBoard] = useState(false);
   const [round, setRound] = useState<FlagQuestion[]>(() => buildRound());
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -78,11 +79,14 @@ export default function FlagsGame() {
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
-    }, user.displayName, isRanked).catch(() => {});
+    }, user.displayName, isRanked)
+      .then(() => { if (isRanked) setSavedToBoard(true); })
+      .catch((err) => console.error('saveScore failed:', err));
   }, [phase, user, score, round.length, isRanked]);
 
   function startGame(ranked: boolean) {
     scoreSaved.current = false;
+    setSavedToBoard(false);
     setIsRanked(ranked);
     setRound(buildRound());
     setIndex(0);
@@ -93,6 +97,7 @@ export default function FlagsGame() {
 
   const restart = useCallback(() => {
     scoreSaved.current = false;
+    setSavedToBoard(false);
     setRound(buildRound());
     setIndex(0);
     setSelected(null);
@@ -138,7 +143,7 @@ export default function FlagsGame() {
         <div className="text-7xl font-bold tracking-tight">{pct}%</div>
         <p className="text-xl font-semibold">{score} / {round.length} correct</p>
         <p className="text-zinc-400">{message}</p>
-        {isRanked && (
+        {savedToBoard && (
           <p className="text-sm text-amber-400">⚡ Score submitted to leaderboard</p>
         )}
         <div className="flex gap-3 mt-4 flex-wrap justify-center">

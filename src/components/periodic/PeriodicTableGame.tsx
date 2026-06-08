@@ -93,6 +93,7 @@ export default function PeriodicTableGame() {
   const scoreSaved = useRef(false);
   const [started, setStarted] = useState(false);
   const [isRanked, setIsRanked] = useState(false);
+  const [savedToBoard, setSavedToBoard] = useState(false);
   const [studyOpen, setStudyOpen] = useState(false);
   const [queue, setQueue] = useState<ChemElement[]>(() => shuffleArray(ELEMENTS));
   const [index, setIndex] = useState(0);
@@ -140,11 +141,14 @@ export default function PeriodicTableGame() {
       score,
       total: ELEMENTS.length,
       pct: Math.round((score / ELEMENTS.length) * 100),
-    }, user.displayName, isRanked).catch(() => {});
+    }, user.displayName, isRanked)
+      .then(() => { if (isRanked) setSavedToBoard(true); })
+      .catch((err) => console.error('saveScore failed:', err));
   }, [done, user, score, isRanked]);
 
   const restart = useCallback(() => {
     scoreSaved.current = false;
+    setSavedToBoard(false);
     setQueue(shuffleArray(ELEMENTS));
     setIndex(0);
     setScore(0);
@@ -168,14 +172,14 @@ export default function PeriodicTableGame() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
-            onClick={() => { setIsRanked(false); setStudyOpen(false); setStarted(true); }}
+            onClick={() => { setIsRanked(false); setSavedToBoard(false); setStudyOpen(false); setStarted(true); }}
             className="rounded-xl border border-white/10 bg-white/5 p-6 text-left hover:border-white/25 hover:bg-white/10 transition-all"
           >
             <h3 className="font-semibold text-lg mb-1">Practice</h3>
             <p className="text-sm text-zinc-400">Play freely — scores saved to your profile only</p>
           </button>
           <button
-            onClick={() => { setIsRanked(true); setStudyOpen(false); setStarted(true); }}
+            onClick={() => { setIsRanked(true); setSavedToBoard(false); setStudyOpen(false); setStarted(true); }}
             className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-6 text-left hover:border-amber-400/50 hover:bg-amber-950/40 transition-all"
           >
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 mb-3 inline-block">⚡ Ranked</span>
@@ -215,7 +219,7 @@ export default function PeriodicTableGame() {
           <div className="text-7xl font-bold tracking-tight">{pct}%</div>
           <p className="text-xl font-semibold">{score} / {ELEMENTS.length} correct</p>
           <p className="text-zinc-400">{message}</p>
-          {isRanked && <p className="text-sm text-amber-400">⚡ Score submitted to leaderboard</p>}
+          {savedToBoard && <p className="text-sm text-amber-400">⚡ Score submitted to leaderboard</p>}
         </div>
 
         {missedEls.length > 0 && (

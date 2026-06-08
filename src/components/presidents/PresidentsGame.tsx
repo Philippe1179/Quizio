@@ -38,6 +38,7 @@ export default function PresidentsGame() {
   const scoreSaved = useRef(false);
   const [phase, setPhase] = useState<Phase>('select');
   const [isRanked, setIsRanked] = useState(false);
+  const [savedToBoard, setSavedToBoard] = useState(false);
   const [doneMode, setDoneMode] = useState<'quiz' | 'type'>('quiz');
 
   // Quiz
@@ -73,7 +74,9 @@ export default function PresidentsGame() {
       score: finalScore,
       total,
       pct: Math.round((finalScore / total) * 100),
-    }, user.displayName, isRanked).catch(() => {});
+    }, user.displayName, isRanked)
+      .then(() => { if (isRanked) setSavedToBoard(true); })
+      .catch((err) => console.error('saveScore failed:', err));
   }, [phase, user, doneMode, finalScore, isRanked]);
 
   // Type mode countdown — runs every second; reads current found when time=0 since timeLeft changes each tick
@@ -93,6 +96,7 @@ export default function PresidentsGame() {
 
   function startQuiz() {
     scoreSaved.current = false;
+    setSavedToBoard(false);
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
     setRound(buildQuizRound());
     setQIndex(0);
@@ -104,6 +108,7 @@ export default function PresidentsGame() {
 
   function startType() {
     scoreSaved.current = false;
+    setSavedToBoard(false);
     setFound(new Set());
     setTimeLeft(TYPE_DURATION);
     setInput('');
@@ -204,7 +209,7 @@ export default function PresidentsGame() {
           <div className="text-7xl font-bold tracking-tight">{pct}%</div>
           <p className="text-xl font-semibold mt-2">{finalScore} / {total} correct</p>
           <p className="text-zinc-400 mt-1">{msg}</p>
-          {isRanked && <p className="text-sm text-amber-400 mt-1">⚡ Score submitted to leaderboard</p>}
+          {savedToBoard && <p className="text-sm text-amber-400 mt-1">⚡ Score submitted to leaderboard</p>}
         </div>
         <div className="flex gap-3 justify-center flex-wrap">
           <button

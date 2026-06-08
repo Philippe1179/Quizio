@@ -221,7 +221,7 @@ function Section({
 
 // ── Page ──
 export default function LeaderboardPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [allEntries, setAllEntries] = useState<Map<string, LeaderboardEntry[]>>(new Map());
   const [loadingSet, setLoadingSet] = useState<Set<string>>(
     new Set(ALL_GAMES.map((g) => g.label)),
@@ -229,12 +229,16 @@ export default function LeaderboardPage() {
   const [selected, setSelected] = useState<Game | null>(null);
 
   useEffect(() => {
+    // Wait for Firebase Auth to restore session — Firestore rules require auth for reads.
+    if (authLoading) return;
     ALL_GAMES.forEach((game) => {
       getLeaderboard(game.label)
         .then((entries) => {
           setAllEntries((prev) => new Map(prev).set(game.label, entries));
         })
-        .catch(() => {})
+        .catch((err) => {
+          console.error(`Leaderboard query failed for "${game.label}":`, err);
+        })
         .finally(() => {
           setLoadingSet((prev) => {
             const next = new Set(prev);
@@ -243,7 +247,7 @@ export default function LeaderboardPage() {
           });
         });
     });
-  }, []);
+  }, [authLoading]);
 
   return (
     <div className="min-h-screen">
