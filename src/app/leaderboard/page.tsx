@@ -6,23 +6,19 @@ import { useAuth } from '@/context/AuthContext';
 import { getLeaderboard, type LeaderboardEntry } from '@/lib/db';
 
 const GAMES = [
-  { label: 'World Map — Type Mode',              description: '197 countries from memory' },
-  { label: 'World Map — All Countries',           description: '163 countries on the map' },
-  { label: 'Periodic Table',                      description: '118 elements' },
-  { label: 'Presidents — Type All',               description: '45 presidents from memory' },
-  { label: 'USA Map — Find the State',            description: '50 states' },
-  { label: 'USA Map — Name the State',            description: '50 states' },
-  { label: 'Presidents — Portrait Quiz',          description: '10 rounds' },
-  { label: 'Flag Quiz',                           description: '10 flags' },
-  { label: 'Countries & Geography — Multiple Choice', description: '10 questions' },
-  { label: 'Countries & Geography — Timed',       description: '10 questions, timed' },
-  { label: 'Countries & Geography — Type the Answer', description: '10 questions' },
-  { label: 'History — Multiple Choice',           description: '10 questions' },
-  { label: 'History — Timed',                     description: '10 questions, timed' },
-  { label: 'Science — Multiple Choice',           description: '10 questions' },
-  { label: 'Science — Timed',                     description: '10 questions, timed' },
-  { label: 'Sports — Multiple Choice',            description: '10 questions' },
-  { label: 'Pop Culture — Multiple Choice',       description: '10 questions' },
+  { label: 'World Map — Type Mode',         description: '197 countries from memory' },
+  { label: 'World Map — All Countries',     description: '163 countries on the map' },
+  { label: 'Periodic Table',               description: '118 elements' },
+  { label: 'Presidents — Type All',        description: '45 presidents from memory' },
+  { label: 'USA Map — Find the State',     description: '50 states' },
+  { label: 'USA Map — Name the State',     description: '50 states' },
+  { label: 'Presidents — Portrait Quiz',   description: '10 rounds' },
+  { label: 'Flag Quiz',                    description: '10 flags' },
+  { label: 'Countries & Geography — Timed', description: '10 questions, timed' },
+  { label: 'History — Timed',             description: '10 questions, timed' },
+  { label: 'Science — Timed',             description: '10 questions, timed' },
+  { label: 'Sports — Timed',              description: '10 questions, timed' },
+  { label: 'Pop Culture — Timed',         description: '10 questions, timed' },
 ];
 
 function medal(rank: number) {

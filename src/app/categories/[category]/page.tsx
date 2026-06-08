@@ -32,7 +32,7 @@ export default async function CategoryPage({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {gameModes.map(({ id, label, description, path }) => {
             const Icon = gameModeIcons[id];
-            const rankable = id !== 'flashcard';
+            const rankable = id === 'timed';
             return (
               <div
                 key={id}
