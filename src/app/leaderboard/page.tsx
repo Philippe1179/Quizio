@@ -6,13 +6,12 @@ import Nav from '@/components/ui/Nav';
 import { useAuth } from '@/context/AuthContext';
 import {
   getDailyLeaderboard, getStreak, getHallOfFame, getAllTimeLeaderboard,
-  getFriends, addFriendByUsername, removeFriend, getFriendDailyScores, getDailyScore,
+  getFriends, getFriendDailyScores,
   type DailyLeaderboardEntry, type StreakInfo, type HallOfFameEntry,
   type AllTimeEntry, type FriendEntry,
 } from '@/lib/db';
 
 type Tab = 'today' | 'all-time' | 'friends';
-type AddStatus = 'idle' | 'loading' | 'success' | 'not_found' | 'self' | 'already' | 'error';
 
 function medal(rank: number) {
   if (rank === 1) return '🥇';
@@ -90,8 +89,6 @@ export default function LeaderboardPage() {
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [friendScores, setFriendScores] = useState<DailyLeaderboardEntry[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
-  const [friendSearch, setFriendSearch] = useState('');
-  const [addStatus, setAddStatus] = useState<AddStatus>('idle');
 
   useEffect(() => {
     if (authLoading) return;
@@ -124,42 +121,6 @@ export default function LeaderboardPage() {
       setFriendsLoading(false);
     }
   }, [authLoading, user, today]);
-
-  async function handleAddFriend() {
-    if (!user || !friendSearch.trim() || addStatus === 'loading') return;
-    setAddStatus('loading');
-    try {
-      await addFriendByUsername(user.uid, friendSearch.trim());
-      const updated = await getFriends(user.uid);
-      setFriends(updated);
-      const allUids = [user.uid, ...updated.map((f) => f.uid)];
-      setFriendScores(await getFriendDailyScores(today, allUids));
-      setFriendSearch('');
-      setAddStatus('success');
-      setTimeout(() => setAddStatus('idle'), 2500);
-    } catch (err) {
-      const msg = (err instanceof Error ? err.message : 'error') as AddStatus;
-      setAddStatus(msg);
-      setTimeout(() => setAddStatus('idle'), 3000);
-    }
-  }
-
-  async function handleRemoveFriend(friendUid: string) {
-    if (!user) return;
-    await removeFriend(user.uid, friendUid);
-    const updated = friends.filter((f) => f.uid !== friendUid);
-    setFriends(updated);
-    const allUids = [user.uid, ...updated.map((f) => f.uid)];
-    setFriendScores(await getFriendDailyScores(today, allUids));
-  }
-
-  const addStatusMsg: Record<Exclude<AddStatus, 'idle' | 'loading'>, string> = {
-    success: 'Friend added!',
-    not_found: 'No user found with that username.',
-    self: "That's you!",
-    already: 'Already in your friends list.',
-    error: 'Something went wrong. Try again.',
-  };
 
   return (
     <div className="min-h-screen">
@@ -347,69 +308,43 @@ export default function LeaderboardPage() {
           <>
             {!user ? (
               <div className="rounded-xl border border-white/10 p-12 text-center flex flex-col gap-3">
-                <p className="text-zinc-400 font-medium">Sign in to add friends</p>
+                <p className="text-zinc-400 font-medium">Sign in to see friends&apos; scores</p>
                 <p className="text-sm text-zinc-500">Track how you rank against the people you know.</p>
               </div>
             ) : (
               <>
-                {/* Add friend */}
-                <section className="flex flex-col gap-3">
-                  <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Add a Friend</h2>
-                  <div className="flex gap-2">
-                    <input
-                      value={friendSearch}
-                      onChange={(e) => setFriendSearch(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddFriend()}
-                      placeholder="Enter username..."
-                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
-                    />
-                    <button
-                      onClick={handleAddFriend}
-                      disabled={addStatus === 'loading' || !friendSearch.trim()}
-                      className="px-5 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {addStatus === 'loading' ? 'Adding…' : 'Add'}
-                    </button>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-zinc-500">
+                    {friends.length === 0 ? 'No friends yet.' : `${friends.length} friend${friends.length === 1 ? '' : 's'}`}
+                  </p>
+                  <Link
+                    href="/friends"
+                    className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
+                    Manage friends →
+                  </Link>
+                </div>
+
+                {friendsLoading ? (
+                  <div className="flex flex-col gap-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-16 rounded-xl border border-white/10 animate-pulse bg-white/5" />
+                    ))}
                   </div>
-                  {addStatus !== 'idle' && addStatus !== 'loading' && (
-                    <p className={`text-sm ${addStatus === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                      {addStatusMsg[addStatus]}
-                    </p>
-                  )}
-                </section>
-
-                {/* Friends list */}
-                <section className="flex flex-col gap-3">
-                  <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
-                    Your Friends {friends.length > 0 && `(${friends.length})`}
-                  </h2>
-                  {friends.length === 0 ? (
-                    <p className="text-sm text-zinc-500">No friends yet. Add someone by their username above.</p>
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      {friends.map((f) => (
-                        <div
-                          key={f.uid}
-                          className="flex items-center gap-3 rounded-xl border border-white/10 px-5 py-3"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 flex-shrink-0">
-                            {(f.username ?? '?').charAt(0).toUpperCase()}
-                          </div>
-                          <span className="flex-1 text-sm font-medium">{f.username ?? 'Unknown'}</span>
-                          <button
-                            onClick={() => handleRemoveFriend(f.uid)}
-                            className="text-xs text-zinc-600 hover:text-red-400 transition-colors"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </section>
-
-                {/* Friends' today scores */}
-                {friendScores.length > 0 && (
+                ) : friendScores.length === 0 ? (
+                  <div className="rounded-xl border border-white/10 p-10 text-center flex flex-col gap-2">
+                    {friends.length === 0 ? (
+                      <>
+                        <p className="text-zinc-500 text-sm">Add friends to see how you stack up.</p>
+                        <Link href="/friends" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
+                          Find friends →
+                        </Link>
+                      </>
+                    ) : (
+                      <p className="text-zinc-500 text-sm">None of your friends have played today yet.</p>
+                    )}
+                  </div>
+                ) : (
                   <section className="flex flex-col gap-4">
                     <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Today&apos;s Scores</h2>
                     <div className="flex flex-col gap-2">
@@ -418,10 +353,6 @@ export default function LeaderboardPage() {
                       ))}
                     </div>
                   </section>
-                )}
-
-                {friends.length > 0 && friendScores.length === 0 && !friendsLoading && (
-                  <p className="text-sm text-zinc-500">None of your friends have played today yet.</p>
                 )}
               </>
             )}

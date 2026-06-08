@@ -268,24 +268,112 @@ export async function getFriends(uid: string): Promise<FriendEntry[]> {
   }));
 }
 
-export async function addFriendByUsername(myUid: string, targetUsername: string): Promise<void> {
+export interface IncomingRequest {
+  fromUid: string;
+  fromUsername: string | null;
+  createdAt: Date;
+}
+
+export interface OutgoingRequest {
+  toUid: string;
+  toUsername: string | null;
+  createdAt: Date;
+}
+
+export async function getIncomingRequests(uid: string): Promise<IncomingRequest[]> {
+  const snap = await getDocs(collection(db, 'users', uid, 'incomingRequests'));
+  return snap.docs.map((d) => ({
+    fromUid: d.id,
+    fromUsername: (d.data().fromUsername as string | undefined) ?? null,
+    createdAt: d.data().createdAt?.toDate() ?? new Date(),
+  }));
+}
+
+export async function getOutgoingRequests(uid: string): Promise<OutgoingRequest[]> {
+  const snap = await getDocs(collection(db, 'users', uid, 'outgoingRequests'));
+  return snap.docs.map((d) => ({
+    toUid: d.id,
+    toUsername: (d.data().toUsername as string | undefined) ?? null,
+    createdAt: d.data().createdAt?.toDate() ?? new Date(),
+  }));
+}
+
+export async function sendFriendRequest(myUid: string, targetUsername: string): Promise<void> {
   const key = targetUsername.toLowerCase();
   const usernameSnap = await getDoc(doc(db, 'usernames', key));
   if (!usernameSnap.exists()) throw new Error('not_found');
   const targetUid = usernameSnap.data().uid as string;
   if (targetUid === myUid) throw new Error('self');
-  const existingSnap = await getDoc(doc(db, 'users', myUid, 'friends', targetUid));
-  if (existingSnap.exists()) throw new Error('already');
-  const userSnap = await getDoc(doc(db, 'users', targetUid));
-  const theirUsername = (userSnap.data()?.username as string | undefined) ?? targetUsername;
-  await setDoc(doc(db, 'users', myUid, 'friends', targetUid), {
-    username: theirUsername,
-    addedAt: serverTimestamp(),
-  });
+
+  const [alreadyFriend, alreadyOutgoing, theyRequestedMe, mySnap, targetSnap] = await Promise.all([
+    getDoc(doc(db, 'users', myUid, 'friends', targetUid)),
+    getDoc(doc(db, 'users', myUid, 'outgoingRequests', targetUid)),
+    getDoc(doc(db, 'users', myUid, 'incomingRequests', targetUid)),
+    getDoc(doc(db, 'users', myUid)),
+    getDoc(doc(db, 'users', targetUid)),
+  ]);
+
+  if (alreadyFriend.exists()) throw new Error('already_friends');
+  if (alreadyOutgoing.exists()) throw new Error('already_requested');
+
+  const myUsername = (mySnap.data()?.username as string | undefined) ?? null;
+  const theirUsername = (targetSnap.data()?.username as string | undefined) ?? targetUsername;
+
+  // If they already sent us a request, auto-accept
+  if (theyRequestedMe.exists()) {
+    await acceptFriendRequest(myUid, targetUid);
+    return;
+  }
+
+  await Promise.all([
+    setDoc(doc(db, 'users', myUid, 'outgoingRequests', targetUid), {
+      toUid: targetUid,
+      toUsername: theirUsername,
+      createdAt: serverTimestamp(),
+    }),
+    setDoc(doc(db, 'users', targetUid, 'incomingRequests', myUid), {
+      fromUid: myUid,
+      fromUsername: myUsername,
+      createdAt: serverTimestamp(),
+    }),
+  ]);
+}
+
+export async function acceptFriendRequest(myUid: string, fromUid: string): Promise<void> {
+  const [mySnap, incomingSnap] = await Promise.all([
+    getDoc(doc(db, 'users', myUid)),
+    getDoc(doc(db, 'users', myUid, 'incomingRequests', fromUid)),
+  ]);
+  const myUsername = (mySnap.data()?.username as string | undefined) ?? null;
+  const fromUsername = (incomingSnap.data()?.fromUsername as string | undefined) ?? null;
+
+  await Promise.all([
+    setDoc(doc(db, 'users', myUid, 'friends', fromUid), { username: fromUsername, addedAt: serverTimestamp() }),
+    setDoc(doc(db, 'users', fromUid, 'friends', myUid), { username: myUsername, addedAt: serverTimestamp() }),
+    deleteDoc(doc(db, 'users', myUid, 'incomingRequests', fromUid)),
+    deleteDoc(doc(db, 'users', fromUid, 'outgoingRequests', myUid)),
+  ]);
+}
+
+export async function declineFriendRequest(myUid: string, fromUid: string): Promise<void> {
+  await Promise.all([
+    deleteDoc(doc(db, 'users', myUid, 'incomingRequests', fromUid)),
+    deleteDoc(doc(db, 'users', fromUid, 'outgoingRequests', myUid)),
+  ]);
+}
+
+export async function cancelFriendRequest(myUid: string, toUid: string): Promise<void> {
+  await Promise.all([
+    deleteDoc(doc(db, 'users', myUid, 'outgoingRequests', toUid)),
+    deleteDoc(doc(db, 'users', toUid, 'incomingRequests', myUid)),
+  ]);
 }
 
 export async function removeFriend(myUid: string, friendUid: string): Promise<void> {
-  await deleteDoc(doc(db, 'users', myUid, 'friends', friendUid));
+  await Promise.all([
+    deleteDoc(doc(db, 'users', myUid, 'friends', friendUid)),
+    deleteDoc(doc(db, 'users', friendUid, 'friends', myUid)),
+  ]);
 }
 
 export async function getFriendDailyScores(
