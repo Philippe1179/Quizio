@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 import Link from 'next/link';
 import { shuffleArray } from '@/lib/questions';
+import { useAuth } from '@/context/AuthContext';
+import { saveScore } from '@/lib/db';
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 
@@ -449,6 +451,8 @@ export default function WorldMapGame() {
   const [timeLeft, setTimeLeft] = useState(TYPE_DURATION);
   const [notification, setNotification] = useState<string | null>(null);
   const notifTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { user } = useAuth();
+  const scoreSaved = useRef(false);
 
   const typeFoundGeos = useMemo(() => {
     const s = new Set<string>();
@@ -473,7 +477,24 @@ export default function WorldMapGame() {
   }, [filter]);
   const target = queue[index] ?? '';
 
+  useEffect(() => {
+    if (phase !== 'done' || !user || scoreSaved.current) return;
+    scoreSaved.current = true;
+    const isType = mode === 'type';
+    const total = isType ? TYPE_TOTAL : queue.length;
+    const correct = isType ? typeFound.size : score;
+    saveScore(user.uid, {
+      game: 'world-map',
+      category: null,
+      label: isType ? 'World Map — Type Mode' : `World Map — ${filterLabel(filter)}`,
+      score: correct,
+      total,
+      pct: Math.round((correct / total) * 100),
+    }).catch(() => {});
+  }, [phase, user, mode, score, queue.length, typeFound.size, filter]);
+
   const startGame = useCallback((f: Filter) => {
+    scoreSaved.current = false;
     const q = filterToQueue(f);
     setMode('click');
     setFilter(f);
@@ -492,6 +513,7 @@ export default function WorldMapGame() {
   }, []);
 
   const startTypeMode = useCallback(() => {
+    scoreSaved.current = false;
     setMode('type');
     setTypeInput('');
     setTypeFound(new Set());

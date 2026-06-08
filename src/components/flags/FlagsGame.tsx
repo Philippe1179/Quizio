@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FLAG_COUNTRIES, flagUrl, type FlagCountry } from '@/data/flags';
 import { shuffleArray } from '@/lib/questions';
+import { useAuth } from '@/context/AuthContext';
+import { saveScore } from '@/lib/db';
 
 const QUESTIONS_PER_ROUND = 10;
 
@@ -33,6 +35,8 @@ function buildRound(): FlagQuestion[] {
 }
 
 export default function FlagsGame() {
+  const { user } = useAuth();
+  const scoreSaved = useRef(false);
   const [round, setRound] = useState<FlagQuestion[]>(() => buildRound());
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -61,7 +65,21 @@ export default function FlagsGame() {
     [answered, current, advance],
   );
 
+  useEffect(() => {
+    if (!done || !user || scoreSaved.current) return;
+    scoreSaved.current = true;
+    saveScore(user.uid, {
+      game: 'flags',
+      category: null,
+      label: 'Flag Quiz',
+      score,
+      total: round.length,
+      pct: Math.round((score / round.length) * 100),
+    }).catch(() => {});
+  }, [done, user, score, round.length]);
+
   const restart = useCallback(() => {
+    scoreSaved.current = false;
     setRound(buildRound());
     setIndex(0);
     setSelected(null);

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { UserRound, Keyboard } from 'lucide-react';
 import { PRESIDENTS, PRESIDENT_LOOKUP, type President } from '@/data/presidents';
 import { shuffleArray } from '@/lib/questions';
+import { useAuth } from '@/context/AuthContext';
+import { saveScore } from '@/lib/db';
 
 const QUIZ_ROUNDS = 10;
 const TYPE_DURATION = 600;
@@ -32,6 +34,8 @@ function formatTime(s: number): string {
 type Phase = 'select' | 'quiz' | 'type' | 'done';
 
 export default function PresidentsGame() {
+  const { user } = useAuth();
+  const scoreSaved = useRef(false);
   const [phase, setPhase] = useState<Phase>('select');
   const [doneMode, setDoneMode] = useState<'quiz' | 'type'>('quiz');
 
@@ -57,6 +61,20 @@ export default function PresidentsGame() {
     return () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); };
   }, []);
 
+  useEffect(() => {
+    if (phase !== 'done' || !user || scoreSaved.current) return;
+    scoreSaved.current = true;
+    const total = doneMode === 'quiz' ? QUIZ_ROUNDS : PRESIDENTS.length;
+    saveScore(user.uid, {
+      game: 'presidents',
+      category: null,
+      label: doneMode === 'quiz' ? 'Presidents — Portrait Quiz' : 'Presidents — Type All',
+      score: finalScore,
+      total,
+      pct: Math.round((finalScore / total) * 100),
+    }).catch(() => {});
+  }, [phase, user, doneMode, finalScore]);
+
   // Type mode countdown — runs every second; reads current found when time=0 since timeLeft changes each tick
   useEffect(() => {
     if (phase !== 'type') return;
@@ -73,6 +91,7 @@ export default function PresidentsGame() {
   }, [phase, timeLeft]);
 
   function startQuiz() {
+    scoreSaved.current = false;
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
     setRound(buildQuizRound());
     setQIndex(0);
@@ -83,6 +102,7 @@ export default function PresidentsGame() {
   }
 
   function startType() {
+    scoreSaved.current = false;
     setFound(new Set());
     setTimeLeft(TYPE_DURATION);
     setInput('');

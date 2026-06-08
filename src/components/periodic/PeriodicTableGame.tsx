@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { ELEMENTS, CATEGORY_COLORS, CATEGORY_LABELS, type ChemElement, type ElementCategory } from '@/data/elements';
 import { shuffleArray } from '@/lib/questions';
+import { useAuth } from '@/context/AuthContext';
+import { saveScore } from '@/lib/db';
 
 const CELL_SIZE = 46;
 const GAP = 2;
@@ -35,6 +37,8 @@ function getCellBorder(
 }
 
 export default function PeriodicTableGame() {
+  const { user } = useAuth();
+  const scoreSaved = useRef(false);
   const [queue, setQueue] = useState<ChemElement[]>(() => shuffleArray(ELEMENTS));
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -71,7 +75,21 @@ export default function PeriodicTableGame() {
     [clickResult, found, missed, target, advance],
   );
 
+  useEffect(() => {
+    if (!done || !user || scoreSaved.current) return;
+    scoreSaved.current = true;
+    saveScore(user.uid, {
+      game: 'periodic',
+      category: null,
+      label: 'Periodic Table',
+      score,
+      total: ELEMENTS.length,
+      pct: Math.round((score / ELEMENTS.length) * 100),
+    }).catch(() => {});
+  }, [done, user, score]);
+
   const restart = useCallback(() => {
+    scoreSaved.current = false;
     setQueue(shuffleArray(ELEMENTS));
     setIndex(0);
     setScore(0);

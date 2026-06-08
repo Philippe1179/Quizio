@@ -4,6 +4,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import Link from 'next/link';
 import { shuffleArray } from '@/lib/questions';
+import { useAuth } from '@/context/AuthContext';
+import { saveScore } from '@/lib/db';
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
 
@@ -46,6 +48,8 @@ export default function USAMapGame() {
   const [missed, setMissed] = useState<Set<string>>(new Set());
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
+  const scoreSaved = useRef(false);
   const target = queue[index] ?? '';
 
   useEffect(() => {
@@ -55,7 +59,21 @@ export default function USAMapGame() {
   }, [phase, mode, submitted, index]);
 
 
+  useEffect(() => {
+    if (phase !== 'done' || !user || scoreSaved.current) return;
+    scoreSaved.current = true;
+    saveScore(user.uid, {
+      game: 'usa-map',
+      category: null,
+      label: mode === 'click' ? 'USA Map — Find the State' : 'USA Map — Name the State',
+      score,
+      total: queue.length,
+      pct: Math.round((score / queue.length) * 100),
+    }).catch(() => {});
+  }, [phase, user, mode, score, queue.length]);
+
   const startGame = (selectedMode: Mode) => {
+    scoreSaved.current = false;
     setMode(selectedMode);
     setQueue(shuffleArray(US_STATES));
     setIndex(0);

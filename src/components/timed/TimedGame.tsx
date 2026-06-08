@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import type { Question } from '@/lib/questions';
 import { shuffleArray } from '@/lib/questions';
+import { useAuth } from '@/context/AuthContext';
+import { saveScore } from '@/lib/db';
+import { categories } from '@/lib/categories';
 
 type GameQuestion = Question & { shuffledOptions: string[] };
 
@@ -23,6 +26,8 @@ export default function TimedGame({
   questions: Question[];
   category: string;
 }) {
+  const { user } = useAuth();
+  const scoreSaved = useRef(false);
   const [round, setRound] = useState<GameQuestion[]>(() => prepareRound(questions));
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -67,7 +72,22 @@ export default function TimedGame({
     [answered, current, advance]
   );
 
+  useEffect(() => {
+    if (!done || !user || scoreSaved.current) return;
+    scoreSaved.current = true;
+    const categoryLabel = categories.find((c) => c.id === category)?.label ?? category;
+    saveScore(user.uid, {
+      game: 'timed',
+      category,
+      label: `${categoryLabel} — Timed`,
+      score,
+      total: round.length,
+      pct: Math.round((score / round.length) * 100),
+    }).catch(() => {});
+  }, [done, user, score, round.length, category]);
+
   const restart = useCallback(() => {
+    scoreSaved.current = false;
     setRound(prepareRound(questions));
     setIndex(0);
     setSelected(null);

@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import type { Question } from '@/lib/questions';
 import { shuffleArray } from '@/lib/questions';
+import { useAuth } from '@/context/AuthContext';
+import { saveScore } from '@/lib/db';
 
 type GameQuestion = Question & { shuffledOptions: string[] };
 
@@ -42,6 +44,9 @@ export default function QuizGame({
   category: string;
   categoryLabel: string;
 }) {
+  const { user } = useAuth();
+  const scoreSaved = useRef(false);
+
   const [round, setRound] = useState<GameQuestion[]>(() => {
     const saved = loadProgress(category, questions);
     return saved?.round ?? prepareRound(questions);
@@ -53,6 +58,19 @@ export default function QuizGame({
   const [resumed] = useState(() => (loadProgress(category, questions)?.index ?? 0) > 0);
 
   const current = round[index];
+
+  useEffect(() => {
+    if (!done || !user || scoreSaved.current) return;
+    scoreSaved.current = true;
+    saveScore(user.uid, {
+      game: 'quiz',
+      category,
+      label: `${categoryLabel} — Multiple Choice`,
+      score,
+      total: round.length,
+      pct: Math.round((score / round.length) * 100),
+    }).catch(() => {});
+  }, [done, user, score, round.length, category, categoryLabel]);
 
   useEffect(() => {
     if (done) {
@@ -87,6 +105,7 @@ export default function QuizGame({
   );
 
   const restart = useCallback(() => {
+    scoreSaved.current = false;
     localStorage.removeItem(STORAGE_KEY(category));
     setRound(prepareRound(questions));
     setIndex(0);

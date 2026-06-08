@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { ensureUserDoc } from '@/lib/db';
 
 interface AuthContextValue {
   user: User | null;
@@ -20,6 +21,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
+      if (u) {
+        ensureUserDoc(u.uid, u.displayName, u.email).catch(() => {});
+      }
     });
     return unsub;
   }, []);

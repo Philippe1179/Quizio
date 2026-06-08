@@ -4,6 +4,9 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import type { Question } from '@/lib/questions';
 import { shuffleArray, isCorrectAnswer } from '@/lib/questions';
+import { useAuth } from '@/context/AuthContext';
+import { saveScore } from '@/lib/db';
+import { categories } from '@/lib/categories';
 
 const QUESTIONS_PER_ROUND = 10;
 const STORAGE_KEY = (category: string) => `quizio-type-${category}`;
@@ -58,12 +61,28 @@ export default function TypeGame({
   const [done, setDone] = useState(false);
   const [resumed] = useState(() => (loadProgress(category, questions)?.index ?? 0) > 0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
+  const scoreSaved = useRef(false);
 
   const current = deck[index];
 
   useEffect(() => {
     if (!submitted) inputRef.current?.focus();
   }, [index, submitted]);
+
+  useEffect(() => {
+    if (!done || !user || scoreSaved.current) return;
+    scoreSaved.current = true;
+    const categoryLabel = categories.find((c) => c.id === category)?.label ?? category;
+    saveScore(user.uid, {
+      game: 'type',
+      category,
+      label: `${categoryLabel} — Type the Answer`,
+      score,
+      total: deck.length,
+      pct: Math.round((score / deck.length) * 100),
+    }).catch(() => {});
+  }, [done, user, score, deck.length, category]);
 
   useEffect(() => {
     if (done) {
@@ -112,6 +131,7 @@ export default function TypeGame({
   );
 
   const restart = useCallback(() => {
+    scoreSaved.current = false;
     localStorage.removeItem(STORAGE_KEY(category));
     setDeck(shuffleArray(questions).slice(0, QUESTIONS_PER_ROUND));
     setIndex(0);

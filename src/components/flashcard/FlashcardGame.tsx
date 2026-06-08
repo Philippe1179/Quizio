@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import type { Question } from '@/lib/questions';
 import { shuffleArray } from '@/lib/questions';
+import { useAuth } from '@/context/AuthContext';
+import { saveScore } from '@/lib/db';
+import { categories } from '@/lib/categories';
 
 type ProgressState = {
   deck: Question[];
@@ -59,12 +62,28 @@ export default function FlashcardGame({
     const saved = loadProgress(category, questions);
     return saved ?? { deck: shuffleArray(questions), index: 0, known: [], unknown: [] };
   });
+  const { user } = useAuth();
+  const scoreSaved = useRef(false);
   const [flipped, setFlipped] = useState(false);
   const [done, setDone] = useState(false);
 
   const { deck, index, known, unknown } = progress;
   const current = deck[index];
   const resumed = known.length + unknown.length > 0;
+
+  useEffect(() => {
+    if (!done || !user || scoreSaved.current) return;
+    scoreSaved.current = true;
+    const categoryLabel = categories.find((c) => c.id === category)?.label ?? category;
+    saveScore(user.uid, {
+      game: 'flashcard',
+      category,
+      label: `${categoryLabel} — Flashcard`,
+      score: known.length,
+      total: deck.length,
+      pct: Math.round((known.length / deck.length) * 100),
+    }).catch(() => {});
+  }, [done, user, known.length, deck.length, category]);
 
   useEffect(() => {
     if (!done) saveProgress(category, progress);
@@ -89,6 +108,7 @@ export default function FlashcardGame({
 
   const restart = useCallback(
     (reviewOnly: boolean) => {
+      scoreSaved.current = false;
       const pool = reviewOnly ? questions.filter((q) => unknown.includes(q.id)) : questions;
       clearProgress(category);
       setProgress({ deck: shuffleArray(pool), index: 0, known: [], unknown: [] });
