@@ -28,8 +28,9 @@ export default function UsernameModal() {
     setSaving(true);
     try {
       await setUsername(trimmed);
-    } catch {
-      setError('Failed to save. Please try again.');
+    } catch (err) {
+      const taken = err instanceof Error && err.message === 'taken';
+      setError(taken ? 'That username is already taken — try another.' : 'Failed to save. Please try again.');
       setSaving(false);
     }
   }

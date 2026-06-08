@@ -1,7 +1,7 @@
 import { db } from './firebase';
 import {
   collection, doc, getDoc, setDoc, addDoc, getDocs,
-  query, orderBy, limit, where, serverTimestamp,
+  query, orderBy, limit, where, serverTimestamp, runTransaction,
 } from 'firebase/firestore';
 
 export async function ensureUserDoc(
@@ -30,8 +30,17 @@ export async function getUsername(uid: string): Promise<string | null> {
   return (snap.data()?.username as string | undefined) ?? null;
 }
 
-export async function updateUsername(uid: string, username: string): Promise<void> {
-  await setDoc(doc(db, 'users', uid), { username }, { merge: true });
+// Atomically claims a username. Throws Error('taken') if already in use.
+export async function claimUsername(uid: string, username: string): Promise<void> {
+  const key = username.toLowerCase();
+  const usernameRef = doc(db, 'usernames', key);
+  const userRef = doc(db, 'users', uid);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(usernameRef);
+    if (snap.exists()) throw new Error('taken');
+    tx.set(usernameRef, { uid });
+    tx.set(userRef, { username }, { merge: true });
+  });
 }
 
 export async function saveScore(

@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { ensureUserDoc, getUsername, updateUsername } from '@/lib/db';
+import { ensureUserDoc, getUsername, claimUsername } from '@/lib/db';
 
 interface AuthContextValue {
   user: User | null;
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function saveUsername(name: string) {
     if (!user) return;
-    await updateUsername(user.uid, name);
+    await claimUsername(user.uid, name); // throws Error('taken') if unavailable
     setUsernameState(name);
   }
 
