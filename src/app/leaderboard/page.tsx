@@ -115,7 +115,9 @@ export default function LeaderboardPage() {
                         {entry.username ?? 'Anonymous'}
                         {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
                       </p>
-                      <p className="text-xs text-zinc-500 mt-0.5">{entry.score} / {entry.total} correct</p>
+                      <p className="text-xs text-zinc-500 mt-0.5">
+                        {entry.score} / {entry.total} correct · {entry.completedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                      </p>
                     </div>
                     <span className={`text-2xl font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>
                       {entry.pct}%

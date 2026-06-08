@@ -139,10 +139,15 @@ function ResultsView({
                     }`}
                   >
                     <span className="w-6 text-sm font-bold text-zinc-400 flex-shrink-0">{medal(i + 1)}</span>
-                    <span className={`flex-1 text-sm truncate ${isYou ? 'text-indigo-400 font-medium' : 'text-zinc-300'}`}>
-                      {entry.username ?? 'Anonymous'}
-                      {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm truncate ${isYou ? 'text-indigo-400 font-medium' : 'text-zinc-300'}`}>
+                        {entry.username ?? 'Anonymous'}
+                        {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
+                      </p>
+                      <p className="text-xs text-zinc-500 mt-0.5">
+                        {entry.completedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                      </p>
+                    </div>
                     <span className={`text-lg font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>
                       {entry.pct}%
                     </span>
