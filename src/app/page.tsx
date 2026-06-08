@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Globe2, BookOpen, FlaskConical, Trophy, Clapperboard, Map, Atom, Earth, Flag, Landmark } from 'lucide-react';
+import { Globe2, BookOpen, FlaskConical, Trophy, Clapperboard, Map, Atom, Earth, Flag, Landmark, Calendar } from 'lucide-react';
 import Nav from '@/components/ui/Nav';
 import { categories } from '@/lib/categories';
 import { useAuth } from '@/context/AuthContext';
@@ -41,6 +41,7 @@ function BestBadge({ pct }: { pct: number | undefined }) {
 export default function Home() {
   const { user } = useAuth();
   const [bests, setBests] = useState<Record<string, number>>({});
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   useEffect(() => {
     if (!user) { setBests({}); return; }
@@ -70,6 +71,40 @@ export default function Home() {
               </span>
             ))}
           </div>
+        </section>
+
+        {/* Daily Challenge */}
+        <section>
+          <Link
+            href="/daily"
+            className="block rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 p-8 hover:from-indigo-500 hover:to-violet-600 transition-all duration-200 shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30 group"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-indigo-300" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-indigo-300">Daily Challenge</span>
+                </div>
+                <div>
+                  <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight leading-tight">
+                    Today&apos;s Quiz
+                  </h2>
+                  <p className="text-indigo-200 mt-2 max-w-sm text-sm sm:text-base">
+                    15 questions. Same for everyone. One shot to top the leaderboard.
+                  </p>
+                </div>
+              </div>
+              <span className="hidden sm:block text-sm font-medium text-indigo-200 bg-white/10 px-4 py-2 rounded-full shrink-0 self-start whitespace-nowrap">
+                {today}
+              </span>
+            </div>
+            <div className="mt-6 flex items-center gap-3">
+              <span className="px-6 py-2.5 rounded-xl bg-white text-indigo-700 font-bold text-sm group-hover:bg-indigo-50 transition-colors">
+                Play Now →
+              </span>
+              <span className="text-sm text-indigo-200">Free · Resets daily</span>
+            </div>
+          </Link>
         </section>
 
         {/* Quiz categories */}
