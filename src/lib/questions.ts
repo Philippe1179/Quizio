@@ -24,6 +24,10 @@ export function getQuestions(category: string): Question[] {
   return questionMap[category] ?? [];
 }
 
+export function getAllQuestions(): Question[] {
+  return Object.values(questionMap).flat();
+}
+
 export function shuffleArray<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }

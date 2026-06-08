@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, LogOut, Sun, Moon, User, Trophy } from 'lucide-react';
+import { ArrowLeft, LogOut, Sun, Moon, User, Trophy, Calendar } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { signOut } from '@/lib/auth';
@@ -48,6 +48,19 @@ export default function Nav({ backHref }: { backHref?: string }) {
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
+            <Link
+              href="/daily"
+              className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors px-2 hidden sm:block"
+            >
+              Daily
+            </Link>
+            <Link
+              href="/daily"
+              className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors p-1 sm:hidden"
+              aria-label="Daily Challenge"
+            >
+              <Calendar className="w-5 h-5" />
+            </Link>
             <Link
               href="/leaderboard"
               className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors px-2 hidden sm:block"

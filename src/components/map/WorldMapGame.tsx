@@ -453,8 +453,6 @@ export default function WorldMapGame() {
   const notifTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, username } = useAuth();
   const scoreSaved = useRef(false);
-  const [isRanked, setIsRanked] = useState(false);
-
   const typeFoundGeos = useMemo(() => {
     const s = new Set<string>();
     for (const dn of typeFound) {
@@ -491,8 +489,8 @@ export default function WorldMapGame() {
       score: correct,
       total,
       pct: Math.round((correct / total) * 100),
-    }, username, isRanked).catch(() => {});
-  }, [phase, user, mode, score, queue.length, typeFound.size, filter, isRanked]);
+    }, username).catch(() => {});
+  }, [phase, user, mode, score, queue.length, typeFound.size, filter]);
 
   const startGame = useCallback((f: Filter) => {
     scoreSaved.current = false;
@@ -589,21 +587,6 @@ export default function WorldMapGame() {
           <div>
             <h2 className="text-2xl font-bold tracking-tight">World Map</h2>
             <p className="text-sm text-zinc-500 mt-1">Find {ALL_COUNTRIES.length} countries on the map</p>
-          </div>
-
-          <div className="flex rounded-lg border border-white/10 overflow-hidden self-start text-sm">
-            <button
-              onClick={() => setIsRanked(false)}
-              className={`px-4 py-2 font-medium transition-colors ${!isRanked ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-            >
-              Practice
-            </button>
-            <button
-              onClick={() => setIsRanked(true)}
-              className={`px-4 py-2 font-medium transition-colors ${isRanked ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}
-            >
-              ⚡ Ranked
-            </button>
           </div>
 
           {/* Type Mode */}

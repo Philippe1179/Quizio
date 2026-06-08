@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Nav from '@/components/ui/Nav';
 import { useAuth } from '@/context/AuthContext';
-import { getUserScores, type ScoreRecord } from '@/lib/db';
+import { getUserScores, getStreak, type ScoreRecord, type StreakInfo } from '@/lib/db';
 
 function formatDate(date: Date): string {
   const now = new Date();
@@ -31,6 +32,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [scores, setScores] = useState<ScoreRecord[]>([]);
   const [fetching, setFetching] = useState(true);
+  const [streak, setStreak] = useState<StreakInfo | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -38,6 +40,7 @@ export default function ProfilePage() {
     getUserScores(user.uid)
       .then(setScores)
       .finally(() => setFetching(false));
+    getStreak(user.uid).then(setStreak).catch(() => {});
   }, [user, loading, router]);
 
   const initials = (username ?? user?.displayName)?.[0]?.toUpperCase()
@@ -76,6 +79,24 @@ export default function ProfilePage() {
             <p className="text-zinc-500 text-sm">{user?.email}</p>
           </div>
         </section>
+
+        {/* Streak */}
+        {streak && (streak.currentStreak > 0 || streak.longestStreak > 0) && (
+          <section className="flex gap-4">
+            <div className="flex-1 rounded-xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
+              <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Daily streak</p>
+              <p className="text-3xl font-bold text-amber-400">{streak.currentStreak} <span className="text-lg font-medium">days</span></p>
+              <p className="text-xs text-zinc-500 mt-1">Longest: {streak.longestStreak} days</p>
+            </div>
+            <Link
+              href="/daily"
+              className="flex-1 rounded-xl border border-white/10 px-5 py-4 hover:border-white/30 transition-colors flex flex-col justify-center"
+            >
+              <p className="font-semibold text-sm">Today&apos;s Challenge</p>
+              <p className="text-xs text-zinc-500 mt-1">Play to keep your streak →</p>
+            </Link>
+          </section>
+        )}
 
         {/* Stats */}
         {scores.length > 0 && (

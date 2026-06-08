@@ -37,8 +37,6 @@ export default function PresidentsGame() {
   const { user, username } = useAuth();
   const scoreSaved = useRef(false);
   const [phase, setPhase] = useState<Phase>('select');
-  const [isRanked, setIsRanked] = useState(false);
-  const [savedToBoard, setSavedToBoard] = useState(false);
   const [doneMode, setDoneMode] = useState<'quiz' | 'type'>('quiz');
 
   // Quiz
@@ -74,10 +72,8 @@ export default function PresidentsGame() {
       score: finalScore,
       total,
       pct: Math.round((finalScore / total) * 100),
-    }, username, isRanked)
-      .then(() => { if (isRanked) setSavedToBoard(true); })
-      .catch((err) => console.error('saveScore failed:', err));
-  }, [phase, user, doneMode, finalScore, isRanked]);
+    }, username).catch(() => {});
+  }, [phase, user, doneMode, finalScore]);
 
   // Type mode countdown — runs every second; reads current found when time=0 since timeLeft changes each tick
   useEffect(() => {
@@ -96,7 +92,6 @@ export default function PresidentsGame() {
 
   function startQuiz() {
     scoreSaved.current = false;
-    setSavedToBoard(false);
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
     setRound(buildQuizRound());
     setQIndex(0);
@@ -108,7 +103,6 @@ export default function PresidentsGame() {
 
   function startType() {
     scoreSaved.current = false;
-    setSavedToBoard(false);
     setFound(new Set());
     setTimeLeft(TYPE_DURATION);
     setInput('');
@@ -162,20 +156,6 @@ export default function PresidentsGame() {
           <h2 className="text-2xl font-bold tracking-tight">US Presidents</h2>
           <p className="text-sm text-zinc-500 mt-1">45 unique individuals — Washington to Biden</p>
         </div>
-        <div className="flex rounded-lg border border-white/10 overflow-hidden self-start text-sm">
-          <button
-            onClick={() => setIsRanked(false)}
-            className={`px-4 py-2 font-medium transition-colors ${!isRanked ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-          >
-            Practice
-          </button>
-          <button
-            onClick={() => setIsRanked(true)}
-            className={`px-4 py-2 font-medium transition-colors ${isRanked ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}
-          >
-            ⚡ Ranked
-          </button>
-        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
             onClick={startQuiz}
@@ -209,7 +189,6 @@ export default function PresidentsGame() {
           <div className="text-7xl font-bold tracking-tight">{pct}%</div>
           <p className="text-xl font-semibold mt-2">{finalScore} / {total} correct</p>
           <p className="text-zinc-400 mt-1">{msg}</p>
-          {savedToBoard && <p className="text-sm text-amber-400 mt-1">⚡ Score submitted to leaderboard</p>}
         </div>
         <div className="flex gap-3 justify-center flex-wrap">
           <button

@@ -6,7 +6,6 @@ import type { Question } from '@/lib/questions';
 import { shuffleArray } from '@/lib/questions';
 import { useAuth } from '@/context/AuthContext';
 import { saveScore } from '@/lib/db';
-import RankedBadge from '@/components/ui/RankedBadge';
 
 type GameQuestion = Question & { shuffledOptions: string[] };
 
@@ -40,12 +39,10 @@ export default function QuizGame({
   questions,
   category,
   categoryLabel,
-  isRanked = false,
 }: {
   questions: Question[];
   category: string;
   categoryLabel: string;
-  isRanked?: boolean;
 }) {
   const { user, username } = useAuth();
   const scoreSaved = useRef(false);
@@ -72,8 +69,8 @@ export default function QuizGame({
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
-    }, username, isRanked).catch(() => {});
-  }, [done, user, score, round.length, category, categoryLabel, isRanked]);
+    }, username).catch(() => {});
+  }, [done, user, score, round.length, category, categoryLabel]);
 
   useEffect(() => {
     if (done) {
@@ -153,7 +150,6 @@ export default function QuizGame({
               resumed
             </span>
           )}
-          {isRanked && <RankedBadge />}
         </div>
         <span>{score} correct</span>
       </div>

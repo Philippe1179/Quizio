@@ -7,7 +7,6 @@ import { shuffleArray, isCorrectAnswer } from '@/lib/questions';
 import { useAuth } from '@/context/AuthContext';
 import { saveScore } from '@/lib/db';
 import { categories } from '@/lib/categories';
-import RankedBadge from '@/components/ui/RankedBadge';
 
 const QUESTIONS_PER_ROUND = 10;
 const STORAGE_KEY = (category: string) => `quizio-type-${category}`;
@@ -45,11 +44,9 @@ function loadProgress(category: string, questions: Question[]): { deck: Question
 export default function TypeGame({
   questions,
   category,
-  isRanked = false,
 }: {
   questions: Question[];
   category: string;
-  isRanked?: boolean;
 }) {
   const [deck, setDeck] = useState<Question[]>(() => {
     const saved = loadProgress(category, questions);
@@ -84,8 +81,8 @@ export default function TypeGame({
       score,
       total: deck.length,
       pct: Math.round((score / deck.length) * 100),
-    }, username, isRanked).catch(() => {});
-  }, [done, user, score, deck.length, category, isRanked]);
+    }, username).catch(() => {});
+  }, [done, user, score, deck.length, category]);
 
   useEffect(() => {
     if (done) {
@@ -206,7 +203,6 @@ export default function TypeGame({
               resumed
             </span>
           )}
-          {isRanked && <RankedBadge />}
         </div>
         <span>{score} correct</span>
       </div>

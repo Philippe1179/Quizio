@@ -50,7 +50,6 @@ export default function USAMapGame() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { user, username } = useAuth();
   const scoreSaved = useRef(false);
-  const [isRanked, setIsRanked] = useState(false);
   const target = queue[index] ?? '';
 
   useEffect(() => {
@@ -70,8 +69,8 @@ export default function USAMapGame() {
       score,
       total: queue.length,
       pct: Math.round((score / queue.length) * 100),
-    }, username, isRanked).catch(() => {});
-  }, [phase, user, mode, score, queue.length, isRanked]);
+    }, username).catch(() => {});
+  }, [phase, user, mode, score, queue.length]);
 
   const startGame = (selectedMode: Mode) => {
     scoreSaved.current = false;
@@ -163,20 +162,6 @@ export default function USAMapGame() {
   if (phase === 'select') {
     return (
       <div className="flex flex-col gap-6">
-        <div className="flex rounded-lg border border-white/10 overflow-hidden self-start text-sm">
-          <button
-            onClick={() => setIsRanked(false)}
-            className={`px-4 py-2 font-medium transition-colors ${!isRanked ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-          >
-            Practice
-          </button>
-          <button
-            onClick={() => setIsRanked(true)}
-            className={`px-4 py-2 font-medium transition-colors ${isRanked ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}
-          >
-            ⚡ Ranked
-          </button>
-        </div>
         <p className="text-zinc-400">Choose how you want to play:</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button

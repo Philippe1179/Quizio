@@ -1,7 +1,7 @@
 import { db } from './firebase';
 import {
   collection, doc, getDoc, setDoc, addDoc, getDocs,
-  query, orderBy, limit, where, serverTimestamp, runTransaction,
+  query, orderBy, limit, serverTimestamp, runTransaction,
 } from 'firebase/firestore';
 
 export async function ensureUserDoc(
@@ -30,7 +30,6 @@ export async function getUsername(uid: string): Promise<string | null> {
   return (snap.data()?.username as string | undefined) ?? null;
 }
 
-// Atomically claims a username. Throws Error('taken') if already in use.
 export async function claimUsername(uid: string, username: string): Promise<void> {
   const key = username.toLowerCase();
   const usernameRef = doc(db, 'usernames', key);
@@ -46,21 +45,12 @@ export async function claimUsername(uid: string, username: string): Promise<void
 export async function saveScore(
   uid: string,
   payload: ScorePayload,
-  username?: string | null,
-  isRanked = false,
+  _username?: string | null,
 ): Promise<void> {
   await addDoc(collection(db, 'users', uid, 'scores'), {
     ...payload,
     createdAt: serverTimestamp(),
   });
-  if (isRanked) {
-    await addDoc(collection(db, 'globalScores'), {
-      ...payload,
-      userId: uid,
-      displayName: username ?? null,
-      createdAt: serverTimestamp(),
-    });
-  }
 }
 
 export interface ScoreRecord extends ScorePayload {
@@ -82,7 +72,6 @@ export async function getUserScores(uid: string, limitCount = 30): Promise<Score
   }));
 }
 
-// Returns best pct per key: category id for category games, game id for special games
 export async function getUserBests(uid: string): Promise<Record<string, number>> {
   const snap = await getDocs(collection(db, 'users', uid, 'scores'));
   const bests: Record<string, number> = {};
@@ -94,40 +83,122 @@ export async function getUserBests(uid: string): Promise<Record<string, number>>
   return bests;
 }
 
-export interface LeaderboardEntry {
-  id: string;
+// ── Daily challenge ────────────────────────────────────────────────────────────
+
+export interface DailyLeaderboardEntry {
   userId: string;
-  displayName: string | null;
-  pct: number;
+  username: string | null;
   score: number;
   total: number;
-  createdAt: Date;
+  pct: number;
+  completedAt: Date;
 }
 
-export async function getLeaderboard(label: string): Promise<LeaderboardEntry[]> {
+export interface StreakInfo {
+  currentStreak: number;
+  longestStreak: number;
+  lastDailyDate: string | null;
+}
+
+export async function getDailyScore(
+  uid: string,
+  dateStr: string,
+): Promise<DailyLeaderboardEntry | null> {
+  const ref = doc(db, 'dailyScores', dateStr, 'entries', uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  const d = snap.data();
+  return {
+    userId: d.userId as string,
+    username: d.username as string | null,
+    score: d.score as number,
+    total: d.total as number,
+    pct: d.pct as number,
+    completedAt: d.completedAt?.toDate() ?? new Date(),
+  };
+}
+
+export async function saveDailyScore(
+  uid: string,
+  dateStr: string,
+  payload: { score: number; total: number; pct: number },
+  username?: string | null,
+): Promise<void> {
+  const entryRef = doc(db, 'dailyScores', dateStr, 'entries', uid);
+  await setDoc(entryRef, {
+    userId: uid,
+    username: username ?? null,
+    ...payload,
+    completedAt: serverTimestamp(),
+  });
+  await addDoc(collection(db, 'users', uid, 'scores'), {
+    game: 'daily',
+    category: null,
+    label: `Daily Challenge — ${dateStr}`,
+    ...payload,
+    createdAt: serverTimestamp(),
+  });
+}
+
+export async function getDailyLeaderboard(
+  dateStr: string,
+): Promise<DailyLeaderboardEntry[]> {
   const q = query(
-    collection(db, 'globalScores'),
-    where('label', '==', label),
-    limit(200),
+    collection(db, 'dailyScores', dateStr, 'entries'),
+    orderBy('pct', 'desc'),
+    orderBy('completedAt', 'asc'),
+    limit(50),
   );
   const snap = await getDocs(q);
-  const entries: LeaderboardEntry[] = snap.docs.map((d) => ({
-    id: d.id,
+  return snap.docs.map((d) => ({
     userId: d.data().userId as string,
-    displayName: d.data().displayName as string | null,
-    pct: d.data().pct as number,
+    username: d.data().username as string | null,
     score: d.data().score as number,
     total: d.data().total as number,
-    createdAt: d.data().createdAt?.toDate() ?? new Date(),
+    pct: d.data().pct as number,
+    completedAt: d.data().completedAt?.toDate() ?? new Date(),
   }));
-  const bestByUser = new Map<string, LeaderboardEntry>();
-  for (const entry of entries) {
-    const existing = bestByUser.get(entry.userId);
-    if (!existing || entry.pct > existing.pct) {
-      bestByUser.set(entry.userId, entry);
-    }
+}
+
+// ── Streaks ────────────────────────────────────────────────────────────────────
+
+function yesterdayUTC(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+export async function getStreak(uid: string): Promise<StreakInfo> {
+  const snap = await getDoc(doc(db, 'users', uid));
+  const data = snap.data() ?? {};
+  return {
+    currentStreak: (data.currentStreak as number) || 0,
+    longestStreak: (data.longestStreak as number) || 0,
+    lastDailyDate: (data.lastDailyDate as string | undefined) ?? null,
+  };
+}
+
+export async function updateStreak(uid: string, dateStr: string): Promise<StreakInfo> {
+  const userRef = doc(db, 'users', uid);
+  const snap = await getDoc(userRef);
+  const data = snap.data() ?? {};
+
+  const lastDate = data.lastDailyDate as string | undefined;
+  const currentStreak = (data.currentStreak as number) || 0;
+  const longestStreak = (data.longestStreak as number) || 0;
+
+  if (lastDate === dateStr) {
+    return { currentStreak, longestStreak, lastDailyDate: lastDate };
   }
-  return [...bestByUser.values()]
-    .sort((a, b) => b.pct - a.pct || a.createdAt.getTime() - b.createdAt.getTime())
-    .slice(0, 10);
+
+  const newStreak = lastDate === yesterdayUTC(dateStr) ? currentStreak + 1 : 1;
+  const newLongest = Math.max(longestStreak, newStreak);
+
+  await setDoc(userRef, {
+    currentStreak: newStreak,
+    longestStreak: newLongest,
+    lastDailyDate: dateStr,
+  }, { merge: true });
+
+  return { currentStreak: newStreak, longestStreak: newLongest, lastDailyDate: dateStr };
 }

@@ -7,7 +7,6 @@ import { shuffleArray } from '@/lib/questions';
 import { useAuth } from '@/context/AuthContext';
 import { saveScore } from '@/lib/db';
 import { categories } from '@/lib/categories';
-import RankedBadge from '@/components/ui/RankedBadge';
 
 type GameQuestion = Question & { shuffledOptions: string[] };
 
@@ -23,11 +22,9 @@ function prepareRound(questions: Question[]): GameQuestion[] {
 export default function TimedGame({
   questions,
   category,
-  isRanked = false,
 }: {
   questions: Question[];
   category: string;
-  isRanked?: boolean;
 }) {
   const { user, username } = useAuth();
   const scoreSaved = useRef(false);
@@ -38,8 +35,6 @@ export default function TimedGame({
   const [timeLeft, setTimeLeft] = useState(SECONDS_PER_QUESTION);
   const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
-  const [savedToBoard, setSavedToBoard] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   const current = round[index];
   const answered = selected !== null || timedOut;
@@ -74,7 +69,7 @@ export default function TimedGame({
       if (correct) setScore((s) => s + 1);
       setTimeout(advance, 1200);
     },
-    [answered, current, advance]
+    [answered, current, advance],
   );
 
   useEffect(() => {
@@ -88,15 +83,11 @@ export default function TimedGame({
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
-    }, username, isRanked)
-      .then(() => { if (isRanked) setSavedToBoard(true); })
-      .catch((err) => { if (isRanked) setSaveError(err?.message ?? 'Unknown error'); });
-  }, [done, user, score, round.length, category, isRanked]);
+    }, username).catch(() => {});
+  }, [done, user, score, round.length, category, username]);
 
   const restart = useCallback(() => {
     scoreSaved.current = false;
-    setSavedToBoard(false);
-    setSaveError(null);
     setRound(prepareRound(questions));
     setIndex(0);
     setSelected(null);
@@ -120,8 +111,6 @@ export default function TimedGame({
         <div className="text-7xl font-bold tracking-tight">{pct}%</div>
         <p className="text-xl font-semibold">{score} / {round.length} correct</p>
         <p className="text-zinc-400">{message}</p>
-        {savedToBoard && <p className="text-sm text-indigo-400">Score submitted to leaderboard</p>}
-        {saveError && <p className="text-sm text-red-400">Failed to submit score: {saveError}</p>}
         <div className="flex gap-3 mt-6">
           <button
             onClick={restart}
@@ -143,10 +132,7 @@ export default function TimedGame({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between text-sm text-zinc-400">
-        <div className="flex items-center gap-2">
-          <span>Question {index + 1} of {round.length}</span>
-          {isRanked && <RankedBadge />}
-        </div>
+        <span>Question {index + 1} of {round.length}</span>
         <div className="flex items-center gap-3">
           <span>{score} correct</span>
           <span className={`tabular-nums transition-colors ${timerTextColor}`}>
@@ -155,7 +141,6 @@ export default function TimedGame({
         </div>
       </div>
 
-      {/* Question progress */}
       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
         <div
           className="h-full bg-indigo-500 rounded-full transition-all duration-500"
@@ -163,7 +148,6 @@ export default function TimedGame({
         />
       </div>
 
-      {/* Timer bar */}
       <div className="h-2 rounded-full bg-white/10 overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-1000 ease-linear ${timerColor}`}
@@ -171,9 +155,8 @@ export default function TimedGame({
         />
       </div>
 
-      {/* Fixed-height feedback row so question doesn't shift */}
       <p className="h-5 text-center text-sm font-medium">
-        {timedOut && <span className="text-amber-400">⏱ Time's up!</span>}
+        {timedOut && <span className="text-amber-400">⏱ Time&apos;s up!</span>}
       </p>
 
       <p className="text-xl font-semibold leading-snug">{current.question}</p>
