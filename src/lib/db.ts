@@ -143,21 +143,17 @@ export async function saveDailyScore(
 export async function getDailyLeaderboard(
   dateStr: string,
 ): Promise<DailyLeaderboardEntry[]> {
-  const q = query(
-    collection(db, 'dailyScores', dateStr, 'entries'),
-    orderBy('pct', 'desc'),
-    orderBy('completedAt', 'asc'),
-    limit(50),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({
-    userId: d.data().userId as string,
-    username: d.data().username as string | null,
-    score: d.data().score as number,
-    total: d.data().total as number,
-    pct: d.data().pct as number,
-    completedAt: d.data().completedAt?.toDate() ?? new Date(),
-  }));
+  const snap = await getDocs(collection(db, 'dailyScores', dateStr, 'entries'));
+  return snap.docs
+    .map((d) => ({
+      userId: d.data().userId as string,
+      username: d.data().username as string | null,
+      score: d.data().score as number,
+      total: d.data().total as number,
+      pct: d.data().pct as number,
+      completedAt: d.data().completedAt?.toDate() ?? new Date(),
+    }))
+    .sort((a, b) => b.pct - a.pct || a.completedAt.getTime() - b.completedAt.getTime());
 }
 
 // ── Streaks ────────────────────────────────────────────────────────────────────
