@@ -1,7 +1,7 @@
 import { db } from './firebase';
 import {
-  collection, doc, getDoc, setDoc, addDoc, getDocs,
-  query, orderBy, limit, serverTimestamp, runTransaction,
+  collection, doc, getDoc, setDoc, addDoc, getDocs, deleteDoc,
+  query, orderBy, limit, serverTimestamp, runTransaction, increment,
 } from 'firebase/firestore';
 
 export async function ensureUserDoc(
@@ -140,6 +140,7 @@ export async function saveDailyScore(
     ...payload,
     createdAt: serverTimestamp(),
   });
+  await setDoc(doc(db, 'users', uid), { totalCorrect: increment(payload.score) }, { merge: true });
 }
 
 export async function getDailyLeaderboard(
@@ -226,4 +227,74 @@ export async function updateStreak(uid: string, dateStr: string): Promise<Streak
   }, { merge: true });
 
   return { currentStreak: newStreak, longestStreak: newLongest, lastDailyDate: dateStr };
+}
+
+// ── All-time leaderboard ───────────────────────────────────────────────────────
+
+export interface AllTimeEntry {
+  userId: string;
+  username: string | null;
+  totalCorrect: number;
+}
+
+export async function getAllTimeLeaderboard(limitCount = 20): Promise<AllTimeEntry[]> {
+  const q = query(
+    collection(db, 'users'),
+    orderBy('totalCorrect', 'desc'),
+    limit(limitCount),
+  );
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => ({
+      userId: d.id,
+      username: (d.data().username as string | undefined) ?? null,
+      totalCorrect: (d.data().totalCorrect as number) || 0,
+    }))
+    .filter((e) => e.totalCorrect > 0);
+}
+
+// ── Friends ────────────────────────────────────────────────────────────────────
+
+export interface FriendEntry {
+  uid: string;
+  username: string | null;
+}
+
+export async function getFriends(uid: string): Promise<FriendEntry[]> {
+  const snap = await getDocs(collection(db, 'users', uid, 'friends'));
+  return snap.docs.map((d) => ({
+    uid: d.id,
+    username: (d.data().username as string | undefined) ?? null,
+  }));
+}
+
+export async function addFriendByUsername(myUid: string, targetUsername: string): Promise<void> {
+  const key = targetUsername.toLowerCase();
+  const usernameSnap = await getDoc(doc(db, 'usernames', key));
+  if (!usernameSnap.exists()) throw new Error('not_found');
+  const targetUid = usernameSnap.data().uid as string;
+  if (targetUid === myUid) throw new Error('self');
+  const existingSnap = await getDoc(doc(db, 'users', myUid, 'friends', targetUid));
+  if (existingSnap.exists()) throw new Error('already');
+  const userSnap = await getDoc(doc(db, 'users', targetUid));
+  const theirUsername = (userSnap.data()?.username as string | undefined) ?? targetUsername;
+  await setDoc(doc(db, 'users', myUid, 'friends', targetUid), {
+    username: theirUsername,
+    addedAt: serverTimestamp(),
+  });
+}
+
+export async function removeFriend(myUid: string, friendUid: string): Promise<void> {
+  await deleteDoc(doc(db, 'users', myUid, 'friends', friendUid));
+}
+
+export async function getFriendDailyScores(
+  dateStr: string,
+  uids: string[],
+): Promise<DailyLeaderboardEntry[]> {
+  if (uids.length === 0) return [];
+  const results = await Promise.all(uids.map((uid) => getDailyScore(uid, dateStr)));
+  return results
+    .filter((e): e is DailyLeaderboardEntry => e !== null)
+    .sort((a, b) => b.pct - a.pct || (a.timeTaken ?? Infinity) - (b.timeTaken ?? Infinity));
 }
