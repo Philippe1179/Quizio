@@ -6,10 +6,14 @@ import TypeGame from '@/components/type/TypeGame';
 
 export default async function TypeAnswerPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ category: string }>;
+  searchParams: Promise<{ ranked?: string }>;
 }) {
   const { category } = await params;
+  const { ranked } = await searchParams;
+  const isRanked = ranked === 'true';
   const cat = getCategoryById(category);
   if (!cat) notFound();
 
@@ -24,7 +28,7 @@ export default async function TypeAnswerPage({
           <span className="text-sm text-zinc-500 font-medium">{cat.label}</span>
           <h2 className="text-2xl font-bold tracking-tight mt-1">Type the Answer</h2>
         </div>
-        <TypeGame questions={questions} category={category} />
+        <TypeGame questions={questions} category={category} isRanked={isRanked} />
       </main>
     </div>
   );

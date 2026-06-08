@@ -6,10 +6,14 @@ import QuizGame from '@/components/quiz/QuizGame';
 
 export default async function QuizPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ category: string }>;
+  searchParams: Promise<{ ranked?: string }>;
 }) {
   const { category } = await params;
+  const { ranked } = await searchParams;
+  const isRanked = ranked === 'true';
   const cat = getCategoryById(category);
   if (!cat) notFound();
 
@@ -24,7 +28,7 @@ export default async function QuizPage({
           <span className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">{cat.label}</span>
           <h2 className="text-2xl font-bold tracking-tight mt-1">Multiple Choice</h2>
         </div>
-        <QuizGame questions={questions} category={category} categoryLabel={cat.label} />
+        <QuizGame questions={questions} category={category} categoryLabel={cat.label} isRanked={isRanked} />
       </main>
     </div>
   );

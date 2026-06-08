@@ -39,6 +39,8 @@ function getCellBorder(
 export default function PeriodicTableGame() {
   const { user } = useAuth();
   const scoreSaved = useRef(false);
+  const [started, setStarted] = useState(false);
+  const [isRanked, setIsRanked] = useState(false);
   const [queue, setQueue] = useState<ChemElement[]>(() => shuffleArray(ELEMENTS));
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -85,8 +87,8 @@ export default function PeriodicTableGame() {
       score,
       total: ELEMENTS.length,
       pct: Math.round((score / ELEMENTS.length) * 100),
-    }, user.displayName).catch(() => {});
-  }, [done, user, score]);
+    }, user.displayName, isRanked).catch(() => {});
+  }, [done, user, score, isRanked]);
 
   const restart = useCallback(() => {
     scoreSaved.current = false;
@@ -97,7 +99,37 @@ export default function PeriodicTableGame() {
     setMissed(new Set());
     setClickResult(null);
     setDone(false);
+    setStarted(false);
   }, []);
+
+  // Start screen
+  if (!started) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Periodic Table</h2>
+          <p className="text-sm text-zinc-500 mt-1">Find all 118 elements on the interactive table</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button
+            onClick={() => { setIsRanked(false); setStarted(true); }}
+            className="rounded-xl border border-white/10 bg-white/5 p-6 text-left hover:border-white/25 hover:bg-white/10 transition-all"
+          >
+            <h3 className="font-semibold text-lg mb-1">Practice</h3>
+            <p className="text-sm text-zinc-400">Play freely — scores saved to your profile only</p>
+          </button>
+          <button
+            onClick={() => { setIsRanked(true); setStarted(true); }}
+            className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-6 text-left hover:border-amber-400/50 hover:bg-amber-950/40 transition-all"
+          >
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 mb-3 inline-block">⚡ Ranked</span>
+            <h3 className="font-semibold text-lg mb-1">Ranked</h3>
+            <p className="text-sm text-zinc-400">Score goes to the global leaderboard</p>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (done) {
     const pct = Math.round((score / ELEMENTS.length) * 100);
@@ -109,6 +141,9 @@ export default function PeriodicTableGame() {
           <div className="text-7xl font-bold tracking-tight">{pct}%</div>
           <p className="text-xl font-semibold">{score} / {ELEMENTS.length} correct</p>
           <p className="text-zinc-400">{message}</p>
+          {isRanked && (
+            <p className="text-sm text-amber-400">⚡ Score submitted to leaderboard</p>
+          )}
         </div>
         {missedEls.length > 0 && (
           <div className="rounded-xl border border-white/10 bg-white/5 p-4">
@@ -147,7 +182,14 @@ export default function PeriodicTableGame() {
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between text-sm text-zinc-400">
-        <span>{index + 1} / {queue.length}</span>
+        <div className="flex items-center gap-2">
+          <span>{index + 1} / {queue.length}</span>
+          {isRanked && (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              ⚡ Ranked
+            </span>
+          )}
+        </div>
         <span>{score} correct</span>
       </div>
       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">

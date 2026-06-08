@@ -7,6 +7,7 @@ import { shuffleArray } from '@/lib/questions';
 import { useAuth } from '@/context/AuthContext';
 import { saveScore } from '@/lib/db';
 import { categories } from '@/lib/categories';
+import RankedBadge from '@/components/ui/RankedBadge';
 
 type GameQuestion = Question & { shuffledOptions: string[] };
 
@@ -22,9 +23,11 @@ function prepareRound(questions: Question[]): GameQuestion[] {
 export default function TimedGame({
   questions,
   category,
+  isRanked = false,
 }: {
   questions: Question[];
   category: string;
+  isRanked?: boolean;
 }) {
   const { user } = useAuth();
   const scoreSaved = useRef(false);
@@ -83,8 +86,8 @@ export default function TimedGame({
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
-    }, user.displayName).catch(() => {});
-  }, [done, user, score, round.length, category]);
+    }, user.displayName, isRanked).catch(() => {});
+  }, [done, user, score, round.length, category, isRanked]);
 
   const restart = useCallback(() => {
     scoreSaved.current = false;
@@ -132,7 +135,10 @@ export default function TimedGame({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between text-sm text-zinc-400">
-        <span>Question {index + 1} of {round.length}</span>
+        <div className="flex items-center gap-2">
+          <span>Question {index + 1} of {round.length}</span>
+          {isRanked && <RankedBadge />}
+        </div>
         <div className="flex items-center gap-3">
           <span>{score} correct</span>
           <span className={`tabular-nums transition-colors ${timerTextColor}`}>

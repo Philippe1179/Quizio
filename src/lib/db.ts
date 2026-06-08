@@ -29,17 +29,20 @@ export async function saveScore(
   uid: string,
   payload: ScorePayload,
   displayName?: string | null,
+  isRanked = false,
 ): Promise<void> {
   await addDoc(collection(db, 'users', uid, 'scores'), {
     ...payload,
     createdAt: serverTimestamp(),
   });
-  await addDoc(collection(db, 'globalScores'), {
-    ...payload,
-    userId: uid,
-    displayName: displayName ?? null,
-    createdAt: serverTimestamp(),
-  });
+  if (isRanked) {
+    await addDoc(collection(db, 'globalScores'), {
+      ...payload,
+      userId: uid,
+      displayName: displayName ?? null,
+      createdAt: serverTimestamp(),
+    });
+  }
 }
 
 export interface ScoreRecord extends ScorePayload {
@@ -99,7 +102,14 @@ export async function getLeaderboard(label: string): Promise<LeaderboardEntry[]>
     total: d.data().total as number,
     createdAt: d.data().createdAt?.toDate() ?? new Date(),
   }));
-  return entries
+  const bestByUser = new Map<string, LeaderboardEntry>();
+  for (const entry of entries) {
+    const existing = bestByUser.get(entry.userId);
+    if (!existing || entry.pct > existing.pct) {
+      bestByUser.set(entry.userId, entry);
+    }
+  }
+  return [...bestByUser.values()]
     .sort((a, b) => b.pct - a.pct || a.createdAt.getTime() - b.createdAt.getTime())
     .slice(0, 10);
 }
