@@ -37,7 +37,7 @@ function buildRound(): FlagQuestion[] {
 type Phase = 'start' | 'game' | 'done';
 
 export default function FlagsGame() {
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const scoreSaved = useRef(false);
   const [phase, setPhase] = useState<Phase>('start');
   const [isRanked, setIsRanked] = useState(false);
@@ -80,7 +80,7 @@ export default function FlagsGame() {
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
-    }, user.displayName, isRanked)
+    }, username, isRanked)
       .then(() => { if (isRanked) setSavedToBoard(true); })
       .catch((err) => {
         console.error('saveScore failed:', err);

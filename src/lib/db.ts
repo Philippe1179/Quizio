@@ -25,10 +25,19 @@ export interface ScorePayload {
   pct: number;
 }
 
+export async function getUsername(uid: string): Promise<string | null> {
+  const snap = await getDoc(doc(db, 'users', uid));
+  return (snap.data()?.username as string | undefined) ?? null;
+}
+
+export async function updateUsername(uid: string, username: string): Promise<void> {
+  await setDoc(doc(db, 'users', uid), { username }, { merge: true });
+}
+
 export async function saveScore(
   uid: string,
   payload: ScorePayload,
-  displayName?: string | null,
+  username?: string | null,
   isRanked = false,
 ): Promise<void> {
   await addDoc(collection(db, 'users', uid, 'scores'), {
@@ -39,7 +48,7 @@ export async function saveScore(
     await addDoc(collection(db, 'globalScores'), {
       ...payload,
       userId: uid,
-      displayName: displayName ?? null,
+      displayName: username ?? null,
       createdAt: serverTimestamp(),
     });
   }

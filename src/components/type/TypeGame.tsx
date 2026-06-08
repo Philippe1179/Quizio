@@ -64,7 +64,7 @@ export default function TypeGame({
   const [done, setDone] = useState(false);
   const [resumed] = useState(() => (loadProgress(category, questions)?.index ?? 0) > 0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const scoreSaved = useRef(false);
 
   const current = deck[index];
@@ -84,7 +84,7 @@ export default function TypeGame({
       score,
       total: deck.length,
       pct: Math.round((score / deck.length) * 100),
-    }, user.displayName, isRanked).catch(() => {});
+    }, username, isRanked).catch(() => {});
   }, [done, user, score, deck.length, category, isRanked]);
 
   useEffect(() => {

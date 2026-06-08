@@ -34,7 +34,7 @@ function formatTime(s: number): string {
 type Phase = 'select' | 'quiz' | 'type' | 'done';
 
 export default function PresidentsGame() {
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const scoreSaved = useRef(false);
   const [phase, setPhase] = useState<Phase>('select');
   const [isRanked, setIsRanked] = useState(false);
@@ -74,7 +74,7 @@ export default function PresidentsGame() {
       score: finalScore,
       total,
       pct: Math.round((finalScore / total) * 100),
-    }, user.displayName, isRanked)
+    }, username, isRanked)
       .then(() => { if (isRanked) setSavedToBoard(true); })
       .catch((err) => console.error('saveScore failed:', err));
   }, [phase, user, doneMode, finalScore, isRanked]);

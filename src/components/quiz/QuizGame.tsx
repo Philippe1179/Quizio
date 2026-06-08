@@ -47,7 +47,7 @@ export default function QuizGame({
   categoryLabel: string;
   isRanked?: boolean;
 }) {
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const scoreSaved = useRef(false);
 
   const [round, setRound] = useState<GameQuestion[]>(() => {
@@ -72,7 +72,7 @@ export default function QuizGame({
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
-    }, user.displayName, isRanked).catch(() => {});
+    }, username, isRanked).catch(() => {});
   }, [done, user, score, round.length, category, categoryLabel, isRanked]);
 
   useEffect(() => {

@@ -89,7 +89,7 @@ function Legend() {
 }
 
 export default function PeriodicTableGame() {
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const scoreSaved = useRef(false);
   const [started, setStarted] = useState(false);
   const [isRanked, setIsRanked] = useState(false);
@@ -141,7 +141,7 @@ export default function PeriodicTableGame() {
       score,
       total: ELEMENTS.length,
       pct: Math.round((score / ELEMENTS.length) * 100),
-    }, user.displayName, isRanked)
+    }, username, isRanked)
       .then(() => { if (isRanked) setSavedToBoard(true); })
       .catch((err) => console.error('saveScore failed:', err));
   }, [done, user, score, isRanked]);

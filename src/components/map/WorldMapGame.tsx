@@ -451,7 +451,7 @@ export default function WorldMapGame() {
   const [timeLeft, setTimeLeft] = useState(TYPE_DURATION);
   const [notification, setNotification] = useState<string | null>(null);
   const notifTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const scoreSaved = useRef(false);
   const [isRanked, setIsRanked] = useState(false);
 
@@ -491,7 +491,7 @@ export default function WorldMapGame() {
       score: correct,
       total,
       pct: Math.round((correct / total) * 100),
-    }, user.displayName, isRanked).catch(() => {});
+    }, username, isRanked).catch(() => {});
   }, [phase, user, mode, score, queue.length, typeFound.size, filter, isRanked]);
 
   const startGame = useCallback((f: Filter) => {

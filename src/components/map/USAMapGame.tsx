@@ -48,7 +48,7 @@ export default function USAMapGame() {
   const [missed, setMissed] = useState<Set<string>>(new Set());
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const scoreSaved = useRef(false);
   const [isRanked, setIsRanked] = useState(false);
   const target = queue[index] ?? '';
@@ -70,7 +70,7 @@ export default function USAMapGame() {
       score,
       total: queue.length,
       pct: Math.round((score / queue.length) * 100),
-    }, user.displayName, isRanked).catch(() => {});
+    }, username, isRanked).catch(() => {});
   }, [phase, user, mode, score, queue.length, isRanked]);
 
   const startGame = (selectedMode: Mode) => {

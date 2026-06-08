@@ -29,7 +29,7 @@ export default function TimedGame({
   category: string;
   isRanked?: boolean;
 }) {
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const scoreSaved = useRef(false);
   const [round, setRound] = useState<GameQuestion[]>(() => prepareRound(questions));
   const [index, setIndex] = useState(0);
@@ -86,7 +86,7 @@ export default function TimedGame({
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
-    }, user.displayName, isRanked).catch(() => {});
+    }, username, isRanked).catch(() => {});
   }, [done, user, score, round.length, category, isRanked]);
 
   const restart = useCallback(() => {
