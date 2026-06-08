@@ -21,6 +21,26 @@ export default function Home() {
       <Nav />
       <main className="max-w-4xl mx-auto px-6 py-12 flex flex-col gap-12">
 
+        {/* Hero */}
+        <section className="pt-2">
+          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-tight mb-4">
+            Test what{' '}
+            <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
+              you know.
+            </span>
+          </h1>
+          <p className="text-zinc-500 dark:text-zinc-400 text-base sm:text-lg max-w-lg mb-6">
+            Quiz games, map challenges, and flashcards across geography, history, science, and more.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {['197 countries', '50 states', '118 elements', '45 presidents', '500+ questions'].map((stat) => (
+              <span key={stat} className="text-xs font-medium px-3 py-1 rounded-full border border-black/10 dark:border-white/10 text-zinc-500 dark:text-zinc-400">
+                {stat}
+              </span>
+            ))}
+          </div>
+        </section>
+
         {/* Quiz categories */}
         <section>
           <div className="mb-5">
