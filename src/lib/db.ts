@@ -159,6 +159,32 @@ export async function getDailyLeaderboard(
     .sort((a, b) => b.pct - a.pct || (a.timeTaken ?? Infinity) - (b.timeTaken ?? Infinity));
 }
 
+// ── Hall of Fame ───────────────────────────────────────────────────────────────
+
+export interface HallOfFameEntry {
+  userId: string;
+  username: string | null;
+  longestStreak: number;
+  currentStreak: number;
+}
+
+export async function getHallOfFame(limitCount = 10): Promise<HallOfFameEntry[]> {
+  const q = query(
+    collection(db, 'users'),
+    orderBy('longestStreak', 'desc'),
+    limit(limitCount),
+  );
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => ({
+      userId: d.id,
+      username: (d.data().username as string | undefined) ?? null,
+      longestStreak: (d.data().longestStreak as number) || 0,
+      currentStreak: (d.data().currentStreak as number) || 0,
+    }))
+    .filter((e) => e.longestStreak > 0);
+}
+
 // ── Streaks ────────────────────────────────────────────────────────────────────
 
 function yesterdayUTC(dateStr: string): string {

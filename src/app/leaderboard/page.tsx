@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Nav from '@/components/ui/Nav';
 import { useAuth } from '@/context/AuthContext';
-import { getDailyLeaderboard, getStreak, type DailyLeaderboardEntry, type StreakInfo } from '@/lib/db';
+import { getDailyLeaderboard, getStreak, getHallOfFame, type DailyLeaderboardEntry, type StreakInfo, type HallOfFameEntry } from '@/lib/db';
 
 function medal(rank: number) {
   if (rank === 1) return '🥇';
@@ -42,6 +42,7 @@ export default function LeaderboardPage() {
   const [entries, setEntries] = useState<DailyLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState<StreakInfo | null>(null);
+  const [hallOfFame, setHallOfFame] = useState<HallOfFameEntry[]>([]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -49,6 +50,7 @@ export default function LeaderboardPage() {
       .then(setEntries)
       .catch((err) => console.error('Failed to load leaderboard:', err))
       .finally(() => setLoading(false));
+    getHallOfFame().then(setHallOfFame).catch(() => {});
     if (user) {
       getStreak(user.uid).then(setStreak).catch(() => {});
     }
@@ -135,6 +137,42 @@ export default function LeaderboardPage() {
             </div>
           )}
         </section>
+
+        {hallOfFame.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">🏆 Hall of Fame — Longest Streaks</h2>
+            <div className="flex flex-col gap-2">
+              {hallOfFame.map((entry, i) => {
+                const isYou = user?.uid === entry.userId;
+                return (
+                  <div
+                    key={entry.userId}
+                    className={`flex items-center gap-4 rounded-xl border px-5 py-4 ${
+                      isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
+                    }`}
+                  >
+                    <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">
+                      {medal(i + 1)}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-medium text-sm truncate ${isYou ? 'text-indigo-400' : ''}`}>
+                        {entry.username ?? 'Anonymous'}
+                        {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
+                      </p>
+                      {entry.currentStreak > 0 && (
+                        <p className="text-xs text-amber-400 mt-0.5">🔥 {entry.currentStreak} day streak active</p>
+                      )}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-2xl font-bold text-amber-400 tabular-nums">{entry.longestStreak}</p>
+                      <p className="text-xs text-zinc-500">best streak</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <section className="flex flex-col gap-4">
           <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Past Challenges</h2>

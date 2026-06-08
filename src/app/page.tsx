@@ -6,7 +6,8 @@ import { Globe2, BookOpen, FlaskConical, Trophy, Clapperboard, Map, Atom, Earth,
 import Nav from '@/components/ui/Nav';
 import { categories } from '@/lib/categories';
 import { useAuth } from '@/context/AuthContext';
-import { getUserBests } from '@/lib/db';
+import { getUserBests, getDailyScore, getStreak } from '@/lib/db';
+import { getTodayUTC } from '@/lib/daily';
 import type { LucideIcon } from 'lucide-react';
 
 const categoryIcons: Record<string, LucideIcon> = {
@@ -41,6 +42,8 @@ function BestBadge({ pct }: { pct: number | undefined }) {
 export default function Home() {
   const { user } = useAuth();
   const [bests, setBests] = useState<Record<string, number>>({});
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [hasPlayedToday, setHasPlayedToday] = useState<boolean | null>(null);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   const nextReset = (() => {
     const now = new Date();
@@ -49,8 +52,15 @@ export default function Home() {
   })();
 
   useEffect(() => {
-    if (!user) { setBests({}); return; }
+    if (!user) { setBests({}); setHasPlayedToday(null); setCurrentStreak(0); return; }
     getUserBests(user.uid).then(setBests).catch(() => {});
+    const today = getTodayUTC();
+    Promise.all([getDailyScore(user.uid, today), getStreak(user.uid)])
+      .then(([score, streak]) => {
+        setHasPlayedToday(!!score);
+        setCurrentStreak(streak.currentStreak);
+      })
+      .catch(() => {});
   }, [user]);
 
   return (
@@ -95,7 +105,7 @@ export default function Home() {
                     Today&apos;s Quiz
                   </h2>
                   <p className="text-indigo-200 mt-2 max-w-sm text-sm sm:text-base">
-                    15 questions. Same for everyone. One shot to top the leaderboard.
+                    10 questions. Same for everyone. One shot to top the leaderboard.
                   </p>
                 </div>
               </div>
@@ -103,9 +113,17 @@ export default function Home() {
                 {today}
               </span>
             </div>
+            {currentStreak > 0 && hasPlayedToday === false && (
+              <div className="mt-4 flex items-center gap-2 bg-amber-500/20 border border-amber-500/30 rounded-xl px-4 py-2.5 self-start">
+                <span className="text-lg">🔥</span>
+                <span className="text-sm font-semibold text-amber-300">
+                  Your {currentStreak}-day streak is at risk — play before {nextReset}!
+                </span>
+              </div>
+            )}
             <div className="mt-6 flex items-center gap-3">
               <span className="px-6 py-2.5 rounded-xl bg-white text-indigo-700 font-bold text-sm group-hover:bg-indigo-50 transition-colors">
-                Play Now →
+                {hasPlayedToday ? 'View Results →' : 'Play Now →'}
               </span>
               <span className="text-sm text-indigo-200">Resets at {nextReset}</span>
             </div>
