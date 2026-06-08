@@ -42,6 +42,7 @@ export default function FlagsGame() {
   const [phase, setPhase] = useState<Phase>('start');
   const [isRanked, setIsRanked] = useState(false);
   const [savedToBoard, setSavedToBoard] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [round, setRound] = useState<FlagQuestion[]>(() => buildRound());
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -81,12 +82,16 @@ export default function FlagsGame() {
       pct: Math.round((score / round.length) * 100),
     }, user.displayName, isRanked)
       .then(() => { if (isRanked) setSavedToBoard(true); })
-      .catch((err) => console.error('saveScore failed:', err));
+      .catch((err) => {
+        console.error('saveScore failed:', err);
+        if (isRanked) setSaveError(err?.message ?? 'Unknown error');
+      });
   }, [phase, user, score, round.length, isRanked]);
 
   function startGame(ranked: boolean) {
     scoreSaved.current = false;
     setSavedToBoard(false);
+    setSaveError(null);
     setIsRanked(ranked);
     setRound(buildRound());
     setIndex(0);
@@ -98,6 +103,7 @@ export default function FlagsGame() {
   const restart = useCallback(() => {
     scoreSaved.current = false;
     setSavedToBoard(false);
+    setSaveError(null);
     setRound(buildRound());
     setIndex(0);
     setSelected(null);
@@ -145,6 +151,9 @@ export default function FlagsGame() {
         <p className="text-zinc-400">{message}</p>
         {savedToBoard && (
           <p className="text-sm text-amber-400">⚡ Score submitted to leaderboard</p>
+        )}
+        {saveError && (
+          <p className="text-sm text-red-400">Failed to submit score: {saveError}</p>
         )}
         <div className="flex gap-3 mt-4 flex-wrap justify-center">
           <button
