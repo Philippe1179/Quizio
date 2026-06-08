@@ -10,7 +10,7 @@ import { signOut } from '@/lib/auth';
 import AuthModal from './AuthModal';
 
 export default function Nav({ backHref }: { backHref?: string }) {
-  const { user, loading } = useAuth();
+  const { user, loading, username } = useAuth();
   const { theme, toggle } = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -27,7 +27,7 @@ export default function Nav({ backHref }: { backHref?: string }) {
     return () => document.removeEventListener('mousedown', handler);
   }, [menuOpen]);
 
-  const initials = user?.displayName?.[0]?.toUpperCase()
+  const initials = (username ?? user?.displayName)?.[0]?.toUpperCase()
     ?? user?.email?.[0]?.toUpperCase()
     ?? '?';
 
@@ -95,8 +95,8 @@ export default function Nav({ backHref }: { backHref?: string }) {
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-52 rounded-xl border border-white/10 bg-[#13111f] shadow-xl py-2 z-40">
                     <div className="px-4 py-2 border-b border-white/10">
-                      {user.displayName && (
-                        <p className="text-sm font-medium truncate">{user.displayName}</p>
+                      {(username ?? user.displayName) && (
+                        <p className="text-sm font-medium truncate">{username ?? user.displayName}</p>
                       )}
                       <p className="text-xs text-zinc-500 truncate">{user.email}</p>
                     </div>

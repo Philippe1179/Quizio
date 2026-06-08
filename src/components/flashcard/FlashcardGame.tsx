@@ -62,7 +62,7 @@ export default function FlashcardGame({
     const saved = loadProgress(category, questions);
     return saved ?? { deck: shuffleArray(questions), index: 0, known: [], unknown: [] };
   });
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const scoreSaved = useRef(false);
   const [flipped, setFlipped] = useState(false);
   const [done, setDone] = useState(false);
@@ -82,7 +82,7 @@ export default function FlashcardGame({
       score: known.length,
       total: deck.length,
       pct: Math.round((known.length / deck.length) * 100),
-    }, user.displayName).catch(() => {});
+    }, username).catch(() => {});
   }, [done, user, known.length, deck.length, category]);
 
   useEffect(() => {

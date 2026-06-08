@@ -27,7 +27,7 @@ function pctColor(pct: number): string {
 }
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, username } = useAuth();
   const router = useRouter();
   const [scores, setScores] = useState<ScoreRecord[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -40,7 +40,7 @@ export default function ProfilePage() {
       .finally(() => setFetching(false));
   }, [user, loading, router]);
 
-  const initials = user?.displayName?.[0]?.toUpperCase()
+  const initials = (username ?? user?.displayName)?.[0]?.toUpperCase()
     ?? user?.email?.[0]?.toUpperCase()
     ?? '?';
 
@@ -70,8 +70,8 @@ export default function ProfilePage() {
             </span>
           )}
           <div>
-            {user?.displayName && (
-              <h1 className="text-2xl font-bold tracking-tight">{user.displayName}</h1>
+            {(username ?? user?.displayName) && (
+              <h1 className="text-2xl font-bold tracking-tight">{username ?? user?.displayName}</h1>
             )}
             <p className="text-zinc-500 text-sm">{user?.email}</p>
           </div>
