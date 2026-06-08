@@ -181,6 +181,7 @@ export default function DailyGame({
   const { user, username, loading: authLoading } = useAuth();
   const scoreSaved = useRef(false);
   const startTime = useRef<number | null>(null);
+  const [elapsed, setElapsed] = useState(0);
 
   const [round] = useState<GameQuestion[]>(() =>
     questions.map((q) => ({ ...q, shuffledOptions: shuffleArray(q.options) }))
@@ -218,6 +219,14 @@ export default function DailyGame({
     if (phase === 'playing' && startTime.current === null) {
       startTime.current = Date.now();
     }
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== 'playing') return;
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - (startTime.current ?? Date.now())) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
   }, [phase]);
 
   useEffect(() => {
@@ -298,7 +307,10 @@ export default function DailyGame({
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between text-sm text-zinc-400">
         <span>Question {index + 1} of {round.length}</span>
-        <span>{score} correct</span>
+        <div className="flex items-center gap-3">
+          <span className="tabular-nums">{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}</span>
+          <span>{score} correct</span>
+        </div>
       </div>
 
       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
