@@ -33,7 +33,7 @@ export default function Nav({ backHref }: { backHref?: string }) {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-black/10 dark:border-white/10 bg-white/90 dark:bg-[#0d0b18]/90 backdrop-blur-md">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-black/10 dark:border-white/10 bg-white/90 dark:bg-[#0d0b18]/90 backdrop-blur-md" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-4xl mx-auto px-6 py-5 flex items-center gap-3">
           {backHref && (
             <Link
@@ -143,7 +143,7 @@ export default function Nav({ backHref }: { backHref?: string }) {
         </div>
       </header>
 
-      <div className="h-[69px]" />
+      <div style={{ height: 'calc(69px + env(safe-area-inset-top, 0px))' }} />
       {modalOpen && <AuthModal onClose={() => setModalOpen(false)} />}
     </>
   );
