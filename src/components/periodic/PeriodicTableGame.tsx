@@ -10,6 +10,14 @@ import { saveScore } from '@/lib/db';
 const CELL_SIZE = 46;
 const GAP = 2;
 
+const GRID_STYLE = {
+  display: 'grid',
+  gridTemplateColumns: `repeat(18, ${CELL_SIZE}px)`,
+  gridTemplateRows: `repeat(7, ${CELL_SIZE}px) 8px repeat(2, ${CELL_SIZE}px)`,
+  gap: `${GAP}px`,
+  width: 'max-content',
+} as const;
+
 function getCellBg(
   el: ChemElement,
   found: Set<number>,
@@ -36,11 +44,56 @@ function getCellBorder(
   return 'rgba(255,255,255,0.08)';
 }
 
+// Full labeled reference table
+function StudyTable() {
+  return (
+    <div className="overflow-x-auto pb-1">
+      <div style={GRID_STYLE}>
+        <div style={{ gridRow: 8, gridColumn: '1 / 19' }} />
+        <div style={{ gridRow: 9, gridColumn: '1 / 4', height: CELL_SIZE }} className="flex items-center justify-end pr-1 text-[9px] text-zinc-600 leading-tight">57–71</div>
+        <div style={{ gridRow: 10, gridColumn: '1 / 4', height: CELL_SIZE }} className="flex items-center justify-end pr-1 text-[9px] text-zinc-600 leading-tight">89–103</div>
+        {ELEMENTS.map((el) => (
+          <div
+            key={el.n}
+            style={{
+              gridRow: el.row,
+              gridColumn: el.col,
+              backgroundColor: CATEGORY_COLORS[el.cat],
+              borderColor: 'rgba(255,255,255,0.08)',
+              width: CELL_SIZE,
+              height: CELL_SIZE,
+            }}
+            className="relative rounded border flex flex-col items-center justify-center"
+          >
+            <span className="absolute top-0.5 left-1 text-[7px] text-white/40 leading-none tabular-nums">{el.n}</span>
+            <span className="text-[13px] font-bold text-white leading-none">{el.sym}</span>
+            <span className="text-[6px] text-white/50 leading-none truncate w-full text-center px-0.5 mt-0.5">{el.name}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Legend() {
+  return (
+    <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+      {(Object.entries(CATEGORY_LABELS) as [ElementCategory, string][]).map(([cat, label]) => (
+        <div key={cat} className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: CATEGORY_COLORS[cat] }} />
+          <span className="text-[10px] text-zinc-500">{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function PeriodicTableGame() {
   const { user } = useAuth();
   const scoreSaved = useRef(false);
   const [started, setStarted] = useState(false);
   const [isRanked, setIsRanked] = useState(false);
+  const [studyOpen, setStudyOpen] = useState(false);
   const [queue, setQueue] = useState<ChemElement[]>(() => shuffleArray(ELEMENTS));
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -102,24 +155,27 @@ export default function PeriodicTableGame() {
     setStarted(false);
   }, []);
 
-  // Start screen
+  // ── Start screen ──
   if (!started) {
     return (
       <div className="flex flex-col gap-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Periodic Table</h2>
-          <p className="text-sm text-zinc-500 mt-1">Find all 118 elements on the interactive table</p>
+          <p className="text-sm text-zinc-500 mt-1">
+            Find all 118 elements on a blank table — no labels, no atomic numbers
+          </p>
         </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
-            onClick={() => { setIsRanked(false); setStarted(true); }}
+            onClick={() => { setIsRanked(false); setStudyOpen(false); setStarted(true); }}
             className="rounded-xl border border-white/10 bg-white/5 p-6 text-left hover:border-white/25 hover:bg-white/10 transition-all"
           >
             <h3 className="font-semibold text-lg mb-1">Practice</h3>
             <p className="text-sm text-zinc-400">Play freely — scores saved to your profile only</p>
           </button>
           <button
-            onClick={() => { setIsRanked(true); setStarted(true); }}
+            onClick={() => { setIsRanked(true); setStudyOpen(false); setStarted(true); }}
             className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-6 text-left hover:border-amber-400/50 hover:bg-amber-950/40 transition-all"
           >
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 mb-3 inline-block">⚡ Ranked</span>
@@ -127,10 +183,28 @@ export default function PeriodicTableGame() {
             <p className="text-sm text-zinc-400">Score goes to the global leaderboard</p>
           </button>
         </div>
+
+        {/* Study table toggle */}
+        <div className="border-t border-white/10 pt-5 flex flex-col gap-4">
+          <button
+            onClick={() => setStudyOpen((o) => !o)}
+            className="flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-zinc-200 transition-colors self-start"
+          >
+            <span className={`transition-transform duration-200 ${studyOpen ? 'rotate-90' : ''}`}>▶</span>
+            {studyOpen ? 'Hide study table' : 'Study the periodic table first'}
+          </button>
+          {studyOpen && (
+            <div className="flex flex-col gap-3">
+              <StudyTable />
+              <Legend />
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
+  // ── Done screen ──
   if (done) {
     const pct = Math.round((score / ELEMENTS.length) * 100);
     const missedEls = ELEMENTS.filter((e) => missed.has(e.n)).sort((a, b) => a.n - b.n);
@@ -141,10 +215,9 @@ export default function PeriodicTableGame() {
           <div className="text-7xl font-bold tracking-tight">{pct}%</div>
           <p className="text-xl font-semibold">{score} / {ELEMENTS.length} correct</p>
           <p className="text-zinc-400">{message}</p>
-          {isRanked && (
-            <p className="text-sm text-amber-400">⚡ Score submitted to leaderboard</p>
-          )}
+          {isRanked && <p className="text-sm text-amber-400">⚡ Score submitted to leaderboard</p>}
         </div>
+
         {missedEls.length > 0 && (
           <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <p className="text-sm font-medium text-zinc-400 mb-3">Missed ({missedEls.length})</p>
@@ -153,14 +226,14 @@ export default function PeriodicTableGame() {
                 <span
                   key={e.n}
                   className="text-xs px-2 py-1 rounded bg-white/10 text-zinc-300"
-                  title={e.name}
                 >
-                  {e.n} {e.sym} — {e.name}
+                  {e.sym} — {e.name}
                 </span>
               ))}
             </div>
           </div>
         )}
+
         <div className="flex gap-3 justify-center">
           <button
             onClick={restart}
@@ -172,10 +245,28 @@ export default function PeriodicTableGame() {
             Home
           </Link>
         </div>
+
+        {/* Study table on done screen */}
+        <div className="border-t border-white/10 pt-5 flex flex-col gap-4">
+          <button
+            onClick={() => setStudyOpen((o) => !o)}
+            className="flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-zinc-200 transition-colors self-start"
+          >
+            <span className={`transition-transform duration-200 ${studyOpen ? 'rotate-90' : ''}`}>▶</span>
+            {studyOpen ? 'Hide study table' : 'Review the full periodic table'}
+          </button>
+          {studyOpen && (
+            <div className="flex flex-col gap-3">
+              <StudyTable />
+              <Legend />
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
+  // ── Game ──
   const progress = (index / queue.length) * 100;
 
   return (
@@ -200,47 +291,28 @@ export default function PeriodicTableGame() {
       <div className="rounded-xl border border-white/10 bg-white/5 px-6 py-4 text-center">
         <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Find the element</p>
         <p className="text-2xl font-bold">{target.name}</p>
-        <p className="text-sm text-zinc-500 mt-1">Atomic number {target.n}</p>
-        <p className="text-xs text-zinc-600 mt-0.5">{CATEGORY_LABELS[target.cat]}</p>
+        <p className="text-sm mt-1" style={{ color: CATEGORY_COLORS[target.cat] }}>
+          {CATEGORY_LABELS[target.cat]}
+        </p>
         <p className="h-5 mt-2 text-sm font-medium">
           {clickResult === 'correct' && <span className="text-green-400">✓ Correct!</span>}
-          {clickResult === 'wrong' && <span className="text-red-400">✗ Wrong — highlighted in red</span>}
+          {clickResult === 'wrong' && <span className="text-red-400">✗ Wrong — it&apos;s shown in red</span>}
         </p>
       </div>
 
-      {/* Table */}
+      {/* Blank game table */}
       <div className="overflow-x-auto pb-1">
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(18, ${CELL_SIZE}px)`,
-            gridTemplateRows: `repeat(7, ${CELL_SIZE}px) 8px repeat(2, ${CELL_SIZE}px)`,
-            gap: `${GAP}px`,
-            width: 'max-content',
-          }}
-        >
-          {/* Spacer row 8 */}
+        <div style={GRID_STYLE}>
           <div style={{ gridRow: 8, gridColumn: '1 / 19' }} />
+          <div style={{ gridRow: 9, gridColumn: '1 / 4', height: CELL_SIZE }} className="flex items-center justify-end pr-1 text-[9px] text-zinc-600 leading-tight">57–71</div>
+          <div style={{ gridRow: 10, gridColumn: '1 / 4', height: CELL_SIZE }} className="flex items-center justify-end pr-1 text-[9px] text-zinc-600 leading-tight">89–103</div>
 
-          {/* F-block row labels */}
-          <div
-            style={{ gridRow: 9, gridColumn: '1 / 4', height: CELL_SIZE }}
-            className="flex items-center justify-end pr-1 text-[9px] text-zinc-600 leading-tight"
-          >
-            57–71
-          </div>
-          <div
-            style={{ gridRow: 10, gridColumn: '1 / 4', height: CELL_SIZE }}
-            className="flex items-center justify-end pr-1 text-[9px] text-zinc-600 leading-tight"
-          >
-            89–103
-          </div>
-
-          {/* Elements */}
           {ELEMENTS.map((el) => {
             const bg = getCellBg(el, found, missed, clickResult, target);
             const border = getCellBorder(el, found, missed, clickResult, target);
             const isClickable = clickResult === null && !found.has(el.n) && !missed.has(el.n);
+            // Show symbol only when found, or on the target during a wrong-click flash
+            const revealSym = found.has(el.n) || (clickResult === 'wrong' && el.n === target.n);
             return (
               <button
                 key={el.n}
@@ -254,15 +326,11 @@ export default function PeriodicTableGame() {
                   width: CELL_SIZE,
                   height: CELL_SIZE,
                 }}
-                className="relative rounded border flex flex-col items-center justify-center transition-all duration-200 disabled:cursor-default enabled:hover:brightness-150 enabled:hover:scale-105 enabled:hover:z-10"
+                className="relative rounded border flex items-center justify-center transition-all duration-200 disabled:cursor-default enabled:hover:brightness-150 enabled:hover:scale-105 enabled:hover:z-10"
               >
-                <span className="absolute top-0.5 left-1 text-[7px] text-white/40 leading-none tabular-nums">
-                  {el.n}
-                </span>
-                <span className="text-[13px] font-bold text-white leading-none">{el.sym}</span>
-                <span className="text-[6px] text-white/50 leading-none truncate w-full text-center px-0.5 mt-0.5">
-                  {el.name}
-                </span>
+                {revealSym && (
+                  <span className="text-[13px] font-bold text-white leading-none">{el.sym}</span>
+                )}
               </button>
             );
           })}
@@ -270,17 +338,7 @@ export default function PeriodicTableGame() {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-1">
-        {(Object.entries(CATEGORY_LABELS) as [ElementCategory, string][]).map(([cat, label]) => (
-          <div key={cat} className="flex items-center gap-1.5">
-            <span
-              className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
-              style={{ backgroundColor: CATEGORY_COLORS[cat] }}
-            />
-            <span className="text-[10px] text-zinc-500">{label}</span>
-          </div>
-        ))}
-      </div>
+      <Legend />
     </div>
   );
 }
