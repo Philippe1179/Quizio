@@ -13,6 +13,13 @@ function medal(rank: number) {
   return `${rank}`;
 }
 
+function formatTime(seconds: number | null) {
+  if (seconds === null) return null;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
 function pctColor(pct: number) {
   if (pct >= 80) return 'text-green-400';
   if (pct >= 50) return 'text-amber-400';
@@ -116,7 +123,7 @@ export default function LeaderboardPage() {
                         {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
                       </p>
                       <p className="text-xs text-zinc-500 mt-0.5">
-                        {entry.score} / {entry.total} correct · {entry.completedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                        {entry.score} / {entry.total} correct{formatTime(entry.timeTaken) ? ` · ${formatTime(entry.timeTaken)}` : ''}
                       </p>
                     </div>
                     <span className={`text-2xl font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>

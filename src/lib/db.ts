@@ -91,6 +91,7 @@ export interface DailyLeaderboardEntry {
   score: number;
   total: number;
   pct: number;
+  timeTaken: number | null;
   completedAt: Date;
 }
 
@@ -114,6 +115,7 @@ export async function getDailyScore(
     score: d.score as number,
     total: d.total as number,
     pct: d.pct as number,
+    timeTaken: (d.timeTaken as number | undefined) ?? null,
     completedAt: d.completedAt?.toDate() ?? new Date(),
   };
 }
@@ -121,7 +123,7 @@ export async function getDailyScore(
 export async function saveDailyScore(
   uid: string,
   dateStr: string,
-  payload: { score: number; total: number; pct: number },
+  payload: { score: number; total: number; pct: number; timeTaken: number },
   username?: string | null,
 ): Promise<void> {
   const entryRef = doc(db, 'dailyScores', dateStr, 'entries', uid);
@@ -151,9 +153,10 @@ export async function getDailyLeaderboard(
       score: d.data().score as number,
       total: d.data().total as number,
       pct: d.data().pct as number,
+      timeTaken: (d.data().timeTaken as number | undefined) ?? null,
       completedAt: d.data().completedAt?.toDate() ?? new Date(),
     }))
-    .sort((a, b) => b.pct - a.pct || a.completedAt.getTime() - b.completedAt.getTime());
+    .sort((a, b) => b.pct - a.pct || (a.timeTaken ?? Infinity) - (b.timeTaken ?? Infinity));
 }
 
 // ── Streaks ────────────────────────────────────────────────────────────────────

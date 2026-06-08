@@ -24,6 +24,13 @@ function medal(rank: number) {
   return `${rank}.`;
 }
 
+function formatTime(seconds: number | null) {
+  if (seconds === null) return null;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
 function pctColor(pct: number) {
   if (pct >= 80) return 'text-green-400';
   if (pct >= 50) return 'text-amber-400';
@@ -144,9 +151,9 @@ function ResultsView({
                         {entry.username ?? 'Anonymous'}
                         {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
                       </p>
-                      <p className="text-xs text-zinc-500 mt-0.5">
-                        {entry.completedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                      </p>
+                      {formatTime(entry.timeTaken) && (
+                        <p className="text-xs text-zinc-500 mt-0.5">{formatTime(entry.timeTaken)}</p>
+                      )}
                     </div>
                     <span className={`text-lg font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>
                       {entry.pct}%
@@ -173,6 +180,7 @@ export default function DailyGame({
 }) {
   const { user, username, loading: authLoading } = useAuth();
   const scoreSaved = useRef(false);
+  const startTime = useRef<number | null>(null);
 
   const [round] = useState<GameQuestion[]>(() =>
     questions.map((q) => ({ ...q, shuffledOptions: shuffleArray(q.options) }))
@@ -207,14 +215,21 @@ export default function DailyGame({
   }, [authLoading, user, dateStr, isArchive]);
 
   useEffect(() => {
+    if (phase === 'playing' && startTime.current === null) {
+      startTime.current = Date.now();
+    }
+  }, [phase]);
+
+  useEffect(() => {
     if (phase !== 'done' || scoreSaved.current) return;
     scoreSaved.current = true;
     if (isArchive || !user) return;
 
     const pct = Math.round((score / round.length) * 100);
+    const timeTaken = startTime.current ? Math.round((Date.now() - startTime.current) / 1000) : 0;
     setBoardLoading(true);
     Promise.all([
-      saveDailyScore(user.uid, dateStr, { score, total: round.length, pct }, username),
+      saveDailyScore(user.uid, dateStr, { score, total: round.length, pct, timeTaken }, username),
       updateStreak(user.uid, dateStr),
     ])
       .then(([, streak]) => {
