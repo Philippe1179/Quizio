@@ -38,6 +38,8 @@ export default function TimedGame({
   const [timeLeft, setTimeLeft] = useState(SECONDS_PER_QUESTION);
   const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
+  const [savedToBoard, setSavedToBoard] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const current = round[index];
   const answered = selected !== null || timedOut;
@@ -86,11 +88,15 @@ export default function TimedGame({
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
-    }, username, isRanked).catch(() => {});
+    }, username, isRanked)
+      .then(() => { if (isRanked) setSavedToBoard(true); })
+      .catch((err) => { if (isRanked) setSaveError(err?.message ?? 'Unknown error'); });
   }, [done, user, score, round.length, category, isRanked]);
 
   const restart = useCallback(() => {
     scoreSaved.current = false;
+    setSavedToBoard(false);
+    setSaveError(null);
     setRound(prepareRound(questions));
     setIndex(0);
     setSelected(null);
@@ -114,6 +120,8 @@ export default function TimedGame({
         <div className="text-7xl font-bold tracking-tight">{pct}%</div>
         <p className="text-xl font-semibold">{score} / {round.length} correct</p>
         <p className="text-zinc-400">{message}</p>
+        {savedToBoard && <p className="text-sm text-indigo-400">Score submitted to leaderboard</p>}
+        {saveError && <p className="text-sm text-red-400">Failed to submit score: {saveError}</p>}
         <div className="flex gap-3 mt-6">
           <button
             onClick={restart}
