@@ -83,7 +83,7 @@ export default function TimedGame({
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
-    }).catch(() => {});
+    }, user.displayName).catch(() => {});
   }, [done, user, score, round.length, category]);
 
   const restart = useCallback(() => {

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
@@ -75,7 +75,7 @@ export default function FlagsGame() {
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
-    }).catch(() => {});
+    }, user.displayName).catch(() => {});
   }, [done, user, score, round.length]);
 
   const restart = useCallback(() => {
@@ -168,3 +168,4 @@ export default function FlagsGame() {
     </div>
   );
 }
+

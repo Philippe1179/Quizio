@@ -69,7 +69,7 @@ export default function USAMapGame() {
       score,
       total: queue.length,
       pct: Math.round((score / queue.length) * 100),
-    }).catch(() => {});
+    }, user.displayName).catch(() => {});
   }, [phase, user, mode, score, queue.length]);
 
   const startGame = (selectedMode: Mode) => {

@@ -48,6 +48,12 @@ export default function Nav({ backHref }: { backHref?: string }) {
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
+            <Link
+              href="/leaderboard"
+              className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors px-2 hidden sm:block"
+            >
+              Leaderboard
+            </Link>
             <button
               onClick={toggle}
               aria-label="Toggle theme"

@@ -85,7 +85,7 @@ export default function PeriodicTableGame() {
       score,
       total: ELEMENTS.length,
       pct: Math.round((score / ELEMENTS.length) * 100),
-    }).catch(() => {});
+    }, user.displayName).catch(() => {});
   }, [done, user, score]);
 
   const restart = useCallback(() => {

@@ -82,7 +82,7 @@ export default function FlashcardGame({
       score: known.length,
       total: deck.length,
       pct: Math.round((known.length / deck.length) * 100),
-    }).catch(() => {});
+    }, user.displayName).catch(() => {});
   }, [done, user, known.length, deck.length, category]);
 
   useEffect(() => {

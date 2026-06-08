@@ -490,7 +490,7 @@ export default function WorldMapGame() {
       score: correct,
       total,
       pct: Math.round((correct / total) * 100),
-    }).catch(() => {});
+    }, user.displayName).catch(() => {});
   }, [phase, user, mode, score, queue.length, typeFound.size, filter]);
 
   const startGame = useCallback((f: Filter) => {

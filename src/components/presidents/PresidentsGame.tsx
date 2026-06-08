@@ -72,7 +72,7 @@ export default function PresidentsGame() {
       score: finalScore,
       total,
       pct: Math.round((finalScore / total) * 100),
-    }).catch(() => {});
+    }, user.displayName).catch(() => {});
   }, [phase, user, doneMode, finalScore]);
 
   // Type mode countdown — runs every second; reads current found when time=0 since timeLeft changes each tick

@@ -81,7 +81,7 @@ export default function TypeGame({
       score,
       total: deck.length,
       pct: Math.round((score / deck.length) * 100),
-    }).catch(() => {});
+    }, user.displayName).catch(() => {});
   }, [done, user, score, deck.length, category]);
 
   useEffect(() => {

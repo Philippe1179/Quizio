@@ -69,7 +69,7 @@ export default function QuizGame({
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
-    }).catch(() => {});
+    }, user.displayName).catch(() => {});
   }, [done, user, score, round.length, category, categoryLabel]);
 
   useEffect(() => {
