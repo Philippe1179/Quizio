@@ -42,6 +42,11 @@ export default function Home() {
   const { user } = useAuth();
   const [bests, setBests] = useState<Record<string, number>>({});
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const nextReset = (() => {
+    const now = new Date();
+    const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+    return midnight.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+  })();
 
   useEffect(() => {
     if (!user) { setBests({}); return; }
@@ -102,7 +107,7 @@ export default function Home() {
               <span className="px-6 py-2.5 rounded-xl bg-white text-indigo-700 font-bold text-sm group-hover:bg-indigo-50 transition-colors">
                 Play Now →
               </span>
-              <span className="text-sm text-indigo-200">Free · Resets daily</span>
+              <span className="text-sm text-indigo-200">Resets at {nextReset}</span>
             </div>
           </Link>
         </section>

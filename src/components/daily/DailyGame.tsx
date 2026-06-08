@@ -74,7 +74,14 @@ function ResultsView({
         <p className="text-zinc-400">{message}</p>
 
         {alreadyPlayed && (
-          <p className="text-sm text-indigo-400 mt-1">You already completed this challenge</p>
+          <div className="flex flex-col items-center gap-1 mt-1">
+            <p className="text-sm text-indigo-400">You already completed this challenge</p>
+            <p className="text-xs text-zinc-500">Next challenge at {(() => {
+              const now = new Date();
+              const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+              return midnight.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+            })()}</p>
+          </div>
         )}
         {isArchive && (
           <p className="text-sm text-zinc-500 mt-1">Archive play — score not submitted to leaderboard</p>
