@@ -1,31 +1,17 @@
-import { getAllQuestions, type Question } from '@/lib/questions';
-
-function mulberry32(seed: number): () => number {
-  return function () {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function seededShuffle<T>(arr: T[], rng: () => number): T[] {
-  const result = [...arr];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
+import { type Question } from '@/lib/questions';
+import { dailyQuestions, DAILY_EPOCH } from '@/data/dailyQuestions';
 
 export function getTodayUTC(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function getDailyQuestions(dateStr: string, count = 15): Question[] {
-  const seed = parseInt(dateStr.replace(/-/g, ''), 10);
-  const rng = mulberry32(seed);
-  return seededShuffle(getAllQuestions(), rng).slice(0, count);
+export function getDailyQuestions(dateStr: string, count = 10): Question[] {
+  const epoch = new Date(DAILY_EPOCH + 'T00:00:00Z').getTime();
+  const target = new Date(dateStr + 'T00:00:00Z').getTime();
+  const dayIndex = Math.floor((target - epoch) / 86400000);
+  const totalSlots = Math.floor(dailyQuestions.length / count);
+  const slot = ((dayIndex % totalSlots) + totalSlots) % totalSlots;
+  return dailyQuestions.slice(slot * count, slot * count + count);
 }
 
 export function isValidPastDate(dateStr: string): boolean {
