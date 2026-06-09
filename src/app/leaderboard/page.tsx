@@ -43,12 +43,14 @@ function getPastDays(todayUTC: string, count: number): string[] {
 
 function DailyEntryRow({ entry, rank, selfUid }: { entry: DailyLeaderboardEntry; rank: number; selfUid?: string }) {
   const isYou = selfUid === entry.userId;
-  return (
-    <div
-      className={`flex items-center gap-4 rounded-xl border px-5 py-4 ${
-        isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
-      }`}
-    >
+  const className = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
+    isYou
+      ? 'border-indigo-500/40 bg-indigo-950/20'
+      : 'border-black/10 dark:border-white/10 hover:border-white/30'
+  } ${entry.username ? 'cursor-pointer' : ''}`;
+
+  const inner = (
+    <>
       <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">
         {medal(rank)}
       </span>
@@ -64,8 +66,17 @@ function DailyEntryRow({ entry, rank, selfUid }: { entry: DailyLeaderboardEntry;
       <span className={`text-2xl font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>
         {entry.pct}%
       </span>
-    </div>
+    </>
   );
+
+  if (entry.username) {
+    return (
+      <Link href={`/profile/${encodeURIComponent(entry.username)}`} className={className}>
+        {inner}
+      </Link>
+    );
+  }
+  return <div className={className}>{inner}</div>;
 }
 
 export default function LeaderboardPage() {

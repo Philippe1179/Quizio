@@ -229,6 +229,47 @@ export async function updateStreak(uid: string, dateStr: string): Promise<Streak
   return { currentStreak: newStreak, longestStreak: newLongest, lastDailyDate: dateStr };
 }
 
+// ── Public profiles ───────────────────────────────────────────────────────────
+
+export interface PublicProfile {
+  uid: string;
+  username: string;
+  currentStreak: number;
+  longestStreak: number;
+  totalCorrect: number;
+}
+
+export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
+  const usernameSnap = await getDoc(doc(db, 'usernames', username.toLowerCase()));
+  if (!usernameSnap.exists()) return null;
+  const uid = usernameSnap.data().uid as string;
+  const userSnap = await getDoc(doc(db, 'users', uid));
+  if (!userSnap.exists()) return null;
+  const d = userSnap.data();
+  return {
+    uid,
+    username: (d.username as string | undefined) ?? username,
+    currentStreak: (d.currentStreak as number) || 0,
+    longestStreak: (d.longestStreak as number) || 0,
+    totalCorrect: (d.totalCorrect as number) || 0,
+  };
+}
+
+export type FriendshipStatus = 'self' | 'friends' | 'outgoing' | 'incoming' | 'none';
+
+export async function getFriendshipStatus(myUid: string, theirUid: string): Promise<FriendshipStatus> {
+  if (myUid === theirUid) return 'self';
+  const [friendSnap, outgoingSnap, incomingSnap] = await Promise.all([
+    getDoc(doc(db, 'users', myUid, 'friends', theirUid)),
+    getDoc(doc(db, 'users', myUid, 'outgoingRequests', theirUid)),
+    getDoc(doc(db, 'users', myUid, 'incomingRequests', theirUid)),
+  ]);
+  if (friendSnap.exists()) return 'friends';
+  if (outgoingSnap.exists()) return 'outgoing';
+  if (incomingSnap.exists()) return 'incoming';
+  return 'none';
+}
+
 // ── All-time leaderboard ───────────────────────────────────────────────────────
 
 export interface AllTimeEntry {
