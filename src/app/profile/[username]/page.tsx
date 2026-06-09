@@ -41,6 +41,7 @@ export default function PublicProfilePage() {
   const [notFound, setNotFound] = useState(false);
   const [blocked, setBlocked] = useState<ProfileVisibility | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -69,6 +70,7 @@ export default function PublicProfilePage() {
 
   async function handleFriendAction() {
     if (!user || !profile || actionLoading) return;
+    if (friendship === 'friends') { setConfirmRemove(true); return; }
     setActionLoading(true);
     try {
       if (friendship === 'none') {
@@ -80,10 +82,19 @@ export default function PublicProfilePage() {
       } else if (friendship === 'incoming') {
         await acceptFriendRequest(user.uid, profile.uid);
         setFriendship('friends');
-      } else if (friendship === 'friends') {
-        await removeFriend(user.uid, profile.uid);
-        setFriendship('none');
       }
+    } catch { /* silently fail */ } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleConfirmRemove() {
+    if (!user || !profile) return;
+    setConfirmRemove(false);
+    setActionLoading(true);
+    try {
+      await removeFriend(user.uid, profile.uid);
+      setFriendship('none');
     } catch { /* silently fail */ } finally {
       setActionLoading(false);
     }
@@ -160,13 +171,32 @@ export default function PublicProfilePage() {
           <h1 className="text-2xl font-bold tracking-tight">{profile!.username}</h1>
 
           {user && friendship !== 'self' && (
-            <button
-              onClick={handleFriendAction}
-              disabled={actionLoading}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors disabled:opacity-50 ${friendStyle}`}
-            >
-              {friendLabel}
-            </button>
+            <div className="flex flex-col items-center gap-2">
+              <button
+                onClick={handleFriendAction}
+                disabled={actionLoading}
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-colors disabled:opacity-50 ${friendStyle}`}
+              >
+                {friendLabel}
+              </button>
+              {confirmRemove && (
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-sm text-zinc-400">Remove friend?</span>
+                  <button
+                    onClick={handleConfirmRemove}
+                    className="text-sm font-medium text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    Yes, remove
+                  </button>
+                  <button
+                    onClick={() => setConfirmRemove(false)}
+                    className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
 

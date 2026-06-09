@@ -46,6 +46,7 @@ export default function FriendsPage() {
   const [declining, setDeclining] = useState<Set<string>>(new Set());
   const [cancelling, setCancelling] = useState<Set<string>>(new Set());
   const [removing, setRemoving] = useState<Set<string>>(new Set());
+  const [confirmingRemove, setConfirmingRemove] = useState<string | null>(null);
 
   async function reload() {
     if (!user) return;
@@ -117,6 +118,7 @@ export default function FriendsPage() {
 
   async function handleRemove(friendUid: string) {
     if (!user) return;
+    setConfirmingRemove(null);
     setRemoving((s) => new Set(s).add(friendUid));
     try {
       await removeFriend(user.uid, friendUid);
@@ -259,13 +261,32 @@ export default function FriendsPage() {
                         >
                           Leaderboard
                         </Link>
-                        <button
-                          onClick={() => handleRemove(f.uid)}
-                          disabled={removing.has(f.uid)}
-                          className="text-xs text-zinc-600 hover:text-red-400 disabled:opacity-50 transition-colors"
-                        >
-                          {removing.has(f.uid) ? '…' : 'Remove'}
-                        </button>
+                        {confirmingRemove === f.uid ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-zinc-400">Remove?</span>
+                            <button
+                              onClick={() => handleRemove(f.uid)}
+                              disabled={removing.has(f.uid)}
+                              className="text-xs text-red-400 hover:text-red-300 font-medium disabled:opacity-50 transition-colors"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => setConfirmingRemove(null)}
+                              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmingRemove(f.uid)}
+                            disabled={removing.has(f.uid)}
+                            className="text-xs text-zinc-600 hover:text-red-400 disabled:opacity-50 transition-colors"
+                          >
+                            {removing.has(f.uid) ? '…' : 'Remove'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
