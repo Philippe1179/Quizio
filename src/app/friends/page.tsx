@@ -128,9 +128,41 @@ export default function FriendsPage() {
     }
   }
 
+  const confirmingFriend = friends.find((f) => f.uid === confirmingRemove) ?? null;
+
   return (
     <div className="min-h-screen">
       <Nav backHref="/" />
+
+      {/* Remove confirmation modal */}
+      {confirmingRemove && confirmingFriend && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setConfirmingRemove(null)} />
+          <div className="relative bg-zinc-900 border border-white/10 rounded-2xl px-6 py-6 w-full max-w-sm flex flex-col gap-5 shadow-xl">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-base font-semibold">Remove friend?</h2>
+              <p className="text-sm text-zinc-400">
+                Remove <span className="text-white font-medium">@{confirmingFriend.username ?? 'this person'}</span> from your friends list?
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmingRemove(null)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleRemove(confirmingRemove)}
+                disabled={removing.has(confirmingRemove)}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
+              >
+                {removing.has(confirmingRemove) ? '…' : 'Remove'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <main className="max-w-xl mx-auto px-6 py-12 flex flex-col gap-10">
 
         <div>
@@ -261,32 +293,13 @@ export default function FriendsPage() {
                         >
                           Leaderboard
                         </Link>
-                        {confirmingRemove === f.uid ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-zinc-400">Remove?</span>
-                            <button
-                              onClick={() => handleRemove(f.uid)}
-                              disabled={removing.has(f.uid)}
-                              className="text-xs text-red-400 hover:text-red-300 font-medium disabled:opacity-50 transition-colors"
-                            >
-                              Yes
-                            </button>
-                            <button
-                              onClick={() => setConfirmingRemove(null)}
-                              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-                            >
-                              No
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setConfirmingRemove(f.uid)}
-                            disabled={removing.has(f.uid)}
-                            className="text-xs text-zinc-600 hover:text-red-400 disabled:opacity-50 transition-colors"
-                          >
-                            {removing.has(f.uid) ? '…' : 'Remove'}
-                          </button>
-                        )}
+                        <button
+                          onClick={() => setConfirmingRemove(f.uid)}
+                          disabled={removing.has(f.uid)}
+                          className="text-xs text-zinc-600 hover:text-red-400 disabled:opacity-50 transition-colors"
+                        >
+                          {removing.has(f.uid) ? '…' : 'Remove'}
+                        </button>
                       </div>
                     </div>
                   ))}
