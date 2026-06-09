@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { shuffleArray, isCorrectAnswer, type Question } from '@/lib/questions';
 import { saveSurvivalScore, getSurvivalLeaderboard, type SurvivalEntry } from '@/lib/db';
@@ -76,18 +77,20 @@ export default function SurvivalGame({
     }
   }
 
+  const finalizeGame = useCallback((finalStreak: number) => {
+    getSurvivalLeaderboard(category).then(setLeaderboard).catch(() => {});
+    if (user && finalStreak > 0) {
+      if (finalStreak > personalBest) setNewBest(true);
+      saveSurvivalScore(user.uid, category, finalStreak, username ?? null).catch(() => {});
+    }
+  }, [category, user, username, personalBest]);
+
   // Save score + load leaderboard when game ends
   useEffect(() => {
     if ((phase !== 'done' && phase !== 'survived') || savedRef.current) return;
     savedRef.current = true;
-
-    getSurvivalLeaderboard(category).then(setLeaderboard).catch(() => {});
-
-    if (user && streak > 0) {
-      if (streak > personalBest) setNewBest(true);
-      saveSurvivalScore(user.uid, category, streak, username ?? null).catch(() => {});
-    }
-  }, [phase, streak, user, username, category, personalBest]);
+    finalizeGame(streak);
+  }, [phase, streak, finalizeGame]);
 
   // ── Playing ──
   if (phase === 'playing' || phase === 'answered') {
@@ -205,12 +208,12 @@ export default function SurvivalGame({
       )}
 
       <div className="flex gap-3">
-        <a
+        <Link
           href="/survival"
           className="flex-1 px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 text-sm font-medium text-zinc-500 hover:border-black/30 dark:hover:border-white/30 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors text-center"
         >
           Change Category
-        </a>
+        </Link>
         <button
           onClick={onReset}
           className="flex-1 px-4 py-3 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-500 transition-colors"
