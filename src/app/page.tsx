@@ -191,6 +191,30 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Survival Mode */}
+        <section>
+          <Link
+            href="/survival"
+            className="block rounded-2xl border border-red-500/20 bg-red-500/5 hover:border-red-500/40 hover:bg-red-500/10 transition-all p-8 group"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">💀</span>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-red-400">Survival Mode</span>
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">One life. No mistakes.</h2>
+                <p className="text-sm text-zinc-500 mt-1.5 max-w-sm">
+                  Pick a category and answer questions until you get one wrong. Your best streak is saved to the leaderboard.
+                </p>
+              </div>
+              <span className="text-sm font-semibold text-red-400 group-hover:text-red-300 transition-colors whitespace-nowrap self-start sm:self-auto">
+                Play →
+              </span>
+            </div>
+          </Link>
+        </section>
+
       </main>
     </div>
   );

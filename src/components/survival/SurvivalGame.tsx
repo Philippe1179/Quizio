@@ -1,0 +1,223 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { shuffleArray, isCorrectAnswer, type Question } from '@/lib/questions';
+import { saveSurvivalScore, getSurvivalLeaderboard, type SurvivalEntry } from '@/lib/db';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+type Phase = 'playing' | 'answered' | 'done' | 'survived';
+
+function medal(rank: number) {
+  if (rank === 1) return '🥇';
+  if (rank === 2) return '🥈';
+  if (rank === 3) return '🥉';
+  return `${rank}`;
+}
+
+export default function SurvivalGame({
+  questions,
+  category,
+  categoryLabel,
+  onReset,
+}: {
+  questions: Question[];
+  category: string;
+  categoryLabel: string;
+  onReset: () => void;
+}) {
+  const { user, username } = useAuth();
+
+  const [shuffled] = useState<Question[]>(() => shuffleArray(questions));
+  const [index, setIndex] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [phase, setPhase] = useState<Phase>('playing');
+  const [selected, setSelected] = useState<string | null>(null);
+  const [leaderboard, setLeaderboard] = useState<SurvivalEntry[]>([]);
+  const [personalBest, setPersonalBest] = useState(0);
+  const [newBest, setNewBest] = useState(false);
+  const savedRef = useRef(false);
+
+  const current = shuffled[index];
+
+  // Load personal best on mount
+  useEffect(() => {
+    if (!user) return;
+    getDoc(doc(db, 'survivalScores', category, 'entries', user.uid))
+      .then((snap) => {
+        if (snap.exists()) setPersonalBest((snap.data().score as number) || 0);
+      })
+      .catch(() => {});
+  }, [user, category]);
+
+  function handleAnswer(option: string) {
+    if (phase !== 'playing') return;
+    const correct = isCorrectAnswer(option, current);
+    setSelected(option);
+    setPhase('answered');
+
+    if (correct) {
+      const next = streak + 1;
+      setTimeout(() => {
+        setStreak(next);
+        if (index + 1 >= shuffled.length) {
+          setPhase('survived');
+        } else {
+          setIndex(index + 1);
+          setSelected(null);
+          setPhase('playing');
+        }
+      }, 500);
+    } else {
+      setTimeout(() => {
+        setPhase('done');
+      }, 900);
+    }
+  }
+
+  // Save score + load leaderboard when game ends
+  useEffect(() => {
+    if ((phase !== 'done' && phase !== 'survived') || savedRef.current) return;
+    savedRef.current = true;
+
+    getSurvivalLeaderboard(category).then(setLeaderboard).catch(() => {});
+
+    if (user && streak > 0) {
+      if (streak > personalBest) setNewBest(true);
+      saveSurvivalScore(user.uid, category, streak, username ?? null).catch(() => {});
+    }
+  }, [phase, streak, user, username, category, personalBest]);
+
+  // ── Playing ──
+  if (phase === 'playing' || phase === 'answered') {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">🔥</span>
+            <span className="text-4xl font-bold tabular-nums">{streak}</span>
+            <span className="text-sm text-zinc-500">correct</span>
+          </div>
+          <span className="text-xs text-zinc-600 tabular-nums">Q{index + 1}</span>
+        </div>
+
+        <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-6 py-8">
+          <p className="text-lg font-semibold leading-snug">{current.question}</p>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {current.options.map((option) => {
+            let cls = 'border-black/10 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30';
+            if (phase === 'answered') {
+              if (isCorrectAnswer(option, current)) {
+                cls = 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-300';
+              } else if (option === selected) {
+                cls = 'border-red-500 bg-red-500/10 text-red-600 dark:text-red-300';
+              } else {
+                cls = 'border-black/5 dark:border-white/5 text-zinc-400 dark:text-zinc-600';
+              }
+            }
+            return (
+              <button
+                key={option}
+                onClick={() => handleAnswer(option)}
+                disabled={phase === 'answered'}
+                className={`w-full text-left px-5 py-4 rounded-xl border text-sm font-medium transition-colors ${cls}`}
+              >
+                {option}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Game over / survived ──
+  const survived = phase === 'survived';
+
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="text-center flex flex-col items-center gap-3">
+        <span className="text-5xl">{survived ? '🏆' : '💀'}</span>
+        <h2 className="text-3xl font-bold tracking-tight">
+          {survived ? 'You Survived!' : 'Game Over'}
+        </h2>
+        {newBest && (
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            🎉 New personal best!
+          </span>
+        )}
+        <div className="mt-1">
+          <p className="text-6xl font-bold tabular-nums text-indigo-400">{streak}</p>
+          <p className="text-sm text-zinc-500 mt-1">
+            {survived
+              ? `Perfect — all ${streak} questions answered correctly`
+              : `${streak === 1 ? '1 question' : `${streak} questions`} correct`}
+          </p>
+        </div>
+        {personalBest > 0 && !newBest && (
+          <p className="text-xs text-zinc-600">Personal best: {personalBest}</p>
+        )}
+      </div>
+
+      {/* Correct answer reveal */}
+      {!survived && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-5 py-4 flex flex-col gap-1">
+          <p className="text-xs text-zinc-500">Correct answer</p>
+          <p className="text-sm font-semibold text-green-500 dark:text-green-400">{current.answer}</p>
+          <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{current.question}</p>
+        </div>
+      )}
+
+      {/* Leaderboard */}
+      {leaderboard.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
+            Top Scores — {categoryLabel}
+          </h3>
+          <div className="flex flex-col gap-2">
+            {leaderboard.slice(0, 5).map((entry, i) => {
+              const isYou = user?.uid === entry.userId;
+              return (
+                <div
+                  key={entry.userId}
+                  className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${
+                    isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
+                  }`}
+                >
+                  <span className="w-6 text-center text-sm font-bold text-zinc-400 flex-shrink-0">
+                    {medal(i + 1)}
+                  </span>
+                  <span className={`flex-1 text-sm font-medium truncate ${isYou ? 'text-indigo-400' : ''}`}>
+                    {entry.username ?? 'Anonymous'}
+                    {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
+                  </span>
+                  <span className="text-xl font-bold tabular-nums text-indigo-400 flex-shrink-0">
+                    {entry.score}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <div className="flex gap-3">
+        <a
+          href="/survival"
+          className="flex-1 px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 text-sm font-medium text-zinc-500 hover:border-black/30 dark:hover:border-white/30 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors text-center"
+        >
+          Change Category
+        </a>
+        <button
+          onClick={onReset}
+          className="flex-1 px-4 py-3 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-500 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+}
