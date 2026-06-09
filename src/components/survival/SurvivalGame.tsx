@@ -30,7 +30,9 @@ export default function SurvivalGame({
 }) {
   const { user, username } = useAuth();
 
-  const [shuffled] = useState<Question[]>(() => shuffleArray(questions));
+  const [shuffled] = useState<Question[]>(() =>
+    shuffleArray(questions).map((q) => ({ ...q, options: shuffleArray(q.options) }))
+  );
   const [index, setIndex] = useState(0);
   const [streak, setStreak] = useState(0);
   const [phase, setPhase] = useState<Phase>('playing');
