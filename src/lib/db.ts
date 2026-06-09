@@ -1,7 +1,7 @@
 import { db } from './firebase';
 import {
   collection, doc, getDoc, setDoc, addDoc, getDocs, deleteDoc,
-  query, orderBy, limit, serverTimestamp, runTransaction, increment,
+  query, orderBy, limit, serverTimestamp, runTransaction, increment, writeBatch,
 } from 'firebase/firestore';
 
 export async function ensureUserDoc(
@@ -325,18 +325,18 @@ export async function sendFriendRequest(myUid: string, targetUsername: string): 
     return;
   }
 
-  await Promise.all([
-    setDoc(doc(db, 'users', myUid, 'outgoingRequests', targetUid), {
-      toUid: targetUid,
-      toUsername: theirUsername,
-      createdAt: serverTimestamp(),
-    }),
-    setDoc(doc(db, 'users', targetUid, 'incomingRequests', myUid), {
-      fromUid: myUid,
-      fromUsername: myUsername,
-      createdAt: serverTimestamp(),
-    }),
-  ]);
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'users', myUid, 'outgoingRequests', targetUid), {
+    toUid: targetUid,
+    toUsername: theirUsername,
+    createdAt: serverTimestamp(),
+  });
+  batch.set(doc(db, 'users', targetUid, 'incomingRequests', myUid), {
+    fromUid: myUid,
+    fromUsername: myUsername,
+    createdAt: serverTimestamp(),
+  });
+  await batch.commit();
 }
 
 export async function acceptFriendRequest(myUid: string, fromUid: string): Promise<void> {
@@ -347,33 +347,33 @@ export async function acceptFriendRequest(myUid: string, fromUid: string): Promi
   const myUsername = (mySnap.data()?.username as string | undefined) ?? null;
   const fromUsername = (incomingSnap.data()?.fromUsername as string | undefined) ?? null;
 
-  await Promise.all([
-    setDoc(doc(db, 'users', myUid, 'friends', fromUid), { username: fromUsername, addedAt: serverTimestamp() }),
-    setDoc(doc(db, 'users', fromUid, 'friends', myUid), { username: myUsername, addedAt: serverTimestamp() }),
-    deleteDoc(doc(db, 'users', myUid, 'incomingRequests', fromUid)),
-    deleteDoc(doc(db, 'users', fromUid, 'outgoingRequests', myUid)),
-  ]);
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'users', myUid, 'friends', fromUid), { username: fromUsername, addedAt: serverTimestamp() });
+  batch.set(doc(db, 'users', fromUid, 'friends', myUid), { username: myUsername, addedAt: serverTimestamp() });
+  batch.delete(doc(db, 'users', myUid, 'incomingRequests', fromUid));
+  batch.delete(doc(db, 'users', fromUid, 'outgoingRequests', myUid));
+  await batch.commit();
 }
 
 export async function declineFriendRequest(myUid: string, fromUid: string): Promise<void> {
-  await Promise.all([
-    deleteDoc(doc(db, 'users', myUid, 'incomingRequests', fromUid)),
-    deleteDoc(doc(db, 'users', fromUid, 'outgoingRequests', myUid)),
-  ]);
+  const batch = writeBatch(db);
+  batch.delete(doc(db, 'users', myUid, 'incomingRequests', fromUid));
+  batch.delete(doc(db, 'users', fromUid, 'outgoingRequests', myUid));
+  await batch.commit();
 }
 
 export async function cancelFriendRequest(myUid: string, toUid: string): Promise<void> {
-  await Promise.all([
-    deleteDoc(doc(db, 'users', myUid, 'outgoingRequests', toUid)),
-    deleteDoc(doc(db, 'users', toUid, 'incomingRequests', myUid)),
-  ]);
+  const batch = writeBatch(db);
+  batch.delete(doc(db, 'users', myUid, 'outgoingRequests', toUid));
+  batch.delete(doc(db, 'users', toUid, 'incomingRequests', myUid));
+  await batch.commit();
 }
 
 export async function removeFriend(myUid: string, friendUid: string): Promise<void> {
-  await Promise.all([
-    deleteDoc(doc(db, 'users', myUid, 'friends', friendUid)),
-    deleteDoc(doc(db, 'users', friendUid, 'friends', myUid)),
-  ]);
+  const batch = writeBatch(db);
+  batch.delete(doc(db, 'users', myUid, 'friends', friendUid));
+  batch.delete(doc(db, 'users', friendUid, 'friends', myUid));
+  await batch.commit();
 }
 
 export async function getFriendDailyScores(
