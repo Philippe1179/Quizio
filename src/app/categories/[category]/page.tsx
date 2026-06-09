@@ -32,10 +32,13 @@ export default async function CategoryPage({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {gameModes.map(({ id, label, description, path }) => {
             const Icon = gameModeIcons[id];
+            const href = id === 'quiz'
+              ? `/categories/${category}/quiz`
+              : `${path}/${category}`;
             return (
               <Link
                 key={id}
-                href={`${path}/${category}`}
+                href={href}
                 className="group border border-black/10 dark:border-white/10 rounded-xl hover:border-black/30 dark:hover:border-white/30 hover:shadow-sm transition-all p-5 block"
               >
                 <Icon className="w-6 h-6 mb-3 text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors" />

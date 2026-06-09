@@ -4,11 +4,14 @@ import scienceData from '@/data/questions/science.json';
 import sportsData from '@/data/questions/sports.json';
 import popCultureData from '@/data/questions/pop-culture.json';
 
+export type Difficulty = 'easy' | 'medium' | 'hard';
+
 export type Question = {
   id: string;
   question: string;
   answer: string;
   options: string[];
+  difficulty?: Difficulty;
   acceptedAnswers?: string[];
 };
 
@@ -20,8 +23,10 @@ const questionMap: Record<string, Question[]> = {
   'pop-culture': popCultureData as Question[],
 };
 
-export function getQuestions(category: string): Question[] {
-  return questionMap[category] ?? [];
+export function getQuestions(category: string, difficulty?: Difficulty): Question[] {
+  const all = questionMap[category] ?? [];
+  if (!difficulty) return all;
+  return all.filter((q) => q.difficulty === difficulty);
 }
 
 export function getAllQuestions(): Question[] {
