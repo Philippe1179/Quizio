@@ -45,10 +45,20 @@ export default function Home() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [hasPlayedToday, setHasPlayedToday] = useState<boolean | null>(null);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  const nextReset = (() => {
+  const { nextReset, hoursLeft } = (() => {
     const now = new Date();
     const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-    return midnight.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+    return {
+      nextReset: midnight.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }),
+      hoursLeft: (midnight.getTime() - now.getTime()) / (1000 * 60 * 60),
+    };
+  })();
+
+  const streakTier = (() => {
+    if (!currentStreak || hasPlayedToday !== false || hoursLeft >= 18) return null;
+    if (hoursLeft < 1) return 'urgent' as const;
+    if (hoursLeft < 6) return 'warning' as const;
+    return 'nudge' as const;
   })();
 
   useEffect(() => {
@@ -113,11 +123,23 @@ export default function Home() {
                 {today}
               </span>
             </div>
-            {currentStreak > 0 && hasPlayedToday === false && (
-              <div className="mt-4 flex items-center gap-2 bg-amber-500/20 border border-amber-500/30 rounded-xl px-4 py-2.5 self-start">
-                <span className="text-lg">🔥</span>
-                <span className="text-sm font-semibold text-amber-300">
-                  Your {currentStreak}-day streak is at risk — play before {nextReset}!
+            {streakTier && (
+              <div className={`mt-4 flex items-center gap-2 rounded-xl px-4 py-2.5 border ${
+                streakTier === 'urgent'  ? 'bg-red-500/20 border-red-500/30' :
+                streakTier === 'warning' ? 'bg-amber-500/20 border-amber-500/30' :
+                                           'bg-indigo-500/10 border-indigo-500/20'
+              }`}>
+                <span className="text-lg">{streakTier === 'urgent' ? '🚨' : '🔥'}</span>
+                <span className={`text-sm font-semibold ${
+                  streakTier === 'urgent'  ? 'text-red-300' :
+                  streakTier === 'warning' ? 'text-amber-300' :
+                                             'text-indigo-300'
+                }`}>
+                  {streakTier === 'urgent'
+                    ? `Play now — your ${currentStreak}-day streak expires in under an hour!`
+                    : streakTier === 'warning'
+                    ? `Your ${currentStreak}-day streak is at risk — play before ${nextReset}!`
+                    : `Play today's challenge to keep your ${currentStreak}-day streak going.`}
                 </span>
               </div>
             )}
