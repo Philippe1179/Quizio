@@ -278,6 +278,49 @@ export async function getFriendshipStatus(myUid: string, theirUid: string): Prom
   return 'none';
 }
 
+// ── Survival mode ─────────────────────────────────────────────────────────────
+
+export interface SurvivalEntry {
+  userId: string;
+  username: string | null;
+  score: number;
+}
+
+export async function saveSurvivalScore(
+  uid: string,
+  category: string,
+  score: number,
+  username: string | null,
+): Promise<void> {
+  const ref = doc(db, 'survivalScores', category, 'entries', uid);
+  const existing = await getDoc(ref);
+  const best = (existing.data()?.score as number) || 0;
+  if (score > best) {
+    await setDoc(ref, { userId: uid, username: username ?? null, score, updatedAt: serverTimestamp() });
+  }
+  await addDoc(collection(db, 'users', uid, 'scores'), {
+    game: 'survival',
+    category,
+    label: `Survival — ${category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ')}`,
+    score,
+    total: score,
+    pct: 100,
+    createdAt: serverTimestamp(),
+  });
+}
+
+export async function getSurvivalLeaderboard(category: string, limitCount = 10): Promise<SurvivalEntry[]> {
+  const snap = await getDocs(collection(db, 'survivalScores', category, 'entries'));
+  return snap.docs
+    .map((d) => ({
+      userId: d.id,
+      username: (d.data().username as string | undefined) ?? null,
+      score: (d.data().score as number) || 0,
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limitCount);
+}
+
 // ── All-time leaderboard ───────────────────────────────────────────────────────
 
 export interface AllTimeEntry {
