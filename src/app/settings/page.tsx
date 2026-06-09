@@ -83,7 +83,7 @@ export default function SettingsPage() {
               <select
                 value={visibility}
                 onChange={(e) => handleVisibilityChange(e.target.value as ProfileVisibility)}
-                className="w-full bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-indigo-500/50 transition-colors cursor-pointer"
+                className="w-full bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium text-zinc-900 dark:text-zinc-200 focus:outline-none focus:border-indigo-500/50 transition-colors cursor-pointer"
               >
                 {VISIBILITY_OPTIONS.map(({ value, label }) => (
                   <option key={value} value={value}>{label}</option>
