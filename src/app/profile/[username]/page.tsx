@@ -6,7 +6,7 @@ import Nav from '@/components/ui/Nav';
 import { useAuth } from '@/context/AuthContext';
 import {
   getPublicProfile, getFriendshipStatus, getUserBests,
-  sendFriendRequest, acceptFriendRequest, cancelFriendRequest, removeFriend,
+  sendFriendRequest, acceptFriendRequest, cancelFriendRequest,
   type PublicProfile, type FriendshipStatus, type ProfileVisibility,
 } from '@/lib/db';
 
@@ -41,7 +41,6 @@ export default function PublicProfilePage() {
   const [notFound, setNotFound] = useState(false);
   const [blocked, setBlocked] = useState<ProfileVisibility | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [confirmRemove, setConfirmRemove] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -70,7 +69,6 @@ export default function PublicProfilePage() {
 
   async function handleFriendAction() {
     if (!user || !profile || actionLoading) return;
-    if (friendship === 'friends') { setConfirmRemove(true); return; }
     setActionLoading(true);
     try {
       if (friendship === 'none') {
@@ -88,28 +86,15 @@ export default function PublicProfilePage() {
     }
   }
 
-  async function handleConfirmRemove() {
-    if (!user || !profile) return;
-    setConfirmRemove(false);
-    setActionLoading(true);
-    try {
-      await removeFriend(user.uid, profile.uid);
-      setFriendship('none');
-    } catch { /* silently fail */ } finally {
-      setActionLoading(false);
-    }
-  }
-
   const friendLabel = (() => {
     if (actionLoading) return '…';
-    if (friendship === 'friends')  return 'Friends ✓';
     if (friendship === 'outgoing') return 'Request Sent';
     if (friendship === 'incoming') return 'Accept Request';
     return 'Add Friend';
   })();
 
   const friendStyle = (() => {
-    if (friendship === 'friends' || friendship === 'outgoing')
+    if (friendship === 'outgoing')
       return 'border border-white/20 text-zinc-400 hover:border-red-500/40 hover:text-red-400';
     return 'bg-indigo-600 text-white hover:bg-indigo-500';
   })();
@@ -172,29 +157,18 @@ export default function PublicProfilePage() {
 
           {user && friendship !== 'self' && (
             <div className="flex flex-col items-center gap-2">
-              <button
-                onClick={handleFriendAction}
-                disabled={actionLoading}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-colors disabled:opacity-50 ${friendStyle}`}
-              >
-                {friendLabel}
-              </button>
-              {confirmRemove && (
-                <div className="flex items-center gap-3 mt-1">
-                  <span className="text-sm text-zinc-400">Remove friend?</span>
-                  <button
-                    onClick={handleConfirmRemove}
-                    className="text-sm font-medium text-red-400 hover:text-red-300 transition-colors"
-                  >
-                    Yes, remove
-                  </button>
-                  <button
-                    onClick={() => setConfirmRemove(false)}
-                    className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
+              {friendship === 'friends' ? (
+                <span className="px-5 py-2 rounded-full text-sm font-medium border border-green-500/30 text-green-400">
+                  Friends ✓
+                </span>
+              ) : (
+                <button
+                  onClick={handleFriendAction}
+                  disabled={actionLoading}
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition-colors disabled:opacity-50 ${friendStyle}`}
+                >
+                  {friendLabel}
+                </button>
               )}
             </div>
           )}
