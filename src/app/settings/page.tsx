@@ -80,27 +80,20 @@ export default function SettingsPage() {
               <p className="text-sm text-zinc-500 mt-0.5">Control who can view your profile page.</p>
             </div>
             <div className="flex flex-col gap-2">
-              {VISIBILITY_OPTIONS.map(({ value, label, desc }) => (
-                <button
-                  key={value}
-                  onClick={() => handleVisibilityChange(value)}
-                  className={`flex items-center justify-between px-5 py-4 rounded-xl border text-left transition-colors ${
-                    visibility === value
-                      ? 'border-indigo-500 bg-indigo-500/10'
-                      : 'border-white/10 hover:border-white/30'
-                  }`}
-                >
-                  <div>
-                    <p className={`text-sm font-medium ${visibility === value ? 'text-indigo-300' : ''}`}>{label}</p>
-                    <p className="text-xs text-zinc-500 mt-0.5">{desc}</p>
-                  </div>
-                  {visibility === value && (
-                    <span className="w-2 h-2 rounded-full bg-indigo-400 flex-shrink-0" />
-                  )}
-                </button>
-              ))}
+              <select
+                value={visibility}
+                onChange={(e) => handleVisibilityChange(e.target.value as ProfileVisibility)}
+                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500/50 transition-colors cursor-pointer"
+              >
+                {VISIBILITY_OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value} className="bg-[#13111f]">{label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-zinc-500">
+                {VISIBILITY_OPTIONS.find((o) => o.value === visibility)?.desc}
+                {savingVisibility && ' — Saving…'}
+              </p>
             </div>
-            {savingVisibility && <p className="text-xs text-zinc-600">Saving…</p>}
           </section>
         )}
 
