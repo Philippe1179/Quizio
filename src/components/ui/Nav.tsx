@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, LogOut, Sun, Moon, User, Trophy, Calendar, Users } from 'lucide-react';
+import { ArrowLeft, LogOut, Sun, Moon, User, Trophy, Calendar, Users, Settings } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { signOut } from '@/lib/auth';
@@ -135,6 +135,14 @@ export default function Nav({ backHref }: { backHref?: string }) {
                     >
                       <Users className="w-4 h-4" />
                       Friends
+                    </Link>
+                    <Link
+                      href="/settings"
+                      onClick={() => setMenuOpen(false)}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
                     </Link>
                     <button
                       onClick={() => { signOut(); setMenuOpen(false); }}
