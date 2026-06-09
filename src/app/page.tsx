@@ -173,24 +173,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Interactive games */}
-        <section>
-          <div className="mb-5">
-            <h2 className="text-2xl font-bold tracking-tight">Interactive</h2>
-            <p className="text-sm text-zinc-500 mt-1">Visual and map-based challenges</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {interactiveGames.map(({ href, icon: Icon, title, description, bestKey }) => (
-              <Link key={href} href={href} className={cardClass}>
-                <BestBadge pct={bests[bestKey]} />
-                <Icon className={iconClass} />
-                <h3 className="font-semibold mb-1">{title}</h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">{description}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-
         {/* Survival Mode */}
         <section>
           <Link
@@ -213,6 +195,24 @@ export default function Home() {
               </span>
             </div>
           </Link>
+        </section>
+
+        {/* Interactive games */}
+        <section>
+          <div className="mb-5">
+            <h2 className="text-2xl font-bold tracking-tight">Interactive</h2>
+            <p className="text-sm text-zinc-500 mt-1">Visual and map-based challenges</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {interactiveGames.map(({ href, icon: Icon, title, description, bestKey }) => (
+              <Link key={href} href={href} className={cardClass}>
+                <BestBadge pct={bests[bestKey]} />
+                <Icon className={iconClass} />
+                <h3 className="font-semibold mb-1">{title}</h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">{description}</p>
+              </Link>
+            ))}
+          </div>
         </section>
 
       </main>
