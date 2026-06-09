@@ -62,8 +62,8 @@ export default function SettingsPage() {
                 onClick={() => { if (theme !== t) toggle(); }}
                 className={`flex-1 px-4 py-3 rounded-xl border text-sm font-medium transition-colors ${
                   theme === t
-                    ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300'
-                    : 'border-white/10 text-zinc-400 hover:border-white/30 hover:text-zinc-200'
+                    ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300'
+                    : 'border-black/10 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:border-black/30 dark:hover:border-white/30 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
               >
                 {t === 'dark' ? '🌙 Dark' : '☀️ Light'}
@@ -83,10 +83,10 @@ export default function SettingsPage() {
               <select
                 value={visibility}
                 onChange={(e) => handleVisibilityChange(e.target.value as ProfileVisibility)}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500/50 transition-colors cursor-pointer"
+                className="w-full bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-indigo-500/50 transition-colors cursor-pointer"
               >
                 {VISIBILITY_OPTIONS.map(({ value, label }) => (
-                  <option key={value} value={value} className="bg-[#13111f]">{label}</option>
+                  <option key={value} value={value}>{label}</option>
                 ))}
               </select>
               <p className="text-xs text-zinc-500">
