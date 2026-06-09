@@ -231,12 +231,15 @@ export async function updateStreak(uid: string, dateStr: string): Promise<Streak
 
 // ── Public profiles ───────────────────────────────────────────────────────────
 
+export type ProfileVisibility = 'public' | 'friends' | 'private';
+
 export interface PublicProfile {
   uid: string;
   username: string;
   currentStreak: number;
   longestStreak: number;
   totalCorrect: number;
+  visibility: ProfileVisibility;
 }
 
 export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
@@ -252,7 +255,12 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
     currentStreak: (d.currentStreak as number) || 0,
     longestStreak: (d.longestStreak as number) || 0,
     totalCorrect: (d.totalCorrect as number) || 0,
+    visibility: (d.profileVisibility as ProfileVisibility | undefined) ?? 'public',
   };
+}
+
+export async function setProfileVisibility(uid: string, visibility: ProfileVisibility): Promise<void> {
+  await setDoc(doc(db, 'users', uid), { profileVisibility: visibility }, { merge: true });
 }
 
 export type FriendshipStatus = 'self' | 'friends' | 'outgoing' | 'incoming' | 'none';

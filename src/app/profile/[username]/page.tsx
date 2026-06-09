@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import {
   getPublicProfile, getFriendshipStatus, getUserBests,
   sendFriendRequest, acceptFriendRequest, cancelFriendRequest, removeFriend,
-  type PublicProfile, type FriendshipStatus,
+  type PublicProfile, type FriendshipStatus, type ProfileVisibility,
 } from '@/lib/db';
 
 const SCORE_LABELS: Record<string, string> = {
@@ -39,6 +39,7 @@ export default function PublicProfilePage() {
   const [friendship, setFriendship] = useState<FriendshipStatus>('none');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [blocked, setBlocked] = useState<ProfileVisibility | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -47,11 +48,20 @@ export default function PublicProfilePage() {
       .then(async (p) => {
         if (!p) { setNotFound(true); return; }
         setProfile(p);
-        getUserBests(p.uid).then(setBests).catch(() => {});
-        if (user) {
-          const status = user.uid === p.uid ? 'self' : await getFriendshipStatus(user.uid, p.uid).catch(() => 'none' as FriendshipStatus);
-          setFriendship(status);
+
+        const isSelf = user?.uid === p.uid;
+        const friendStatus: FriendshipStatus = user && !isSelf
+          ? await getFriendshipStatus(user.uid, p.uid).catch(() => 'none' as FriendshipStatus)
+          : isSelf ? 'self' : 'none';
+        setFriendship(friendStatus);
+
+        // Visibility check
+        if (!isSelf) {
+          if (p.visibility === 'private') { setBlocked('private'); return; }
+          if (p.visibility === 'friends' && friendStatus !== 'friends') { setBlocked('friends'); return; }
         }
+
+        getUserBests(p.uid).then(setBests).catch(() => {});
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
@@ -112,6 +122,23 @@ export default function PublicProfilePage() {
       <main className="max-w-xl mx-auto px-6 py-24 text-center">
         <p className="text-zinc-400 font-medium">User not found</p>
         <p className="text-sm text-zinc-600 mt-1">@{username} doesn&apos;t exist.</p>
+      </main>
+    </div>
+  );
+
+  if (blocked) return (
+    <div className="min-h-screen">
+      <Nav backHref="/" />
+      <main className="max-w-xl mx-auto px-6 py-24 text-center flex flex-col gap-2">
+        <p className="text-2xl">🔒</p>
+        <p className="text-zinc-300 font-medium">
+          {blocked === 'private' ? 'This profile is private' : 'This profile is friends only'}
+        </p>
+        <p className="text-sm text-zinc-500">
+          {blocked === 'private'
+            ? `@${username} has set their profile to private.`
+            : `You need to be friends with @${username} to view their profile.`}
+        </p>
       </main>
     </div>
   );
