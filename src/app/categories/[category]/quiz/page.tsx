@@ -4,10 +4,10 @@ import Nav from '@/components/ui/Nav';
 import { getCategoryById } from '@/lib/categories';
 
 const DIFFICULTIES = [
-  { key: 'easy',   label: 'Easy',   emoji: '🟢', desc: '50 beginner-friendly questions',      href: (cat: string) => `/quiz/${cat}?difficulty=easy`   },
-  { key: 'medium', label: 'Medium', emoji: '🟡', desc: '50 moderately challenging questions', href: (cat: string) => `/quiz/${cat}?difficulty=medium` },
-  { key: 'hard',   label: 'Hard',   emoji: '🔴', desc: '50 tough questions',                  href: (cat: string) => `/quiz/${cat}?difficulty=hard`   },
-  { key: 'mixed',  label: 'Mixed',  emoji: '🎲', desc: 'All 150 questions combined',          href: (cat: string) => `/quiz/${cat}`                   },
+  { key: 'easy',   label: 'Easy',   emoji: '🟢', desc: 'Beginner-friendly questions',    href: (cat: string) => `/quiz/${cat}?difficulty=easy`   },
+  { key: 'medium', label: 'Medium', emoji: '🟡', desc: 'Moderately challenging',         href: (cat: string) => `/quiz/${cat}?difficulty=medium` },
+  { key: 'hard',   label: 'Hard',   emoji: '🔴', desc: 'Tough questions',                href: (cat: string) => `/quiz/${cat}?difficulty=hard`   },
+  { key: 'mixed',  label: 'Mixed',  emoji: '🎲', desc: 'Any difficulty — keep you on your toes', href: (cat: string) => `/quiz/${cat}`          },
 ];
 
 export default async function QuizDifficultyPage({
