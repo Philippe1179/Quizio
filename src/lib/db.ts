@@ -321,6 +321,16 @@ export async function getSurvivalLeaderboard(category: string, limitCount = 10):
     .slice(0, limitCount);
 }
 
+export async function getAllSurvivalLeaderboards(
+  categoryIds: string[],
+  limitCount = 5,
+): Promise<Record<string, SurvivalEntry[]>> {
+  const results = await Promise.all(
+    categoryIds.map((id) => getSurvivalLeaderboard(id, limitCount).then((entries) => [id, entries] as const))
+  );
+  return Object.fromEntries(results);
+}
+
 // ── All-time leaderboard ───────────────────────────────────────────────────────
 
 export interface AllTimeEntry {

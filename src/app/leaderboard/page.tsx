@@ -7,12 +7,13 @@ import PlayerActionSheet from '@/components/ui/PlayerActionSheet';
 import { useAuth } from '@/context/AuthContext';
 import {
   getDailyLeaderboard, getStreak, getHallOfFame, getAllTimeLeaderboard,
-  getFriends, getFriendDailyScores,
+  getFriends, getFriendDailyScores, getAllSurvivalLeaderboards,
   type DailyLeaderboardEntry, type StreakInfo, type HallOfFameEntry,
-  type AllTimeEntry, type FriendEntry,
+  type AllTimeEntry, type FriendEntry, type SurvivalEntry,
 } from '@/lib/db';
+import { categories } from '@/lib/categories';
 
-type Tab = 'today' | 'all-time' | 'friends';
+type Tab = 'today' | 'all-time' | 'survival' | 'friends';
 
 function medal(rank: number) {
   if (rank === 1) return '🥇';
@@ -107,6 +108,10 @@ export default function LeaderboardPage() {
   const [hallOfFame, setHallOfFame] = useState<HallOfFameEntry[]>([]);
   const [allTimeLoading, setAllTimeLoading] = useState(true);
 
+  // Survival
+  const [survivalBoards, setSurvivalBoards] = useState<Record<string, SurvivalEntry[]>>({});
+  const [survivalLoading, setSurvivalLoading] = useState(true);
+
   // Friends
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [friendScores, setFriendScores] = useState<DailyLeaderboardEntry[]>([]);
@@ -128,6 +133,11 @@ export default function LeaderboardPage() {
       .then(([at, hof]) => { setAllTime(at); setHallOfFame(hof); })
       .catch(() => {})
       .finally(() => setAllTimeLoading(false));
+
+    getAllSurvivalLeaderboards(categories.map((c) => c.id))
+      .then(setSurvivalBoards)
+      .catch(() => {})
+      .finally(() => setSurvivalLoading(false));
 
     if (user) {
       getFriends(user.uid)
@@ -165,7 +175,7 @@ export default function LeaderboardPage() {
 
         {/* Tab bar */}
         <div className="flex border-b border-white/10">
-          {(['today', 'all-time', 'friends'] as Tab[]).map((t) => (
+          {(['today', 'all-time', 'survival', 'friends'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -334,6 +344,69 @@ export default function LeaderboardPage() {
               </section>
             )}
           </>
+        )}
+
+        {/* ── Survival ── */}
+        {tab === 'survival' && (
+          survivalLoading ? (
+            <div className="flex flex-col gap-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 rounded-xl border border-white/10 animate-pulse bg-white/5" />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-8">
+              {categories.map(({ id, label }) => {
+                const entries = survivalBoards[id] ?? [];
+                return (
+                  <section key={id} className="flex flex-col gap-3">
+                    <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
+                      💀 {label}
+                    </h2>
+                    {entries.length === 0 ? (
+                      <p className="text-sm text-zinc-600 px-1">No scores yet</p>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        {entries.map((entry, i) => {
+                          const isYou = user?.uid === entry.userId;
+                          const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
+                            isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
+                          }`;
+                          const inner = (
+                            <>
+                              <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">{medal(i + 1)}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className={`font-medium text-sm truncate ${isYou ? 'text-indigo-400' : ''}`}>
+                                  {entry.username ?? 'Anonymous'}
+                                  {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
+                                </p>
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-2xl font-bold tabular-nums text-red-400">{entry.score}</p>
+                                <p className="text-xs text-zinc-500">streak</p>
+                              </div>
+                            </>
+                          );
+                          if (entry.username) {
+                            return (
+                              <button
+                                key={entry.userId}
+                                onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }}
+                                className={`${baseCls} hover:border-white/30 w-full text-left`}
+                              >
+                                {inner}
+                              </button>
+                            );
+                          }
+                          return <div key={entry.userId} className={baseCls}>{inner}</div>;
+                        })}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          )
         )}
 
         {/* ── Friends ── */}
