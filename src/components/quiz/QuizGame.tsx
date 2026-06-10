@@ -91,18 +91,18 @@ export default function QuizGame({
       const correct = option === current.answer;
       setSelected(option);
       if (correct) setScore((s) => s + 1);
-
-      setTimeout(() => {
-        if (index + 1 >= round.length) {
-          setDone(true);
-        } else {
-          setIndex((i) => i + 1);
-          setSelected(null);
-        }
-      }, 1200);
     },
-    [selected, current, index, round.length]
+    [selected, current]
   );
+
+  const handleNext = useCallback(() => {
+    if (index + 1 >= round.length) {
+      setDone(true);
+    } else {
+      setIndex((i) => i + 1);
+      setSelected(null);
+    }
+  }, [index, round.length]);
 
   const restart = useCallback(() => {
     scoreSaved.current = false;
@@ -186,6 +186,22 @@ export default function QuizGame({
           );
         })}
       </div>
+
+      {selected !== null && (
+        <div className="flex flex-col gap-3 mt-1">
+          {current.explanation && (
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300 leading-relaxed">
+              {current.explanation}
+            </div>
+          )}
+          <button
+            onClick={handleNext}
+            className="self-end px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium transition-colors text-sm"
+          >
+            {index + 1 >= round.length ? 'See Results' : 'Next Question'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
