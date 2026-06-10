@@ -16,7 +16,7 @@ export default function DailyPage() {
             <span className="text-sm text-zinc-500">{dateStr}</span>
           </div>
           <p className="text-sm text-zinc-500 mt-1">
-            15 questions from all categories · Same for everyone · Resets at midnight UTC
+            10 questions from all categories · Same for everyone · Resets at midnight UTC
           </p>
         </div>
         <DailyGame questions={questions} dateStr={dateStr} />
