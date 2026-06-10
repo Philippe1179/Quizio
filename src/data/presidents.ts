@@ -46,7 +46,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 6, number: '6th', name: 'John Quincy Adams',
     years: '1825–1829', party: 'Democratic-Republican',
-    portrait: p('John_Quincy_Adams_by_George_Caleb_Bingham.jpg'),
+    portrait: p('John_Quincy_Adams.jpg'),
     fact: 'The only president to serve in the House of Representatives after his presidency.',
   },
   {
@@ -130,7 +130,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 20, number: '20th', name: 'James A. Garfield',
     years: '1881', party: 'Republican',
-    portrait: p('James_Abram_Garfield,_photo_portrait_seated.jpg'),
+    portrait: p('James_Garfield.jpg'),
     fact: 'Assassinated just 200 days into office. He was ambidextrous and could simultaneously write Greek with one hand and Latin with the other.',
   },
   {
@@ -154,7 +154,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 24, number: '25th', name: 'William McKinley',
     years: '1897–1901', party: 'Republican',
-    portrait: p('William_McKinley_by_Courtney_Art_Studio,_1896.jpg'),
+    portrait: p('William_McKinley.jpg'),
     fact: 'Led the US to victory in the Spanish-American War, acquiring Puerto Rico, Guam, and the Philippines. Assassinated in 1901.',
   },
   {
@@ -172,13 +172,13 @@ export const PRESIDENTS: President[] = [
   {
     id: 27, number: '28th', name: 'Woodrow Wilson',
     years: '1913–1921', party: 'Democratic',
-    portrait: p('Thomas_Woodrow_Wilson,_Harris_&_Ewing_bw_photo_portrait,_1919.jpg'),
+    portrait: p('Woodrow_Wilson.jpg'),
     fact: 'Led the US through WWI and proposed the League of Nations — the forerunner of the United Nations.',
   },
   {
     id: 28, number: '29th', name: 'Warren G. Harding',
     years: '1921–1923', party: 'Republican',
-    portrait: p('Warren_G._Harding_(BEP_engraved_portrait).jpg'),
+    portrait: p('Warren_G._Harding.jpg'),
     fact: 'Coined the word "normalcy." His administration was rocked by the Teapot Dome scandal. Died in office.',
   },
   {
@@ -208,25 +208,25 @@ export const PRESIDENTS: President[] = [
   {
     id: 33, number: '34th', name: 'Dwight D. Eisenhower',
     years: '1953–1961', party: 'Republican',
-    portrait: p('Dwight_D._Eisenhower,_official_photo_portrait,_May_29,_1959.jpg'),
+    portrait: p('Dwight_Eisenhower.jpg'),
     fact: 'Supreme Allied Commander in WWII. Created the Interstate Highway System — originally justified for military evacuation.',
   },
   {
     id: 34, number: '35th', name: 'John F. Kennedy',
     years: '1961–1963', party: 'Democratic',
-    portrait: p('John_F._Kennedy,_White_House_color_photo_portrait.jpg'),
+    portrait: p('John_F._Kennedy_White_House_color_photo_portrait.jpg'),
     fact: 'Youngest elected president at 43. Navigated the Cuban Missile Crisis, bringing the world back from nuclear brinkmanship.',
   },
   {
     id: 35, number: '36th', name: 'Lyndon B. Johnson',
     years: '1963–1969', party: 'Democratic',
-    portrait: p('37_Lyndon_Johnson_3x4.jpg'),
+    portrait: p('Lyndon_Johnson.jpg'),
     fact: 'Signed the Civil Rights Act of 1964 and the Voting Rights Act of 1965, landmark achievements of the civil rights movement.',
   },
   {
     id: 36, number: '37th', name: 'Richard Nixon',
     years: '1969–1974', party: 'Republican',
-    portrait: p('Richard_M._Nixon,_ca._1935_-_1982_-_NARA_-_530679.jpg'),
+    portrait: p('Richard_Nixon.jpg'),
     fact: 'First president to visit China, opening diplomatic relations. First and only president to resign from office.',
   },
   {
@@ -238,7 +238,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 38, number: '39th', name: 'Jimmy Carter',
     years: '1977–1981', party: 'Democratic',
-    portrait: p('JimmyCarterPortrait2.jpg'),
+    portrait: p('Jimmy_Carter.jpg'),
     fact: 'Brokered the Camp David Accords between Israel and Egypt. Awarded the Nobel Peace Prize in 2002.',
   },
   {
@@ -262,7 +262,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 42, number: '43rd', name: 'George W. Bush',
     years: '2001–2009', party: 'Republican',
-    portrait: p('George-W-Bush.jpg'),
+    portrait: p('George_W._Bush.jpg'),
     fact: 'Led the US response to 9/11, launching the War on Terror and wars in Afghanistan and Iraq.',
   },
   {
