@@ -53,7 +53,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 7, number: '7th', name: 'Andrew Jackson',
     years: '1829–1837', party: 'Democratic',
-    portrait: p('Andrew_Jackson_head.jpg'),
+    portrait: '/presidents/andrew-jackson.jpg',
     fact: 'First president from west of the Appalachians. Survived two assassination attempts — both pistols misfired.',
   },
   {
@@ -125,7 +125,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 19, number: '19th', name: 'Rutherford B. Hayes',
     years: '1877–1881', party: 'Republican',
-    portrait: p('Rutherford_B._Hayes_-_Brady-Handy.jpg'),
+    portrait: '/presidents/rutherford-hayes.jpg',
     fact: 'First president to use a telephone in the White House. Thomas Edison demonstrated the phonograph to him personally.',
   },
   {
@@ -155,7 +155,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 24, number: '25th', name: 'William McKinley',
     years: '1897–1901', party: 'Republican',
-    portrait: p('William_McKinley_by_Anders_Zorn,_1908.jpg'),
+    portrait: '/presidents/william-mckinley.jpg',
     fact: 'Led the US to victory in the Spanish-American War, acquiring Puerto Rico, Guam, and the Philippines. Assassinated in 1901.',
   },
   {
