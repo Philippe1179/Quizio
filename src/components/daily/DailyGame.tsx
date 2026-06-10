@@ -271,9 +271,8 @@ export default function DailyGame({
       if (selected !== null) return;
       if (option === round[index].answer) setScore((s) => s + 1);
       setSelected(option);
-      setTimeout(advance, 1200);
     },
-    [selected, round, index, advance],
+    [selected, round, index],
   );
 
   if (phase === 'checking') {
@@ -349,6 +348,22 @@ export default function DailyGame({
           );
         })}
       </div>
+
+      {answered && (
+        <div className="flex flex-col gap-3 mt-1">
+          {current.explanation && (
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300 leading-relaxed">
+              {current.explanation}
+            </div>
+          )}
+          <button
+            onClick={advance}
+            className="self-end px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium transition-colors text-sm"
+          >
+            {index + 1 >= round.length ? 'See Results' : 'Next Question'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
