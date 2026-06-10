@@ -241,6 +241,7 @@ export default function DailyGame({
   const [showPlus, setShowPlus] = useState(false);
   const [answers, setAnswers] = useState<boolean[]>([]);
   const [wrongAnswers, setWrongAnswers] = useState<{ q: Question; selected: string }[]>([]);
+  const [fading, setFading] = useState(false);
   const [score, setScore] = useState(0);
   const [phase, setPhase] = useState<Phase>('checking');
 
@@ -304,16 +305,21 @@ export default function DailyGame({
   }, [phase, user, username, score, round.length, dateStr, isArchive]);
 
   const advance = useCallback(() => {
-    const correct = selected === round[index].answer;
-    setAnswers((prev) => [...prev, correct]);
-    if (!correct && selected) setWrongAnswers((prev) => [...prev, { q: round[index], selected }]);
-    if (index + 1 >= round.length) {
-      setPhase('done');
-    } else {
-      setIndex((i) => i + 1);
-      setSelected(null);
-    }
-  }, [index, round.length, selected, round]);
+    if (fading) return;
+    setFading(true);
+    setTimeout(() => {
+      const correct = selected === round[index].answer;
+      setAnswers((prev) => [...prev, correct]);
+      if (!correct && selected) setWrongAnswers((prev) => [...prev, { q: round[index], selected }]);
+      if (index + 1 >= round.length) {
+        setPhase('done');
+      } else {
+        setIndex((i) => i + 1);
+        setSelected(null);
+        setFading(false);
+      }
+    }, 150);
+  }, [fading, index, round.length, selected, round]);
 
   const handleSelect = useCallback(
     (option: string) => {
@@ -400,6 +406,7 @@ export default function DailyGame({
         })}
       </div>
 
+      <div className={`flex flex-col gap-6 transition-opacity duration-150 ${fading ? 'opacity-0' : 'opacity-100'}`}>
       <p className="text-xl font-semibold leading-snug">{current.question}</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -439,6 +446,7 @@ export default function DailyGame({
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -39,6 +39,7 @@ export default function SurvivalGame({
   const [phase, setPhase] = useState<Phase>('playing');
   const [selected, setSelected] = useState<string | null>(null);
   const [showPlus, setShowPlus] = useState(false);
+  const [fading, setFading] = useState(false);
   const [leaderboard, setLeaderboard] = useState<SurvivalEntry[]>([]);
   const [personalBest, setPersonalBest] = useState(0);
   const [newBest, setNewBest] = useState(false);
@@ -69,18 +70,22 @@ export default function SurvivalGame({
   }
 
   function handleNext() {
-    if (!selected) return;
-    if (isCorrectAnswer(selected, current)) {
-      if (index + 1 >= shuffled.length) {
-        setPhase('survived');
+    if (!selected || fading) return;
+    setFading(true);
+    setTimeout(() => {
+      if (isCorrectAnswer(selected, current)) {
+        if (index + 1 >= shuffled.length) {
+          setPhase('survived');
+        } else {
+          setIndex(index + 1);
+          setSelected(null);
+          setPhase('playing');
+          setFading(false);
+        }
       } else {
-        setIndex(index + 1);
-        setSelected(null);
-        setPhase('playing');
+        setPhase('done');
       }
-    } else {
-      setPhase('done');
-    }
+    }, 150);
   }
 
   const finalizeGame = useCallback((finalStreak: number) => {
@@ -118,6 +123,7 @@ export default function SurvivalGame({
           <span className="text-xs text-zinc-600 tabular-nums">Q{index + 1}</span>
         </div>
 
+        <div className={`flex flex-col gap-6 transition-opacity duration-150 ${fading ? 'opacity-0' : 'opacity-100'}`}>
         <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-6 py-8">
           <p className="text-lg font-semibold leading-snug">{current.question}</p>
         </div>
@@ -163,6 +169,7 @@ export default function SurvivalGame({
             </button>
           </div>
         )}
+        </div>
       </div>
     );
   }

@@ -57,6 +57,7 @@ export default function QuizGame({
   const [selected, setSelected] = useState<string | null>(null);
   const [showPlus, setShowPlus] = useState(false);
   const [wrongAnswers, setWrongAnswers] = useState<{ q: GameQuestion; selected: string }[]>([]);
+  const [fading, setFading] = useState(false);
   const [answers, setAnswers] = useState<(boolean | null)[]>(() => {
     const resumeIndex = loadProgress(category, questions)?.index ?? 0;
     return resumeIndex > 0 ? (Array(resumeIndex).fill(null) as (boolean | null)[]) : [];
@@ -107,16 +108,21 @@ export default function QuizGame({
   );
 
   const handleNext = useCallback(() => {
-    const correct = selected === current.answer;
-    setAnswers((prev) => [...prev, correct]);
-    if (!correct && selected) setWrongAnswers((prev) => [...prev, { q: current, selected }]);
-    if (index + 1 >= round.length) {
-      setDone(true);
-    } else {
-      setIndex((i) => i + 1);
-      setSelected(null);
-    }
-  }, [index, round.length, selected, current]);
+    if (fading) return;
+    setFading(true);
+    setTimeout(() => {
+      const correct = selected === current.answer;
+      setAnswers((prev) => [...prev, correct]);
+      if (!correct && selected) setWrongAnswers((prev) => [...prev, { q: current, selected }]);
+      if (index + 1 >= round.length) {
+        setDone(true);
+      } else {
+        setIndex((i) => i + 1);
+        setSelected(null);
+        setFading(false);
+      }
+    }, 150);
+  }, [fading, index, round.length, selected, current]);
 
   const restart = useCallback(() => {
     scoreSaved.current = false;
@@ -127,6 +133,7 @@ export default function QuizGame({
     setShowPlus(false);
     setAnswers([]);
     setWrongAnswers([]);
+    setFading(false);
     setScore(0);
     setDone(false);
   }, [questions, category]);
@@ -231,7 +238,8 @@ export default function QuizGame({
         })}
       </div>
 
-      <p className="text-xl font-semibold leading-snug mt-2">{current.question}</p>
+      <div className={`flex flex-col gap-6 transition-opacity duration-150 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+      <p className="text-xl font-semibold leading-snug">{current.question}</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {current.shuffledOptions.map((option) => {
@@ -274,6 +282,7 @@ export default function QuizGame({
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }
