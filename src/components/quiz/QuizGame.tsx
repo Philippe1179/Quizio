@@ -56,6 +56,7 @@ export default function QuizGame({
   const [score, setScore] = useState(() => loadProgress(category, questions)?.score ?? 0);
   const [selected, setSelected] = useState<string | null>(null);
   const [showPlus, setShowPlus] = useState(false);
+  const [wrongAnswers, setWrongAnswers] = useState<{ q: GameQuestion; selected: string }[]>([]);
   const [answers, setAnswers] = useState<(boolean | null)[]>(() => {
     const resumeIndex = loadProgress(category, questions)?.index ?? 0;
     return resumeIndex > 0 ? (Array(resumeIndex).fill(null) as (boolean | null)[]) : [];
@@ -106,7 +107,9 @@ export default function QuizGame({
   );
 
   const handleNext = useCallback(() => {
-    setAnswers((prev) => [...prev, selected === current.answer]);
+    const correct = selected === current.answer;
+    setAnswers((prev) => [...prev, correct]);
+    if (!correct && selected) setWrongAnswers((prev) => [...prev, { q: current, selected }]);
     if (index + 1 >= round.length) {
       setDone(true);
     } else {
@@ -123,6 +126,7 @@ export default function QuizGame({
     setSelected(null);
     setShowPlus(false);
     setAnswers([]);
+    setWrongAnswers([]);
     setScore(0);
     setDone(false);
   }, [questions, category]);
@@ -131,24 +135,56 @@ export default function QuizGame({
     const pct = Math.round((score / round.length) * 100);
     const message = pct >= 80 ? 'Great job!' : pct >= 50 ? 'Good effort!' : 'Keep practicing!';
     return (
-      <div className="flex flex-col items-center text-center gap-4 py-8">
-        <div className="text-7xl font-bold tracking-tight">{pct}%</div>
-        <p className="text-xl font-semibold">{score} / {round.length} correct</p>
-        <p className="text-zinc-400">{message}</p>
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={restart}
-            className="px-5 py-2.5 rounded-lg border border-white/20 font-medium hover:border-white/40 transition-colors"
-          >
-            Play Again
-          </button>
-          <Link
-            href={`/categories/${category}`}
-            className="px-5 py-2.5 rounded-lg bg-white/10 font-medium hover:bg-white/15 transition-colors"
-          >
-            Choose Mode
-          </Link>
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col items-center text-center gap-3 py-6">
+          <div className="text-7xl font-bold tracking-tight">{pct}%</div>
+          <p className="text-xl font-semibold">{score} / {round.length} correct</p>
+          <p className="text-zinc-400">{message}</p>
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={restart}
+              className="px-5 py-2.5 rounded-lg border border-white/20 font-medium hover:border-white/40 transition-colors"
+            >
+              Play Again
+            </button>
+            <Link
+              href={`/categories/${category}`}
+              className="px-5 py-2.5 rounded-lg bg-white/10 font-medium hover:bg-white/15 transition-colors"
+            >
+              Choose Mode
+            </Link>
+          </div>
         </div>
+
+        {wrongAnswers.length > 0 && (
+          <section className="flex flex-col gap-3">
+            <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
+              Missed — {wrongAnswers.length} {wrongAnswers.length === 1 ? 'question' : 'questions'}
+            </h2>
+            <div className="flex flex-col gap-3">
+              {wrongAnswers.map(({ q, selected: wrong }, i) => (
+                <div key={i} className="rounded-xl border border-white/10 bg-white/5 px-4 py-4 flex flex-col gap-2.5">
+                  <p className="text-sm font-medium leading-snug">{q.question}</p>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-red-400 font-medium">✗</span>
+                      <span className="text-sm text-red-400 line-through">{wrong}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-green-400 font-medium">✓</span>
+                      <span className="text-sm text-green-400 font-medium">{q.answer}</span>
+                    </div>
+                  </div>
+                  {q.explanation && (
+                    <p className="text-xs text-zinc-400 leading-relaxed border-t border-white/5 pt-2.5">
+                      {q.explanation}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     );
   }

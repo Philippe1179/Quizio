@@ -52,6 +52,7 @@ function ResultsView({
   isGuest,
   alreadyPlayed,
   saveError,
+  wrongAnswers = [],
 }: {
   score: number;
   total: number;
@@ -65,6 +66,7 @@ function ResultsView({
   isGuest: boolean;
   alreadyPlayed: boolean;
   saveError: string | null;
+  wrongAnswers?: { q: Question; selected: string }[];
 }) {
   const message = pct >= 80 ? 'Great job!' : pct >= 50 ? 'Good effort!' : 'Keep practicing!';
   const [selectedPlayer, setSelectedPlayer] = useState<import('@/components/ui/PlayerActionSheet').PlayerTarget | null>(null);
@@ -131,6 +133,36 @@ function ResultsView({
           </Link>
         </div>
       </div>
+
+      {wrongAnswers.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
+            Missed — {wrongAnswers.length} {wrongAnswers.length === 1 ? 'question' : 'questions'}
+          </h2>
+          <div className="flex flex-col gap-3">
+            {wrongAnswers.map(({ q, selected: wrong }, i) => (
+              <div key={i} className="rounded-xl border border-white/10 bg-white/5 px-4 py-4 flex flex-col gap-2.5">
+                <p className="text-sm font-medium leading-snug">{q.question}</p>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-red-400 font-medium">✗</span>
+                    <span className="text-sm text-red-400 line-through">{wrong}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-green-400 font-medium">✓</span>
+                    <span className="text-sm text-green-400 font-medium">{q.answer}</span>
+                  </div>
+                </div>
+                {q.explanation && (
+                  <p className="text-xs text-zinc-400 leading-relaxed border-t border-white/5 pt-2.5">
+                    {q.explanation}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {!isArchive && (
         <div className="flex flex-col gap-4">
@@ -208,6 +240,7 @@ export default function DailyGame({
   const [selected, setSelected] = useState<string | null>(null);
   const [showPlus, setShowPlus] = useState(false);
   const [answers, setAnswers] = useState<boolean[]>([]);
+  const [wrongAnswers, setWrongAnswers] = useState<{ q: Question; selected: string }[]>([]);
   const [score, setScore] = useState(0);
   const [phase, setPhase] = useState<Phase>('checking');
 
@@ -271,7 +304,9 @@ export default function DailyGame({
   }, [phase, user, username, score, round.length, dateStr, isArchive]);
 
   const advance = useCallback(() => {
-    setAnswers((prev) => [...prev, selected === round[index].answer]);
+    const correct = selected === round[index].answer;
+    setAnswers((prev) => [...prev, correct]);
+    if (!correct && selected) setWrongAnswers((prev) => [...prev, { q: round[index], selected }]);
     if (index + 1 >= round.length) {
       setPhase('done');
     } else {
@@ -320,6 +355,7 @@ export default function DailyGame({
         isGuest={!user}
         alreadyPlayed={phase === 'already-played'}
         saveError={saveError}
+        wrongAnswers={phase === 'done' ? wrongAnswers : []}
       />
     );
   }
