@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ChevronDown } from 'lucide-react';
 import Nav from '@/components/ui/Nav';
 import PlayerActionSheet from '@/components/ui/PlayerActionSheet';
 import { useAuth } from '@/context/AuthContext';
 import {
   getDailyLeaderboard, getStreak, getHallOfFame, getAllTimeLeaderboard,
   getFriends, getFriendDailyScores, getAllSurvivalLeaderboards,
+  getUserDailyScoresForDates,
   type DailyLeaderboardEntry, type StreakInfo, type HallOfFameEntry,
   type AllTimeEntry, type FriendEntry, type SurvivalEntry,
 } from '@/lib/db';
@@ -93,7 +95,6 @@ function DailyEntryRow({
 export default function LeaderboardPage() {
   const { user, loading: authLoading } = useAuth();
   const today = new Date().toISOString().slice(0, 10);
-  const pastDays = getPastDays(today, 7);
 
   const [tab, setTab] = useState<Tab>('today');
   const [selectedPlayer, setSelectedPlayer] = useState<import('@/components/ui/PlayerActionSheet').PlayerTarget | null>(null);
@@ -111,6 +112,13 @@ export default function LeaderboardPage() {
   // Survival
   const [survivalBoards, setSurvivalBoards] = useState<Record<string, SurvivalEntry[]>>({});
   const [survivalLoading, setSurvivalLoading] = useState(true);
+
+  // Past daily challenges
+  const pastDates30 = getPastDays(today, 30);
+  const [userPastScores, setUserPastScores] = useState<Record<string, DailyLeaderboardEntry>>({});
+  const [expandedDate, setExpandedDate] = useState<string | null>(null);
+  const [expandedEntries, setExpandedEntries] = useState<DailyLeaderboardEntry[]>([]);
+  const [expandedLoading, setExpandedLoading] = useState(false);
 
   // Friends
   const [friends, setFriends] = useState<FriendEntry[]>([]);
@@ -140,6 +148,12 @@ export default function LeaderboardPage() {
       .finally(() => setSurvivalLoading(false));
 
     if (user) {
+      getUserDailyScoresForDates(user.uid, getPastDays(today, 30))
+        .then(setUserPastScores)
+        .catch(() => {});
+    }
+
+    if (user) {
       getFriends(user.uid)
         .then(async (f) => {
           setFriends(f);
@@ -153,6 +167,17 @@ export default function LeaderboardPage() {
       setFriendsLoading(false);
     }
   }, [authLoading, user, today]);
+
+  function handleDateClick(date: string) {
+    if (expandedDate === date) { setExpandedDate(null); return; }
+    setExpandedDate(date);
+    setExpandedEntries([]);
+    setExpandedLoading(true);
+    getDailyLeaderboard(date)
+      .then(setExpandedEntries)
+      .catch(() => {})
+      .finally(() => setExpandedLoading(false));
+  }
 
   return (
     <div className="min-h-screen">
@@ -233,21 +258,6 @@ export default function LeaderboardPage() {
               )}
             </section>
 
-            <section className="flex flex-col gap-4">
-              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Past Challenges</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {pastDays.map((date) => (
-                  <Link
-                    key={date}
-                    href={`/daily/${date}`}
-                    className="rounded-xl border border-black/10 dark:border-white/10 px-4 py-3 text-center hover:border-black/30 dark:hover:border-white/30 transition-colors"
-                  >
-                    <p className="text-sm font-medium">{date.slice(5)}</p>
-                    <p className="text-xs text-zinc-500 mt-0.5">Play →</p>
-                  </Link>
-                ))}
-              </div>
-            </section>
           </>
         )}
 
@@ -343,6 +353,60 @@ export default function LeaderboardPage() {
                 </div>
               </section>
             )}
+            <section className="flex flex-col gap-3">
+              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Past Daily Challenges</h2>
+              <div className="flex flex-col gap-2">
+                {pastDates30.map((date) => {
+                  const userScore = userPastScores[date];
+                  const isExpanded = expandedDate === date;
+                  return (
+                    <div key={date} className="rounded-xl border border-black/10 dark:border-white/10 overflow-hidden">
+                      <button
+                        onClick={() => handleDateClick(date)}
+                        className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-white/5 transition-colors text-left"
+                      >
+                        <span className="flex-1 text-sm font-medium tabular-nums">{date}</span>
+                        {userScore !== undefined && (
+                          <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 ${pctColor(userScore.pct)}`}>
+                            You: {userScore.pct}%
+                          </span>
+                        )}
+                        <ChevronDown className={`w-4 h-4 text-zinc-500 flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {isExpanded && (
+                        <div className="border-t border-white/10 px-5 py-4 flex flex-col gap-2">
+                          {expandedLoading ? (
+                            [...Array(3)].map((_, i) => (
+                              <div key={i} className="h-12 rounded-lg bg-white/5 animate-pulse" />
+                            ))
+                          ) : expandedEntries.length === 0 ? (
+                            <p className="text-sm text-zinc-600 py-2">No scores for this day.</p>
+                          ) : (
+                            expandedEntries.slice(0, 10).map((entry, i) => {
+                              const isYou = user?.uid === entry.userId;
+                              return (
+                                <div
+                                  key={entry.userId}
+                                  className={`flex items-center gap-3 rounded-lg px-4 py-2.5 ${isYou ? 'bg-indigo-950/30 border border-indigo-500/30' : 'bg-white/[0.03]'}`}
+                                >
+                                  <span className="w-6 text-center text-xs font-bold text-zinc-500 flex-shrink-0">{medal(i + 1)}</span>
+                                  <p className={`flex-1 text-sm truncate ${isYou ? 'text-indigo-400 font-medium' : ''}`}>
+                                    {entry.username ?? 'Anonymous'}
+                                    {isYou && <span className="ml-2 text-xs">you</span>}
+                                  </p>
+                                  <span className={`text-sm font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>{entry.pct}%</span>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
           </>
         )}
 

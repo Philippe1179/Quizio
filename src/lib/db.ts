@@ -120,6 +120,18 @@ export async function getDailyScore(
   };
 }
 
+export async function getUserDailyScoresForDates(
+  uid: string,
+  dates: string[],
+): Promise<Record<string, DailyLeaderboardEntry>> {
+  const results = await Promise.all(
+    dates.map((date) => getDailyScore(uid, date).then((entry) => [date, entry] as const))
+  );
+  return Object.fromEntries(
+    results.filter((pair): pair is [string, DailyLeaderboardEntry] => pair[1] !== null)
+  );
+}
+
 export async function saveDailyScore(
   uid: string,
   dateStr: string,
