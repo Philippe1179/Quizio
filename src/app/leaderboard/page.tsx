@@ -78,7 +78,7 @@ function DailyEntryRow({
       <button
         onClick={(e) => {
           const r = e.currentTarget.getBoundingClientRect();
-          onPlayerClick({ username: entry.username!, userId: entry.userId, x: r.right, y: r.top });
+          onPlayerClick({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom });
         }}
         className={`${baseCls} hover:border-white/30 w-full text-left`}
       >
@@ -282,7 +282,7 @@ export default function LeaderboardPage() {
                     );
                     if (clickable) {
                       return (
-                        <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.right, y: r.top }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
+                        <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
                           {inner}
                         </button>
                       );
@@ -323,7 +323,7 @@ export default function LeaderboardPage() {
                     );
                     if (clickable) {
                       return (
-                        <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.right, y: r.top }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
+                        <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
                           {inner}
                         </button>
                       );

@@ -172,7 +172,7 @@ function ResultsView({
                 );
                 if (clickable) {
                   return (
-                    <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.right, y: r.top }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
+                    <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
                       {inner}
                     </button>
                   );

@@ -67,10 +67,10 @@ export default function PlayerActionSheet({
   // Position card near click, clamped to viewport
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  let left = player.x + 8;
-  let top = player.y;
+  let left = player.x;
+  let top = player.y + 6;
   if (left + CARD_W > vw - 8) left = vw - CARD_W - 8;
-  if (top + CARD_H > vh - 16) top = vh - CARD_H - 16;
+  if (top + CARD_H > vh - 16) top = player.y - CARD_H - 6;
   if (left < 8) left = 8;
 
   async function handleAddFriend() {
