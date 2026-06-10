@@ -132,6 +132,26 @@ export async function getUserDailyScoresForDates(
   );
 }
 
+export async function getUserDailyScoresWithRank(
+  uid: string,
+  dates: string[],
+): Promise<Record<string, { entry: DailyLeaderboardEntry; rank: number }>> {
+  const userScores = await getUserDailyScoresForDates(uid, dates);
+  const playedDates = Object.keys(userScores);
+  if (playedDates.length === 0) return {};
+
+  const boards = await Promise.all(
+    playedDates.map((date) => getDailyLeaderboard(date).then((entries) => [date, entries] as const))
+  );
+
+  const result: Record<string, { entry: DailyLeaderboardEntry; rank: number }> = {};
+  for (const [date, entries] of boards) {
+    const rank = entries.findIndex((e) => e.userId === uid) + 1;
+    if (rank > 0) result[date] = { entry: userScores[date], rank };
+  }
+  return result;
+}
+
 export async function saveDailyScore(
   uid: string,
   dateStr: string,

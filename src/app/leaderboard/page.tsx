@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import {
   getDailyLeaderboard, getStreak, getHallOfFame,
   getFriends, getFriendDailyScores, getAllSurvivalLeaderboards,
-  getUserDailyScoresForDates,
+  getUserDailyScoresWithRank,
   type DailyLeaderboardEntry, type StreakInfo, type HallOfFameEntry,
   type FriendEntry, type SurvivalEntry,
 } from '@/lib/db';
@@ -114,7 +114,7 @@ export default function LeaderboardPage() {
 
   // Past daily challenges
   const pastDates30 = getPastDays(today, 30);
-  const [userPastScores, setUserPastScores] = useState<Record<string, DailyLeaderboardEntry>>({});
+  const [userPastScores, setUserPastScores] = useState<Record<string, { entry: DailyLeaderboardEntry; rank: number }>>({});
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandedEntries, setExpandedEntries] = useState<DailyLeaderboardEntry[]>([]);
   const [expandedLoading, setExpandedLoading] = useState(false);
@@ -147,7 +147,7 @@ export default function LeaderboardPage() {
       .finally(() => setSurvivalLoading(false));
 
     if (user) {
-      getUserDailyScoresForDates(user.uid, getPastDays(today, 30))
+      getUserDailyScoresWithRank(user.uid, getPastDays(today, 30))
         .then(setUserPastScores)
         .catch(() => {});
     }
@@ -317,8 +317,8 @@ export default function LeaderboardPage() {
                       >
                         <span className="flex-1 text-sm font-medium tabular-nums">{date}</span>
                         {userScore !== undefined && (
-                          <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 ${pctColor(userScore.pct)}`}>
-                            You: {userScore.pct}%
+                          <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 ${pctColor(userScore.entry.pct)}`}>
+                            #{userScore.rank} · {userScore.entry.pct}%
                           </span>
                         )}
                         <ChevronDown className={`w-4 h-4 text-zinc-500 flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
