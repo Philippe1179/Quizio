@@ -1,15 +1,13 @@
 import Link from 'next/link';
-import { ListChecks, StickyNote, Keyboard, Timer } from 'lucide-react';
+import { ListChecks, Zap } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import Nav from '@/components/ui/Nav';
 import { getCategoryById, gameModes } from '@/lib/categories';
 import type { LucideIcon } from 'lucide-react';
 
 const gameModeIcons: Record<string, LucideIcon> = {
-  quiz: ListChecks,
-  flashcard: StickyNote,
-  type: Keyboard,
-  timed: Timer,
+  quiz:  ListChecks,
+  timed: Zap,
 };
 
 export default async function CategoryPage({

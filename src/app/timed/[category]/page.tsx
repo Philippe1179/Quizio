@@ -22,7 +22,7 @@ export default async function TimedPage({
       <main className="max-w-2xl mx-auto px-6 py-10">
         <div className="mb-8">
           <span className="text-sm text-zinc-500 font-medium">{cat.label}</span>
-          <h2 className="text-2xl font-bold tracking-tight mt-1">Timed Challenge</h2>
+          <h2 className="text-2xl font-bold tracking-tight mt-1">Blitz</h2>
         </div>
         <TimedGame questions={questions} category={category} />
       </main>

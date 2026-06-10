@@ -20,10 +20,8 @@ export const categories: Category[] = [
 ];
 
 export const gameModes: GameMode[] = [
-  { id: 'quiz', label: 'Multiple Choice', description: 'Answer questions with 4 options', path: '/quiz' },
-  { id: 'flashcard', label: 'Flashcard', description: 'Flip cards to learn and review', path: '/flashcard' },
-  { id: 'type', label: 'Type the Answer', description: 'Type your answer from memory', path: '/type' },
-  { id: 'timed', label: 'Timed Challenge', description: 'Race the clock for bonus points', path: '/timed' },
+  { id: 'quiz',  label: 'Multiple Choice', description: 'Answer questions with 4 options',          path: '/quiz'  },
+  { id: 'timed', label: 'Blitz',           description: '10 seconds per question — no mercy',       path: '/timed' },
 ];
 
 export function getCategoryById(id: string): Category | undefined {

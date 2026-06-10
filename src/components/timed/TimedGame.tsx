@@ -11,7 +11,7 @@ import { categories } from '@/lib/categories';
 type GameQuestion = Question & { shuffledOptions: string[] };
 
 const QUESTIONS_PER_ROUND = 10;
-const SECONDS_PER_QUESTION = 15;
+const SECONDS_PER_QUESTION = 10;
 
 function prepareRound(questions: Question[]): GameQuestion[] {
   return shuffleArray(questions)
@@ -79,7 +79,7 @@ export default function TimedGame({
     saveScore(user.uid, {
       game: 'timed',
       category,
-      label: `${categoryLabel} — Timed`,
+      label: `${categoryLabel} — Blitz`,
       score,
       total: round.length,
       pct: Math.round((score / round.length) * 100),
@@ -99,9 +99,9 @@ export default function TimedGame({
 
   const timerPct = (timeLeft / SECONDS_PER_QUESTION) * 100;
   const timerColor =
-    timeLeft > 8 ? 'bg-indigo-500' : timeLeft > 4 ? 'bg-amber-500' : 'bg-red-500';
+    timeLeft > 5 ? 'bg-indigo-500' : timeLeft > 2 ? 'bg-amber-500' : 'bg-red-500';
   const timerTextColor =
-    timeLeft > 8 ? 'text-zinc-400' : timeLeft > 4 ? 'text-amber-400' : 'text-red-400 font-bold';
+    timeLeft > 5 ? 'text-zinc-400' : timeLeft > 2 ? 'text-amber-400' : 'text-red-400 font-bold';
 
   if (done) {
     const pct = Math.round((score / round.length) * 100);
