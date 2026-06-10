@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Nav from '@/components/ui/Nav';
 import DailyGame from '@/components/daily/DailyGame';
+import ArchiveLeaderboard from '@/components/daily/ArchiveLeaderboard';
 import { getDailyQuestions, isValidPastDate } from '@/lib/daily';
 
 export default async function ArchivePage({
@@ -26,6 +27,7 @@ export default async function ArchivePage({
           <p className="text-sm text-zinc-500 mt-1">{date}</p>
         </div>
         <DailyGame questions={questions} dateStr={date} isArchive />
+        <ArchiveLeaderboard dateStr={date} />
       </main>
     </div>
   );
