@@ -1,4 +1,4 @@
-export type CapitalCoord = { lat: number; lng: number; zoom: number; capital: string };
+export type CapitalCoord = { lat: number; lng: number; zoom: number; capital: string; noHighlight?: boolean };
 
 export const capitalCoords: Record<string, CapitalCoord> = {
   // Europe — Western
@@ -160,6 +160,23 @@ export const capitalCoords: Record<string, CapitalCoord> = {
   'Burundi':                  { lat: -3.43,  lng:  29.93,  zoom: 8.5,  capital: 'Gitega' },
   'Djibouti':                 { lat: 11.59,  lng:  43.15,  zoom: 9,    capital: 'Djibouti City' },
   'Eritrea':                  { lat: 15.34,  lng:  38.93,  zoom: 6,    capital: 'Asmara' },
+
+  // Small island nations — in 50m dataset
+  'Malta':                    { lat: 35.90,  lng:  14.51,  zoom: 10,  capital: 'Valletta' },
+  'Samoa':                    { lat: -13.82, lng: -171.78, zoom: 8,   capital: 'Apia' },
+  'Tonga':                    { lat: -21.14, lng: -175.22, zoom: 8,   capital: "Nukuʻalofa" },
+  'Kiribati':                 { lat:  1.33,  lng: 173.02,  zoom: 7,   capital: 'South Tarawa' },
+  'Palau':                    { lat:  7.50,  lng: 134.62,  zoom: 8,   capital: 'Ngerulmud' },
+  'Maldives':                 { lat:  4.18,  lng:  73.51,  zoom: 9,   capital: 'Malé' },
+  'Micronesia':               { lat:  6.92,  lng: 158.19,  zoom: 7,   capital: 'Palikir' },
+  'São Tomé and Principe':    { lat:  0.34,  lng:   6.73,  zoom: 9,   capital: 'São Tomé' },
+  'Comoros':                  { lat: -11.70, lng:  43.26,  zoom: 8,   capital: 'Moroni' },
+  'Vatican':                  { lat: 41.90,  lng:  12.45,  zoom: 12,  capital: 'Vatican City' },
+
+  // Micro-nations — not in 50m dataset, show Pacific location context
+  'Tuvalu':                   { lat: -8.52,  lng: 179.20,  zoom: 5,   capital: 'Funafuti',     noHighlight: true },
+  'Nauru':                    { lat: -0.53,  lng: 166.93,  zoom: 5,   capital: 'Yaren',         noHighlight: true },
+  'Marshall Islands':         { lat:  7.12,  lng: 171.18,  zoom: 5,   capital: 'Majuro',        noHighlight: true },
 
   // Africa — Southern
   'South Africa':             { lat: -25.75, lng:  28.19,  zoom: 3.5,  capital: 'Pretoria' },

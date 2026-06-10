@@ -3,7 +3,7 @@
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 import { capitalCoords } from '@/data/capitalCoords';
 
-const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json';
 
 export default function CountryMap({ geoName }: { geoName: string }) {
   const data = capitalCoords[geoName];
@@ -27,7 +27,7 @@ export default function CountryMap({ geoName }: { geoName: string }) {
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill={geo.properties.name === geoName ? '#4f46e5' : '#27272a'}
+                    fill={!data.noHighlight && geo.properties.name === geoName ? '#4f46e5' : '#27272a'}
                     stroke="#3f3f46"
                     strokeWidth={0.5}
                     tabIndex={-1}
