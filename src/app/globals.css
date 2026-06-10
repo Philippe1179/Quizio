@@ -62,3 +62,12 @@ body {
   font-family: var(--font-geist-sans, Arial, Helvetica, sans-serif);
   min-height: 100vh;
 }
+
+@keyframes floatUp {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-2rem); }
+}
+
+.animate-float-up {
+  animation: floatUp 700ms ease-out forwards;
+}

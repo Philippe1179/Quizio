@@ -189,7 +189,6 @@ export default function DailyGame({
   const { user, username, loading: authLoading } = useAuth();
   const scoreSaved = useRef(false);
   const startTime = useRef<number | null>(null);
-  const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [elapsed, setElapsed] = useState(0);
 
   const [round] = useState<GameQuestion[]>(() =>
@@ -197,7 +196,7 @@ export default function DailyGame({
   );
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
-  const [pendingOption, setPendingOption] = useState<string | null>(null);
+  const [showPlus, setShowPlus] = useState(false);
   const [answers, setAnswers] = useState<boolean[]>([]);
   const [score, setScore] = useState(0);
   const [phase, setPhase] = useState<Phase>('checking');
@@ -261,10 +260,6 @@ export default function DailyGame({
       .finally(() => setBoardLoading(false));
   }, [phase, user, username, score, round.length, dateStr, isArchive]);
 
-  useEffect(() => {
-    return () => { if (pendingRef.current) clearTimeout(pendingRef.current); };
-  }, []);
-
   const advance = useCallback(() => {
     setAnswers((prev) => [...prev, selected === round[index].answer]);
     if (index + 1 >= round.length) {
@@ -277,15 +272,16 @@ export default function DailyGame({
 
   const handleSelect = useCallback(
     (option: string) => {
-      if (selected !== null || pendingOption !== null) return;
-      setPendingOption(option);
-      pendingRef.current = setTimeout(() => {
-        if (option === round[index].answer) setScore((s) => s + 1);
-        setSelected(option);
-        setPendingOption(null);
-      }, 280);
+      if (selected !== null) return;
+      const correct = option === round[index].answer;
+      if (correct) {
+        setScore((s) => s + 1);
+        setShowPlus(true);
+        setTimeout(() => setShowPlus(false), 750);
+      }
+      setSelected(option);
     },
-    [selected, pendingOption, round, index],
+    [selected, round, index],
   );
 
   if (phase === 'checking') {
@@ -327,7 +323,14 @@ export default function DailyGame({
         <span>Question {index + 1} of {round.length}</span>
         <div className="flex items-center gap-3">
           <span className="tabular-nums">{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}</span>
-          <span>{score} correct</span>
+          <div className="relative">
+            <span>{score} correct</span>
+            {showPlus && (
+              <span className="absolute inset-x-0 -top-5 text-center text-green-400 font-bold pointer-events-none animate-float-up">
+                +1
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -360,14 +363,12 @@ export default function DailyGame({
             if (option === current.answer) style = 'border-2 border-green-500 bg-green-950/40 text-green-400';
             else if (option === selected) style = 'border-2 border-red-500 bg-red-950/40 text-red-400';
             else style = 'border border-white/5 opacity-40';
-          } else if (option === pendingOption) {
-            style = 'border-2 border-indigo-400 bg-indigo-950/30';
           }
           return (
             <button
               key={option}
               onClick={() => handleSelect(option)}
-              disabled={answered || pendingOption !== null}
+              disabled={answered}
               className={`rounded-xl p-4 text-left font-medium transition-all duration-300 ${style}`}
             >
               {option}

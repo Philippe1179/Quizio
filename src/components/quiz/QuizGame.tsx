@@ -47,7 +47,6 @@ export default function QuizGame({
 }) {
   const { user, username } = useAuth();
   const scoreSaved = useRef(false);
-  const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [round, setRound] = useState<GameQuestion[]>(() => {
     const saved = loadProgress(category, questions);
@@ -56,7 +55,7 @@ export default function QuizGame({
   const [index, setIndex] = useState(() => loadProgress(category, questions)?.index ?? 0);
   const [score, setScore] = useState(() => loadProgress(category, questions)?.score ?? 0);
   const [selected, setSelected] = useState<string | null>(null);
-  const [pendingOption, setPendingOption] = useState<string | null>(null);
+  const [showPlus, setShowPlus] = useState(false);
   const [answers, setAnswers] = useState<(boolean | null)[]>(() => {
     const resumeIndex = loadProgress(category, questions)?.index ?? 0;
     return resumeIndex > 0 ? (Array(resumeIndex).fill(null) as (boolean | null)[]) : [];
@@ -92,22 +91,18 @@ export default function QuizGame({
     } catch {}
   }, [index, score, done, round, category]);
 
-  useEffect(() => {
-    return () => { if (pendingRef.current) clearTimeout(pendingRef.current); };
-  }, []);
-
   const handleSelect = useCallback(
     (option: string) => {
-      if (selected !== null || pendingOption !== null) return;
-      setPendingOption(option);
-      pendingRef.current = setTimeout(() => {
-        const correct = option === current.answer;
-        setSelected(option);
-        setPendingOption(null);
-        if (correct) setScore((s) => s + 1);
-      }, 280);
+      if (selected !== null) return;
+      const correct = option === current.answer;
+      setSelected(option);
+      if (correct) {
+        setScore((s) => s + 1);
+        setShowPlus(true);
+        setTimeout(() => setShowPlus(false), 750);
+      }
     },
-    [selected, pendingOption, current]
+    [selected, current]
   );
 
   const handleNext = useCallback(() => {
@@ -121,13 +116,12 @@ export default function QuizGame({
   }, [index, round.length, selected, current]);
 
   const restart = useCallback(() => {
-    if (pendingRef.current) { clearTimeout(pendingRef.current); pendingRef.current = null; }
     scoreSaved.current = false;
     localStorage.removeItem(STORAGE_KEY(category));
     setRound(prepareRound(questions));
     setIndex(0);
     setSelected(null);
-    setPendingOption(null);
+    setShowPlus(false);
     setAnswers([]);
     setScore(0);
     setDone(false);
@@ -170,7 +164,14 @@ export default function QuizGame({
             </span>
           )}
         </div>
-        <span>{score} correct</span>
+        <div className="relative">
+          <span>{score} correct</span>
+          {showPlus && (
+            <span className="absolute inset-x-0 -top-5 text-center text-green-400 font-bold pointer-events-none animate-float-up">
+              +1
+            </span>
+          )}
+        </div>
       </div>
       <div className="flex items-center justify-center gap-1.5 py-0.5">
         {round.map((_, i) => {
@@ -207,14 +208,12 @@ export default function QuizGame({
             } else {
               style = 'border border-white/5 opacity-40';
             }
-          } else if (option === pendingOption) {
-            style = 'border-2 border-indigo-400 bg-indigo-950/30';
           }
           return (
             <button
               key={option}
               onClick={() => handleSelect(option)}
-              disabled={selected !== null || pendingOption !== null}
+              disabled={selected !== null}
               className={`rounded-xl p-4 text-left font-medium transition-all duration-300 ${style}`}
             >
               {option}
