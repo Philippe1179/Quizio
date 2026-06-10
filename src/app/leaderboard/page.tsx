@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Nav from '@/components/ui/Nav';
+import PlayerActionSheet from '@/components/ui/PlayerActionSheet';
 import { useAuth } from '@/context/AuthContext';
 import {
   getDailyLeaderboard, getStreak, getHallOfFame, getAllTimeLeaderboard,
@@ -41,19 +42,24 @@ function getPastDays(todayUTC: string, count: number): string[] {
   });
 }
 
-function DailyEntryRow({ entry, rank, selfUid }: { entry: DailyLeaderboardEntry; rank: number; selfUid?: string }) {
+function DailyEntryRow({
+  entry, rank, selfUid, onPlayerClick,
+}: {
+  entry: DailyLeaderboardEntry;
+  rank: number;
+  selfUid?: string;
+  onPlayerClick?: (p: { username: string; userId: string }) => void;
+}) {
   const isYou = selfUid === entry.userId;
-  const className = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
-    isYou
-      ? 'border-indigo-500/40 bg-indigo-950/20'
-      : 'border-black/10 dark:border-white/10 hover:border-white/30'
-  } ${entry.username ? 'cursor-pointer' : ''}`;
+  const clickable = !!entry.username && !!onPlayerClick;
+
+  const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
+    isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
+  }`;
 
   const inner = (
     <>
-      <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">
-        {medal(rank)}
-      </span>
+      <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">{medal(rank)}</span>
       <div className="flex-1 min-w-0">
         <p className={`font-medium text-sm truncate ${isYou ? 'text-indigo-400' : ''}`}>
           {entry.username ?? 'Anonymous'}
@@ -63,20 +69,21 @@ function DailyEntryRow({ entry, rank, selfUid }: { entry: DailyLeaderboardEntry;
           {entry.score} / {entry.total} correct{formatTime(entry.timeTaken) ? ` · ${formatTime(entry.timeTaken)}` : ''}
         </p>
       </div>
-      <span className={`text-2xl font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>
-        {entry.pct}%
-      </span>
+      <span className={`text-2xl font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>{entry.pct}%</span>
     </>
   );
 
-  if (entry.username) {
+  if (clickable) {
     return (
-      <Link href={`/profile/${encodeURIComponent(entry.username)}`} className={className}>
+      <button
+        onClick={() => onPlayerClick({ username: entry.username!, userId: entry.userId })}
+        className={`${baseCls} hover:border-white/30 w-full text-left`}
+      >
         {inner}
-      </Link>
+      </button>
     );
   }
-  return <div className={className}>{inner}</div>;
+  return <div className={baseCls}>{inner}</div>;
 }
 
 export default function LeaderboardPage() {
@@ -85,6 +92,7 @@ export default function LeaderboardPage() {
   const pastDays = getPastDays(today, 7);
 
   const [tab, setTab] = useState<Tab>('today');
+  const [selectedPlayer, setSelectedPlayer] = useState<{ username: string; userId: string } | null>(null);
 
   // Today
   const [entries, setEntries] = useState<DailyLeaderboardEntry[]>([]);
@@ -135,6 +143,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen">
+      <PlayerActionSheet player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />
       <Nav backHref="/" />
       <main className="max-w-2xl mx-auto px-6 py-12 flex flex-col gap-8">
 
@@ -205,7 +214,7 @@ export default function LeaderboardPage() {
               ) : (
                 <div className="flex flex-col gap-2">
                   {entries.slice(0, 10).map((entry, i) => (
-                    <DailyEntryRow key={entry.userId} entry={entry} rank={i + 1} selfUid={user?.uid} />
+                    <DailyEntryRow key={entry.userId} entry={entry} rank={i + 1} selfUid={user?.uid} onPlayerClick={setSelectedPlayer} />
                   ))}
                 </div>
               )}
@@ -249,16 +258,13 @@ export default function LeaderboardPage() {
                 <div className="flex flex-col gap-2">
                   {allTime.map((entry, i) => {
                     const isYou = user?.uid === entry.userId;
-                    return (
-                      <div
-                        key={entry.userId}
-                        className={`flex items-center gap-4 rounded-xl border px-5 py-4 ${
-                          isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
-                        }`}
-                      >
-                        <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">
-                          {medal(i + 1)}
-                        </span>
+                    const clickable = !!entry.username;
+                    const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
+                      isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
+                    }`;
+                    const inner = (
+                      <>
+                        <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">{medal(i + 1)}</span>
                         <div className="flex-1 min-w-0">
                           <p className={`font-medium text-sm truncate ${isYou ? 'text-indigo-400' : ''}`}>
                             {entry.username ?? 'Anonymous'}
@@ -269,8 +275,16 @@ export default function LeaderboardPage() {
                           <p className="text-2xl font-bold tabular-nums text-zinc-100">{entry.totalCorrect}</p>
                           <p className="text-xs text-zinc-500">correct</p>
                         </div>
-                      </div>
+                      </>
                     );
+                    if (clickable) {
+                      return (
+                        <button key={entry.userId} onClick={() => setSelectedPlayer({ username: entry.username!, userId: entry.userId })} className={`${baseCls} hover:border-white/30 w-full text-left`}>
+                          {inner}
+                        </button>
+                      );
+                    }
+                    return <div key={entry.userId} className={baseCls}>{inner}</div>;
                   })}
                 </div>
               )}
@@ -282,16 +296,13 @@ export default function LeaderboardPage() {
                 <div className="flex flex-col gap-2">
                   {hallOfFame.map((entry, i) => {
                     const isYou = user?.uid === entry.userId;
-                    return (
-                      <div
-                        key={entry.userId}
-                        className={`flex items-center gap-4 rounded-xl border px-5 py-4 ${
-                          isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
-                        }`}
-                      >
-                        <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">
-                          {medal(i + 1)}
-                        </span>
+                    const clickable = !!entry.username;
+                    const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
+                      isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
+                    }`;
+                    const inner = (
+                      <>
+                        <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">{medal(i + 1)}</span>
                         <div className="flex-1 min-w-0">
                           <p className={`font-medium text-sm truncate ${isYou ? 'text-indigo-400' : ''}`}>
                             {entry.username ?? 'Anonymous'}
@@ -305,8 +316,16 @@ export default function LeaderboardPage() {
                           <p className="text-2xl font-bold text-amber-400 tabular-nums">{entry.longestStreak}</p>
                           <p className="text-xs text-zinc-500">best streak</p>
                         </div>
-                      </div>
+                      </>
                     );
+                    if (clickable) {
+                      return (
+                        <button key={entry.userId} onClick={() => setSelectedPlayer({ username: entry.username!, userId: entry.userId })} className={`${baseCls} hover:border-white/30 w-full text-left`}>
+                          {inner}
+                        </button>
+                      );
+                    }
+                    return <div key={entry.userId} className={baseCls}>{inner}</div>;
                   })}
                 </div>
               </section>

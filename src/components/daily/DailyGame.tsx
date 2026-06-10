@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import type { Question } from '@/lib/questions';
 import CountryMap from '@/components/map/CountryMap';
+import PlayerActionSheet from '@/components/ui/PlayerActionSheet';
 import { shuffleArray } from '@/lib/questions';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -66,9 +67,11 @@ function ResultsView({
   saveError: string | null;
 }) {
   const message = pct >= 80 ? 'Great job!' : pct >= 50 ? 'Good effort!' : 'Keep practicing!';
+  const [selectedPlayer, setSelectedPlayer] = useState<{ username: string; userId: string } | null>(null);
 
   return (
     <div className="flex flex-col gap-8">
+      <PlayerActionSheet player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />
       <div className="flex flex-col items-center text-center gap-3 py-6">
         <div className={`text-7xl font-bold tracking-tight ${pctColor(pct)}`}>{pct}%</div>
         <p className="text-xl font-semibold">{score} / {total} correct</p>
@@ -146,13 +149,12 @@ function ResultsView({
             <div className="flex flex-col gap-2">
               {leaderboard.slice(0, 10).map((entry, i) => {
                 const isYou = currentUserId === entry.userId;
-                return (
-                  <div
-                    key={entry.userId}
-                    className={`flex items-center gap-4 rounded-xl border px-5 py-3 ${
-                      isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-white/10'
-                    }`}
-                  >
+                const clickable = !!entry.username;
+                const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-3 transition-colors ${
+                  isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-white/10'
+                }`;
+                const inner = (
+                  <>
                     <span className="w-6 text-sm font-bold text-zinc-400 flex-shrink-0">{medal(i + 1)}</span>
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm truncate ${isYou ? 'text-indigo-400 font-medium' : 'text-zinc-300'}`}>
@@ -166,8 +168,16 @@ function ResultsView({
                     <span className={`text-lg font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>
                       {entry.pct}%
                     </span>
-                  </div>
+                  </>
                 );
+                if (clickable) {
+                  return (
+                    <button key={entry.userId} onClick={() => setSelectedPlayer({ username: entry.username!, userId: entry.userId })} className={`${baseCls} hover:border-white/30 w-full text-left`}>
+                      {inner}
+                    </button>
+                  );
+                }
+                return <div key={entry.userId} className={baseCls}>{inner}</div>;
               })}
             </div>
           )}
