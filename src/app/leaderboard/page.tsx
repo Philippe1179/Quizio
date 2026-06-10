@@ -325,7 +325,14 @@ export default function LeaderboardPage() {
                       </button>
 
                       {isExpanded && (
-                        <div className="border-t border-white/10 px-5 py-4 flex flex-col gap-2">
+                        <div className="border-t border-white/10 px-5 py-4 flex flex-col gap-3">
+                          <Link
+                            href={`/daily/${date}`}
+                            className="self-start text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                          >
+                            Play this challenge →
+                          </Link>
+                          <div className="flex flex-col gap-2">
                           {expandedLoading ? (
                             [...Array(3)].map((_, i) => (
                               <div key={i} className="h-12 rounded-lg bg-white/5 animate-pulse" />
@@ -360,6 +367,7 @@ export default function LeaderboardPage() {
                               return <div key={entry.userId} className={baseCls}>{inner}</div>;
                             })
                           )}
+                          </div>
                         </div>
                       )}
                     </div>
