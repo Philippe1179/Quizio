@@ -13,6 +13,7 @@ export type Question = {
   options: string[];
   difficulty?: Difficulty;
   acceptedAnswers?: string[];
+  explanation?: string;
 };
 
 const questionMap: Record<string, Question[]> = {
