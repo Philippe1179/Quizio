@@ -63,6 +63,15 @@ body {
   min-height: 100vh;
 }
 
+@keyframes floatBob {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-18px); }
+}
+
+.animate-float-bob {
+  animation: floatBob ease-in-out infinite;
+}
+
 @keyframes floatUp {
   0%   { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-2rem); }

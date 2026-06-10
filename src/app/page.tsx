@@ -82,6 +82,29 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
+      {/* Floating ambient symbols — gutters only, xl+ screens */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10 hidden xl:block" aria-hidden="true">
+        {[
+          { e: '🌍', t: '10%', l: '4%',         sz: 'text-2xl', dur: '8s',  del: '0s'  },
+          { e: '📚', t: '28%', l: '8%',         sz: 'text-xl',  dur: '11s', del: '-4s' },
+          { e: '⚗️', t: '47%', l: '3%',         sz: 'text-3xl', dur: '9s',  del: '-7s' },
+          { e: '🏆', t: '65%', l: '7%',         sz: 'text-xl',  dur: '7s',  del: '-2s' },
+          { e: '🎬', t: '82%', l: '5%',         sz: 'text-2xl', dur: '10s', del: '-5s' },
+          { e: '🗺️', t: '16%', r: '5%',         sz: 'text-xl',  dur: '9s',  del: '-3s' },
+          { e: '🧪', t: '35%', r: '8%',         sz: 'text-2xl', dur: '8s',  del: '-6s' },
+          { e: '❓', t: '53%', r: '3%',         sz: 'text-xl',  dur: '12s', del: '-1s' },
+          { e: '📖', t: '72%', r: '7%',         sz: 'text-3xl', dur: '7s',  del: '-8s' },
+          { e: '🌐', t: '88%', r: '4%',         sz: 'text-2xl', dur: '10s', del: '-4s' },
+        ].map(({ e, t, l, r, sz, dur, del }, i) => (
+          <span
+            key={i}
+            className={`absolute opacity-[0.10] select-none animate-float-bob ${sz}`}
+            style={{ top: t, left: l, right: r, animationDuration: dur, animationDelay: del }}
+          >
+            {e}
+          </span>
+        ))}
+      </div>
       <Nav />
       <main className="max-w-4xl mx-auto px-6 py-12 flex flex-col gap-12">
 
