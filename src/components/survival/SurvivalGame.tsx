@@ -58,24 +58,22 @@ export default function SurvivalGame({
     if (phase !== 'playing') return;
     const correct = isCorrectAnswer(option, current);
     setSelected(option);
+    if (correct) setStreak((s) => s + 1);
     setPhase('answered');
+  }
 
-    if (correct) {
-      const next = streak + 1;
-      setTimeout(() => {
-        setStreak(next);
-        if (index + 1 >= shuffled.length) {
-          setPhase('survived');
-        } else {
-          setIndex(index + 1);
-          setSelected(null);
-          setPhase('playing');
-        }
-      }, 500);
+  function handleNext() {
+    if (!selected) return;
+    if (isCorrectAnswer(selected, current)) {
+      if (index + 1 >= shuffled.length) {
+        setPhase('survived');
+      } else {
+        setIndex(index + 1);
+        setSelected(null);
+        setPhase('playing');
+      }
     } else {
-      setTimeout(() => {
-        setPhase('done');
-      }, 900);
+      setPhase('done');
     }
   }
 
@@ -111,7 +109,7 @@ export default function SurvivalGame({
           <p className="text-lg font-semibold leading-snug">{current.question}</p>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {current.options.map((option) => {
             let cls = 'border-black/10 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30';
             if (phase === 'answered') {
@@ -135,6 +133,22 @@ export default function SurvivalGame({
             );
           })}
         </div>
+
+        {phase === 'answered' && (
+          <div className="flex flex-col gap-3 mt-1">
+            {current.explanation && (
+              <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300 leading-relaxed">
+                {current.explanation}
+              </div>
+            )}
+            <button
+              onClick={handleNext}
+              className="self-end px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium transition-colors text-sm"
+            >
+              {selected && isCorrectAnswer(selected, current) ? 'Next Question' : 'See Results'}
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -173,6 +187,9 @@ export default function SurvivalGame({
           <p className="text-xs text-zinc-500">Correct answer</p>
           <p className="text-sm font-semibold text-green-500 dark:text-green-400">{current.answer}</p>
           <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{current.question}</p>
+          {current.explanation && (
+            <p className="text-xs text-zinc-400 mt-2 leading-relaxed border-t border-white/5 pt-2">{current.explanation}</p>
+          )}
         </div>
       )}
 
