@@ -48,7 +48,7 @@ function DailyEntryRow({
   entry: DailyLeaderboardEntry;
   rank: number;
   selfUid?: string;
-  onPlayerClick?: (p: { username: string; userId: string }) => void;
+  onPlayerClick?: (p: import('@/components/ui/PlayerActionSheet').PlayerTarget) => void;
 }) {
   const isYou = selfUid === entry.userId;
   const clickable = !!entry.username && !!onPlayerClick;
@@ -76,7 +76,10 @@ function DailyEntryRow({
   if (clickable) {
     return (
       <button
-        onClick={() => onPlayerClick({ username: entry.username!, userId: entry.userId })}
+        onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          onPlayerClick({ username: entry.username!, userId: entry.userId, x: r.left + r.width / 2, y: r.bottom });
+        }}
         className={`${baseCls} hover:border-white/30 w-full text-left`}
       >
         {inner}
@@ -92,7 +95,7 @@ export default function LeaderboardPage() {
   const pastDays = getPastDays(today, 7);
 
   const [tab, setTab] = useState<Tab>('today');
-  const [selectedPlayer, setSelectedPlayer] = useState<{ username: string; userId: string } | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<import('@/components/ui/PlayerActionSheet').PlayerTarget | null>(null);
 
   // Today
   const [entries, setEntries] = useState<DailyLeaderboardEntry[]>([]);
@@ -279,7 +282,7 @@ export default function LeaderboardPage() {
                     );
                     if (clickable) {
                       return (
-                        <button key={entry.userId} onClick={() => setSelectedPlayer({ username: entry.username!, userId: entry.userId })} className={`${baseCls} hover:border-white/30 w-full text-left`}>
+                        <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left + r.width / 2, y: r.bottom }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
                           {inner}
                         </button>
                       );
@@ -320,7 +323,7 @@ export default function LeaderboardPage() {
                     );
                     if (clickable) {
                       return (
-                        <button key={entry.userId} onClick={() => setSelectedPlayer({ username: entry.username!, userId: entry.userId })} className={`${baseCls} hover:border-white/30 w-full text-left`}>
+                        <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left + r.width / 2, y: r.bottom }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
                           {inner}
                         </button>
                       );

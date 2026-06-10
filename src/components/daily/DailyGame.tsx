@@ -67,7 +67,7 @@ function ResultsView({
   saveError: string | null;
 }) {
   const message = pct >= 80 ? 'Great job!' : pct >= 50 ? 'Good effort!' : 'Keep practicing!';
-  const [selectedPlayer, setSelectedPlayer] = useState<{ username: string; userId: string } | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<import('@/components/ui/PlayerActionSheet').PlayerTarget | null>(null);
 
   return (
     <div className="flex flex-col gap-8">
@@ -172,7 +172,7 @@ function ResultsView({
                 );
                 if (clickable) {
                   return (
-                    <button key={entry.userId} onClick={() => setSelectedPlayer({ username: entry.username!, userId: entry.userId })} className={`${baseCls} hover:border-white/30 w-full text-left`}>
+                    <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left + r.width / 2, y: r.bottom }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
                       {inner}
                     </button>
                   );
