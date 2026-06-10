@@ -7,11 +7,11 @@ import Nav from '@/components/ui/Nav';
 import PlayerActionSheet from '@/components/ui/PlayerActionSheet';
 import { useAuth } from '@/context/AuthContext';
 import {
-  getDailyLeaderboard, getStreak, getHallOfFame, getAllTimeLeaderboard,
+  getDailyLeaderboard, getStreak, getHallOfFame,
   getFriends, getFriendDailyScores, getAllSurvivalLeaderboards,
   getUserDailyScoresForDates,
   type DailyLeaderboardEntry, type StreakInfo, type HallOfFameEntry,
-  type AllTimeEntry, type FriendEntry, type SurvivalEntry,
+  type FriendEntry, type SurvivalEntry,
 } from '@/lib/db';
 import { categories } from '@/lib/categories';
 
@@ -105,7 +105,6 @@ export default function LeaderboardPage() {
   const [streak, setStreak] = useState<StreakInfo | null>(null);
 
   // All-time
-  const [allTime, setAllTime] = useState<AllTimeEntry[]>([]);
   const [hallOfFame, setHallOfFame] = useState<HallOfFameEntry[]>([]);
   const [allTimeLoading, setAllTimeLoading] = useState(true);
 
@@ -137,8 +136,8 @@ export default function LeaderboardPage() {
       getStreak(user.uid).then(setStreak).catch(() => {});
     }
 
-    Promise.all([getAllTimeLeaderboard(), getHallOfFame()])
-      .then(([at, hof]) => { setAllTime(at); setHallOfFame(hof); })
+    getHallOfFame()
+      .then(setHallOfFame)
       .catch(() => {})
       .finally(() => setAllTimeLoading(false));
 
@@ -264,55 +263,6 @@ export default function LeaderboardPage() {
         {/* ── All-time ── */}
         {tab === 'all-time' && (
           <>
-            <section className="flex flex-col gap-4">
-              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">All-time Correct Answers</h2>
-
-              {allTimeLoading ? (
-                <div className="flex flex-col gap-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-16 rounded-xl border border-white/10 animate-pulse bg-white/5" />
-                  ))}
-                </div>
-              ) : allTime.length === 0 ? (
-                <div className="rounded-xl border border-white/10 p-12 text-center">
-                  <p className="text-zinc-500">No all-time scores yet</p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {allTime.map((entry, i) => {
-                    const isYou = user?.uid === entry.userId;
-                    const clickable = !!entry.username;
-                    const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
-                      isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
-                    }`;
-                    const inner = (
-                      <>
-                        <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">{medal(i + 1)}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className={`font-medium text-sm truncate ${isYou ? 'text-indigo-400' : ''}`}>
-                            {entry.username ?? 'Anonymous'}
-                            {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
-                          </p>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-2xl font-bold tabular-nums text-zinc-100">{entry.totalCorrect}</p>
-                          <p className="text-xs text-zinc-500">correct</p>
-                        </div>
-                      </>
-                    );
-                    if (clickable) {
-                      return (
-                        <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
-                          {inner}
-                        </button>
-                      );
-                    }
-                    return <div key={entry.userId} className={baseCls}>{inner}</div>;
-                  })}
-                </div>
-              )}
-            </section>
-
             {hallOfFame.length > 0 && (
               <section className="flex flex-col gap-4">
                 <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">🏆 Hall of Fame — Longest Streaks</h2>
