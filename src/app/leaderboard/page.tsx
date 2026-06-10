@@ -385,19 +385,29 @@ export default function LeaderboardPage() {
                           ) : (
                             expandedEntries.slice(0, 10).map((entry, i) => {
                               const isYou = user?.uid === entry.userId;
-                              return (
-                                <div
-                                  key={entry.userId}
-                                  className={`flex items-center gap-3 rounded-lg px-4 py-2.5 ${isYou ? 'bg-indigo-950/30 border border-indigo-500/30' : 'bg-white/[0.03]'}`}
-                                >
+                              const baseCls = `flex items-center gap-3 rounded-lg px-4 py-2.5 w-full text-left transition-colors ${isYou ? 'bg-indigo-950/30 border border-indigo-500/30' : 'bg-white/[0.03] hover:bg-white/[0.07]'}`;
+                              const inner = (
+                                <>
                                   <span className="w-6 text-center text-xs font-bold text-zinc-500 flex-shrink-0">{medal(i + 1)}</span>
                                   <p className={`flex-1 text-sm truncate ${isYou ? 'text-indigo-400 font-medium' : ''}`}>
                                     {entry.username ?? 'Anonymous'}
                                     {isYou && <span className="ml-2 text-xs">you</span>}
                                   </p>
                                   <span className={`text-sm font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>{entry.pct}%</span>
-                                </div>
+                                </>
                               );
+                              if (entry.username) {
+                                return (
+                                  <button
+                                    key={entry.userId}
+                                    onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }}
+                                    className={baseCls}
+                                  >
+                                    {inner}
+                                  </button>
+                                );
+                              }
+                              return <div key={entry.userId} className={baseCls}>{inner}</div>;
                             })
                           )}
                         </div>
