@@ -30,7 +30,8 @@ export default function CountryMap({ geoName }: { geoName: string }) {
                     fill={geo.properties.name === geoName ? '#4f46e5' : '#27272a'}
                     stroke="#3f3f46"
                     strokeWidth={0.5}
-                    style={{ outline: 'none' }}
+                    tabIndex={-1}
+                    style={{ default: { outline: 'none' }, hover: { outline: 'none' }, pressed: { outline: 'none' } }}
                   />
                 ))
               }
