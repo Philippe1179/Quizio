@@ -19,15 +19,22 @@ const categoryIcons: Record<string, LucideIcon> = {
 };
 
 const interactiveGames = [
-  { href: '/map/states',  icon: Map,      title: 'USA Map',        description: 'Click or type all 50 US states on a blank map',          bestKey: 'usa-map' },
-  { href: '/map/world',   icon: Earth,    title: 'World Map',      description: 'Find countries on a blank world map',                     bestKey: 'world-map' },
-  { href: '/flags',       icon: Flag,     title: 'Flag Quiz',      description: 'Identify countries from their flags',                     bestKey: 'flags' },
-  { href: '/periodic',    icon: Atom,     title: 'Periodic Table', description: 'Find all 118 elements on an interactive periodic table',  bestKey: 'periodic' },
-  { href: '/presidents',  icon: Landmark, title: 'US Presidents',  description: 'Portrait quiz or type all 45 presidents from memory',     bestKey: 'presidents' },
+  { href: '/map/states',  icon: Map,      title: 'USA Map',        description: 'Click or type all 50 US states on a blank map',          bestKey: 'usa-map',    iconCls: 'text-blue-400',    cardCls: 'hover:border-blue-500/40 hover:bg-blue-500/5 hover:shadow-blue-500/10' },
+  { href: '/map/world',   icon: Earth,    title: 'World Map',      description: 'Find countries on a blank world map',                     bestKey: 'world-map',  iconCls: 'text-teal-400',    cardCls: 'hover:border-teal-500/40 hover:bg-teal-500/5 hover:shadow-teal-500/10' },
+  { href: '/flags',       icon: Flag,     title: 'Flag Quiz',      description: 'Identify countries from their flags',                     bestKey: 'flags',      iconCls: 'text-orange-400',  cardCls: 'hover:border-orange-500/40 hover:bg-orange-500/5 hover:shadow-orange-500/10' },
+  { href: '/periodic',    icon: Atom,     title: 'Periodic Table', description: 'Find all 118 elements on an interactive periodic table',  bestKey: 'periodic',   iconCls: 'text-violet-400',  cardCls: 'hover:border-violet-500/40 hover:bg-violet-500/5 hover:shadow-violet-500/10' },
+  { href: '/presidents',  icon: Landmark, title: 'US Presidents',  description: 'Portrait quiz or type all 45 presidents from memory',     bestKey: 'presidents', iconCls: 'text-amber-400',   cardCls: 'hover:border-amber-500/40 hover:bg-amber-500/5 hover:shadow-amber-500/10' },
 ];
 
-const cardClass = 'group relative border border-black/10 dark:border-white/10 rounded-xl p-5 hover:border-black/30 dark:hover:border-white/30 hover:shadow-sm transition-all';
-const iconClass = 'w-6 h-6 mb-3 text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors';
+const categoryColors: Record<string, { iconCls: string; cardCls: string }> = {
+  countries:     { iconCls: 'text-indigo-400',  cardCls: 'hover:border-indigo-500/40  hover:bg-indigo-500/5  hover:shadow-indigo-500/10' },
+  history:       { iconCls: 'text-amber-400',   cardCls: 'hover:border-amber-500/40   hover:bg-amber-500/5   hover:shadow-amber-500/10'  },
+  science:       { iconCls: 'text-cyan-400',    cardCls: 'hover:border-cyan-500/40    hover:bg-cyan-500/5    hover:shadow-cyan-500/10'   },
+  sports:        { iconCls: 'text-emerald-400', cardCls: 'hover:border-emerald-500/40 hover:bg-emerald-500/5 hover:shadow-emerald-500/10' },
+  'pop-culture': { iconCls: 'text-pink-400',    cardCls: 'hover:border-pink-500/40    hover:bg-pink-500/5    hover:shadow-pink-500/10'   },
+};
+
+const baseCardClass = 'group relative border border-black/10 dark:border-white/10 rounded-xl p-5 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]';
 
 function BestBadge({ pct }: { pct: number | undefined }) {
   if (pct === undefined) return null;
@@ -161,10 +168,11 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {categories.map(({ id, label, description }) => {
               const Icon = categoryIcons[id];
+              const { iconCls, cardCls } = categoryColors[id] ?? { iconCls: 'text-zinc-400', cardCls: '' };
               return (
-                <Link key={id} href={`/categories/${id}`} className={cardClass}>
+                <Link key={id} href={`/categories/${id}`} className={`${baseCardClass} ${cardCls}`}>
                   <BestBadge pct={bests[id]} />
-                  <Icon className={iconClass} />
+                  <Icon className={`w-8 h-8 mb-3 transition-colors ${iconCls}`} />
                   <h3 className="font-semibold mb-1">{label}</h3>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400">{description}</p>
                 </Link>
@@ -204,10 +212,10 @@ export default function Home() {
             <p className="text-sm text-zinc-500 mt-1">Visual and map-based challenges</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {interactiveGames.map(({ href, icon: Icon, title, description, bestKey }) => (
-              <Link key={href} href={href} className={cardClass}>
+            {interactiveGames.map(({ href, icon: Icon, title, description, bestKey, iconCls, cardCls }) => (
+              <Link key={href} href={href} className={`${baseCardClass} ${cardCls}`}>
                 <BestBadge pct={bests[bestKey]} />
-                <Icon className={iconClass} />
+                <Icon className={`w-8 h-8 mb-3 transition-colors ${iconCls}`} />
                 <h3 className="font-semibold mb-1">{title}</h3>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">{description}</p>
               </Link>
