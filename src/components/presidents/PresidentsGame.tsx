@@ -3,6 +3,18 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { UserRound, Keyboard } from 'lucide-react';
+
+function PortraitImg({ src, alt, className }: { src: string; alt: string; className: string }) {
+  const [error, setError] = useState(false);
+  if (error) {
+    return (
+      <div className={`${className} flex items-center justify-center bg-zinc-800`}>
+        <UserRound className="w-16 h-16 text-zinc-600" />
+      </div>
+    );
+  }
+  return <img src={src} alt={alt} className={className} onError={() => setError(true)} />;
+}
 import { PRESIDENTS, PRESIDENT_LOOKUP, type President } from '@/data/presidents';
 import { shuffleArray } from '@/lib/questions';
 import { useAuth } from '@/context/AuthContext';
@@ -45,7 +57,6 @@ export default function PresidentsGame() {
   const [selected, setSelected] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [missedIds, setMissedIds] = useState<Set<number>>(new Set());
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Type
   const [found, setFound] = useState<Set<number>>(new Set());
@@ -56,10 +67,6 @@ export default function PresidentsGame() {
   // Done
   const [finalScore, setFinalScore] = useState(0);
   const [finalMissed, setFinalMissed] = useState<President[]>([]);
-
-  useEffect(() => {
-    return () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); };
-  }, []);
 
   useEffect(() => {
     if (phase !== 'done' || !user || scoreSaved.current) return;
@@ -92,7 +99,6 @@ export default function PresidentsGame() {
 
   function startQuiz() {
     scoreSaved.current = false;
-    if (advanceTimer.current) clearTimeout(advanceTimer.current);
     setRound(buildQuizRound());
     setQIndex(0);
     setSelected(null);
@@ -115,21 +121,20 @@ export default function PresidentsGame() {
     const current = round[qIndex];
     setSelected(name);
     const correct = name === current.president.name;
-    const newScore = correct ? score + 1 : score;
-    const newMissed = correct ? missedIds : new Set([...missedIds, current.president.id]);
-    setScore(newScore);
-    setMissedIds(newMissed);
-    advanceTimer.current = setTimeout(() => {
-      if (qIndex + 1 >= QUIZ_ROUNDS) {
-        setFinalScore(newScore);
-        setFinalMissed(PRESIDENTS.filter((p) => newMissed.has(p.id)));
-        setDoneMode('quiz');
-        setPhase('done');
-      } else {
-        setQIndex(qIndex + 1);
-        setSelected(null);
-      }
-    }, 2500);
+    if (correct) setScore((s) => s + 1);
+    else setMissedIds((prev) => new Set([...prev, current.president.id]));
+  }
+
+  function handleQuizNext() {
+    if (qIndex + 1 >= QUIZ_ROUNDS) {
+      setFinalScore(score);
+      setFinalMissed(PRESIDENTS.filter((p) => missedIds.has(p.id)));
+      setDoneMode('quiz');
+      setPhase('done');
+    } else {
+      setQIndex(qIndex + 1);
+      setSelected(null);
+    }
   }
 
   function handleTypeInput(value: string) {
@@ -216,7 +221,7 @@ export default function PresidentsGame() {
             <div className="flex flex-col gap-2">
               {finalMissed.map((pres) => (
                 <div key={pres.id} className="flex items-center gap-3 rounded-lg border border-white/10 p-3">
-                  <img
+                  <PortraitImg
                     src={pres.portrait}
                     alt={pres.name}
                     className="w-10 h-10 rounded-full object-cover object-top bg-zinc-800 flex-shrink-0"
@@ -258,7 +263,7 @@ export default function PresidentsGame() {
         <div className="flex flex-col items-center gap-4 py-2">
           <p className="text-xs text-zinc-500 uppercase tracking-widest">Who is this president?</p>
           <div className="w-44 h-56 rounded-xl overflow-hidden border border-white/10 bg-zinc-900 flex-shrink-0">
-            <img
+            <PortraitImg
               src={current.president.portrait}
               alt="Presidential portrait"
               className="w-full h-full object-cover object-top"
@@ -302,6 +307,17 @@ export default function PresidentsGame() {
             );
           })}
         </div>
+
+        {answered && (
+          <div className="flex justify-end">
+            <button
+              onClick={handleQuizNext}
+              className="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium transition-colors text-sm"
+            >
+              {qIndex + 1 >= QUIZ_ROUNDS ? 'See Results' : 'Next Question'}
+            </button>
+          </div>
+        )}
       </div>
     );
   }
