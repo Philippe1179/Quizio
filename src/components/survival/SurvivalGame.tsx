@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { shuffleArray, isCorrectAnswer, type Question } from '@/lib/questions';
+import CountryMap from '@/components/map/CountryMap';
 import { saveSurvivalScore, getSurvivalLeaderboard, type SurvivalEntry } from '@/lib/db';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -141,6 +142,7 @@ export default function SurvivalGame({
                 {current.explanation}
               </div>
             )}
+            {current.geoName && <CountryMap geoName={current.geoName} />}
             <button
               onClick={handleNext}
               className="self-end px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium transition-colors text-sm"
@@ -190,6 +192,7 @@ export default function SurvivalGame({
           {current.explanation && (
             <p className="text-xs text-zinc-400 mt-2 leading-relaxed border-t border-white/5 pt-2">{current.explanation}</p>
           )}
+          {current.geoName && <CountryMap geoName={current.geoName} />}
         </div>
       )}
 

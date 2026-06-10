@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import type { Question } from '@/lib/questions';
+import CountryMap from '@/components/map/CountryMap';
 import { shuffleArray } from '@/lib/questions';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -356,6 +357,7 @@ export default function DailyGame({
               {current.explanation}
             </div>
           )}
+          {current.geoName && <CountryMap geoName={current.geoName} />}
           <button
             onClick={advance}
             className="self-end px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium transition-colors text-sm"

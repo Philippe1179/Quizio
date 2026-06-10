@@ -14,6 +14,7 @@ export type Question = {
   difficulty?: Difficulty;
   acceptedAnswers?: string[];
   explanation?: string;
+  geoName?: string;
 };
 
 const questionMap: Record<string, Question[]> = {
