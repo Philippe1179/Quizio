@@ -38,10 +38,12 @@ export default function SurvivalGame({
   const [streak, setStreak] = useState(0);
   const [phase, setPhase] = useState<Phase>('playing');
   const [selected, setSelected] = useState<string | null>(null);
+  const [pendingOption, setPendingOption] = useState<string | null>(null);
   const [leaderboard, setLeaderboard] = useState<SurvivalEntry[]>([]);
   const [personalBest, setPersonalBest] = useState(0);
   const [newBest, setNewBest] = useState(false);
   const savedRef = useRef(false);
+  const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const current = shuffled[index];
 
@@ -55,12 +57,20 @@ export default function SurvivalGame({
       .catch(() => {});
   }, [user, category]);
 
+  useEffect(() => {
+    return () => { if (pendingRef.current) clearTimeout(pendingRef.current); };
+  }, []);
+
   function handleAnswer(option: string) {
-    if (phase !== 'playing') return;
-    const correct = isCorrectAnswer(option, current);
-    setSelected(option);
-    if (correct) setStreak((s) => s + 1);
-    setPhase('answered');
+    if (phase !== 'playing' || pendingOption !== null) return;
+    setPendingOption(option);
+    pendingRef.current = setTimeout(() => {
+      const correct = isCorrectAnswer(option, current);
+      setSelected(option);
+      setPendingOption(null);
+      if (correct) setStreak((s) => s + 1);
+      setPhase('answered');
+    }, 280);
   }
 
   function handleNext() {
@@ -121,13 +131,15 @@ export default function SurvivalGame({
               } else {
                 cls = 'border-black/5 dark:border-white/5 text-zinc-400 dark:text-zinc-600';
               }
+            } else if (option === pendingOption) {
+              cls = 'border-indigo-400 bg-indigo-950/30 dark:border-indigo-400';
             }
             return (
               <button
                 key={option}
                 onClick={() => handleAnswer(option)}
-                disabled={phase === 'answered'}
-                className={`w-full text-left px-5 py-4 rounded-xl border text-sm font-medium transition-colors ${cls}`}
+                disabled={phase === 'answered' || pendingOption !== null}
+                className={`w-full text-left px-5 py-4 rounded-xl border text-sm font-medium transition-all duration-300 ${cls}`}
               >
                 {option}
               </button>

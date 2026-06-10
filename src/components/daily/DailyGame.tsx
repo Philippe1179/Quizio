@@ -189,6 +189,7 @@ export default function DailyGame({
   const { user, username, loading: authLoading } = useAuth();
   const scoreSaved = useRef(false);
   const startTime = useRef<number | null>(null);
+  const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [elapsed, setElapsed] = useState(0);
 
   const [round] = useState<GameQuestion[]>(() =>
@@ -196,6 +197,8 @@ export default function DailyGame({
   );
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
+  const [pendingOption, setPendingOption] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<boolean[]>([]);
   const [score, setScore] = useState(0);
   const [phase, setPhase] = useState<Phase>('checking');
 
@@ -258,22 +261,31 @@ export default function DailyGame({
       .finally(() => setBoardLoading(false));
   }, [phase, user, username, score, round.length, dateStr, isArchive]);
 
+  useEffect(() => {
+    return () => { if (pendingRef.current) clearTimeout(pendingRef.current); };
+  }, []);
+
   const advance = useCallback(() => {
+    setAnswers((prev) => [...prev, selected === round[index].answer]);
     if (index + 1 >= round.length) {
       setPhase('done');
     } else {
       setIndex((i) => i + 1);
       setSelected(null);
     }
-  }, [index, round.length]);
+  }, [index, round.length, selected, round]);
 
   const handleSelect = useCallback(
     (option: string) => {
-      if (selected !== null) return;
-      if (option === round[index].answer) setScore((s) => s + 1);
-      setSelected(option);
+      if (selected !== null || pendingOption !== null) return;
+      setPendingOption(option);
+      pendingRef.current = setTimeout(() => {
+        if (option === round[index].answer) setScore((s) => s + 1);
+        setSelected(option);
+        setPendingOption(null);
+      }, 280);
     },
-    [selected, round, index],
+    [selected, pendingOption, round, index],
   );
 
   if (phase === 'checking') {
@@ -308,7 +320,6 @@ export default function DailyGame({
 
   const current = round[index];
   const answered = selected !== null;
-  const progress = (index / round.length) * 100;
 
   return (
     <div className="flex flex-col gap-6">
@@ -320,11 +331,24 @@ export default function DailyGame({
         </div>
       </div>
 
-      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-        <div
-          className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-          style={{ width: `${progress}%` }}
-        />
+      <div className="flex items-center justify-center gap-1.5 py-0.5">
+        {round.map((_, i) => {
+          const result = answers[i];
+          return (
+            <div
+              key={i}
+              className={`rounded-full transition-all duration-300 ${
+                i < index
+                  ? result === true
+                    ? 'w-2.5 h-2.5 bg-green-500'
+                    : 'w-2.5 h-2.5 bg-red-500'
+                  : i === index
+                  ? 'w-3 h-3 bg-white/50'
+                  : 'w-2 h-2 bg-white/10'
+              }`}
+            />
+          );
+        })}
       </div>
 
       <p className="text-xl font-semibold leading-snug">{current.question}</p>
@@ -336,13 +360,15 @@ export default function DailyGame({
             if (option === current.answer) style = 'border-2 border-green-500 bg-green-950/40 text-green-400';
             else if (option === selected) style = 'border-2 border-red-500 bg-red-950/40 text-red-400';
             else style = 'border border-white/5 opacity-40';
+          } else if (option === pendingOption) {
+            style = 'border-2 border-indigo-400 bg-indigo-950/30';
           }
           return (
             <button
               key={option}
               onClick={() => handleSelect(option)}
-              disabled={answered}
-              className={`rounded-xl p-4 text-left font-medium transition-all ${style}`}
+              disabled={answered || pendingOption !== null}
+              className={`rounded-xl p-4 text-left font-medium transition-all duration-300 ${style}`}
             >
               {option}
             </button>

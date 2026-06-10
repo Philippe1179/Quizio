@@ -47,6 +47,7 @@ export default function QuizGame({
 }) {
   const { user, username } = useAuth();
   const scoreSaved = useRef(false);
+  const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [round, setRound] = useState<GameQuestion[]>(() => {
     const saved = loadProgress(category, questions);
@@ -55,6 +56,11 @@ export default function QuizGame({
   const [index, setIndex] = useState(() => loadProgress(category, questions)?.index ?? 0);
   const [score, setScore] = useState(() => loadProgress(category, questions)?.score ?? 0);
   const [selected, setSelected] = useState<string | null>(null);
+  const [pendingOption, setPendingOption] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<(boolean | null)[]>(() => {
+    const resumeIndex = loadProgress(category, questions)?.index ?? 0;
+    return resumeIndex > 0 ? (Array(resumeIndex).fill(null) as (boolean | null)[]) : [];
+  });
   const [done, setDone] = useState(false);
   const [resumed] = useState(() => (loadProgress(category, questions)?.index ?? 0) > 0);
 
@@ -86,31 +92,43 @@ export default function QuizGame({
     } catch {}
   }, [index, score, done, round, category]);
 
+  useEffect(() => {
+    return () => { if (pendingRef.current) clearTimeout(pendingRef.current); };
+  }, []);
+
   const handleSelect = useCallback(
     (option: string) => {
-      if (selected !== null) return;
-      const correct = option === current.answer;
-      setSelected(option);
-      if (correct) setScore((s) => s + 1);
+      if (selected !== null || pendingOption !== null) return;
+      setPendingOption(option);
+      pendingRef.current = setTimeout(() => {
+        const correct = option === current.answer;
+        setSelected(option);
+        setPendingOption(null);
+        if (correct) setScore((s) => s + 1);
+      }, 280);
     },
-    [selected, current]
+    [selected, pendingOption, current]
   );
 
   const handleNext = useCallback(() => {
+    setAnswers((prev) => [...prev, selected === current.answer]);
     if (index + 1 >= round.length) {
       setDone(true);
     } else {
       setIndex((i) => i + 1);
       setSelected(null);
     }
-  }, [index, round.length]);
+  }, [index, round.length, selected, current]);
 
   const restart = useCallback(() => {
+    if (pendingRef.current) { clearTimeout(pendingRef.current); pendingRef.current = null; }
     scoreSaved.current = false;
     localStorage.removeItem(STORAGE_KEY(category));
     setRound(prepareRound(questions));
     setIndex(0);
     setSelected(null);
+    setPendingOption(null);
+    setAnswers([]);
     setScore(0);
     setDone(false);
   }, [questions, category]);
@@ -154,11 +172,26 @@ export default function QuizGame({
         </div>
         <span>{score} correct</span>
       </div>
-      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-        <div
-          className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-          style={{ width: `${(index / round.length) * 100}%` }}
-        />
+      <div className="flex items-center justify-center gap-1.5 py-0.5">
+        {round.map((_, i) => {
+          const result = answers[i];
+          return (
+            <div
+              key={i}
+              className={`rounded-full transition-all duration-300 ${
+                i < index
+                  ? result === true
+                    ? 'w-2.5 h-2.5 bg-green-500'
+                    : result === false
+                    ? 'w-2.5 h-2.5 bg-red-500'
+                    : 'w-2.5 h-2.5 bg-white/20'
+                  : i === index
+                  ? 'w-3 h-3 bg-white/50'
+                  : 'w-2 h-2 bg-white/10'
+              }`}
+            />
+          );
+        })}
       </div>
 
       <p className="text-xl font-semibold leading-snug mt-2">{current.question}</p>
@@ -174,13 +207,15 @@ export default function QuizGame({
             } else {
               style = 'border border-white/5 opacity-40';
             }
+          } else if (option === pendingOption) {
+            style = 'border-2 border-indigo-400 bg-indigo-950/30';
           }
           return (
             <button
               key={option}
               onClick={() => handleSelect(option)}
-              disabled={selected !== null}
-              className={`rounded-xl p-4 text-left font-medium transition-all ${style}`}
+              disabled={selected !== null || pendingOption !== null}
+              className={`rounded-xl p-4 text-left font-medium transition-all duration-300 ${style}`}
             >
               {option}
             </button>
