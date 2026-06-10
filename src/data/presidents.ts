@@ -9,8 +9,9 @@ export interface President {
 }
 
 // Portraits via Wikimedia Commons Special:FilePath redirect
+// Do NOT encodeURIComponent — commas/ampersands in the path work fine; encoding breaks them
 const p = (file: string) =>
-  `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=400`;
+  `https://commons.wikimedia.org/wiki/Special:FilePath/${file}?width=400`;
 
 export const PRESIDENTS: President[] = [
   {
@@ -52,7 +53,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 7, number: '7th', name: 'Andrew Jackson',
     years: '1829–1837', party: 'Democratic',
-    portrait: p('Andrew_Jackson_-_3_by_Ralph_Eleaser_Whiteside_Earl_-_Hermitage.jpg'),
+    portrait: p('Andrew_Jackson_portrait.jpg'),
     fact: 'First president from west of the Appalachians. Survived two assassination attempts — both pistols misfired.',
   },
   {
@@ -76,13 +77,13 @@ export const PRESIDENTS: President[] = [
   {
     id: 11, number: '11th', name: 'James K. Polk',
     years: '1845–1849', party: 'Democratic',
-    portrait: p('James_Knox_Polk.jpg'),
+    portrait: p('James_K._Polk.jpg'),
     fact: 'Oversaw the largest territorial expansion in US history, adding over 1.2 million square miles including California.',
   },
   {
     id: 12, number: '12th', name: 'Zachary Taylor',
     years: '1849–1850', party: 'Whig',
-    portrait: p('Zachary_Taylor_edit.jpg'),
+    portrait: p('Zachary_Taylor.jpg'),
     fact: 'War hero who died just 16 months into office. He had never voted in a presidential election before winning one.',
   },
   {
@@ -100,7 +101,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 15, number: '15th', name: 'James Buchanan',
     years: '1857–1861', party: 'Democratic',
-    portrait: p('James_Buchanan_-_NARA_-_527674_edit2.jpg'),
+    portrait: p('James_Buchanan.jpg'),
     fact: 'The only bachelor president. His inaction as Southern states seceded left Lincoln a nation on the brink of war.',
   },
   {
@@ -124,7 +125,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 19, number: '19th', name: 'Rutherford B. Hayes',
     years: '1877–1881', party: 'Republican',
-    portrait: p('Rutherford_B._Hayes.jpg'),
+    portrait: p('Rutherford_Hayes.jpg'),
     fact: 'First president to use a telephone in the White House. Thomas Edison demonstrated the phonograph to him personally.',
   },
   {
@@ -136,7 +137,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 21, number: '21st', name: 'Chester A. Arthur',
     years: '1881–1885', party: 'Republican',
-    portrait: p('Chester_A_Arthur.jpg'),
+    portrait: p('Chester_A._Arthur.jpg'),
     fact: 'Known for his impeccable fashion sense (reportedly owned 80 pairs of pants). Overhauled the civil service system.',
   },
   {
@@ -154,7 +155,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 24, number: '25th', name: 'William McKinley',
     years: '1897–1901', party: 'Republican',
-    portrait: p('William_McKinley.jpg'),
+    portrait: p('William_McKinley_by_Courtney_Art_Studio.jpg'),
     fact: 'Led the US to victory in the Spanish-American War, acquiring Puerto Rico, Guam, and the Philippines. Assassinated in 1901.',
   },
   {
@@ -172,7 +173,7 @@ export const PRESIDENTS: President[] = [
   {
     id: 27, number: '28th', name: 'Woodrow Wilson',
     years: '1913–1921', party: 'Democratic',
-    portrait: p('Woodrow_Wilson.jpg'),
+    portrait: p('Thomas_Woodrow_Wilson,_Harris_&_Ewing_bw_photo_portrait,_1919.jpg'),
     fact: 'Led the US through WWI and proposed the League of Nations — the forerunner of the United Nations.',
   },
   {
@@ -202,19 +203,19 @@ export const PRESIDENTS: President[] = [
   {
     id: 32, number: '33rd', name: 'Harry S. Truman',
     years: '1945–1953', party: 'Democratic',
-    portrait: p('Harry_S_Truman.jpg'),
+    portrait: p('Harry_S._Truman.jpg'),
     fact: 'Made the decision to use atomic bombs on Japan to end WWII. Desegregated the US military by executive order.',
   },
   {
     id: 33, number: '34th', name: 'Dwight D. Eisenhower',
     years: '1953–1961', party: 'Republican',
-    portrait: p('Dwight_Eisenhower.jpg'),
+    portrait: p('Dwight_D._Eisenhower,_official_photo_portrait,_May_29,_1959.jpg'),
     fact: 'Supreme Allied Commander in WWII. Created the Interstate Highway System — originally justified for military evacuation.',
   },
   {
     id: 34, number: '35th', name: 'John F. Kennedy',
     years: '1961–1963', party: 'Democratic',
-    portrait: p('John_F._Kennedy_White_House_color_photo_portrait.jpg'),
+    portrait: p('John_F._Kennedy,_White_House_color_photo_portrait.jpg'),
     fact: 'Youngest elected president at 43. Navigated the Cuban Missile Crisis, bringing the world back from nuclear brinkmanship.',
   },
   {
