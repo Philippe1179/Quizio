@@ -322,6 +322,7 @@ export default function DailyGame({
         setIndex((i) => i + 1);
         setSelected(null);
         setFading(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }, 150);
   }, [fading, index, round.length, selected, round]);
