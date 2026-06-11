@@ -48,21 +48,23 @@ export default function DailyContent() {
         </p>
       </div>
       <DailyGame questions={questions} dateStr={dateStr} onComplete={handleComplete} />
-      {showArchive && <section className="mt-12 flex flex-col gap-4 animate-fade-in">
-        <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Past Challenges</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {pastDays.map((date) => (
-            <Link
-              key={date}
-              href={`/daily/${date}`}
-              className="rounded-xl border border-black/10 dark:border-white/10 px-4 py-3 text-center hover:border-black/30 dark:hover:border-white/30 transition-colors"
-            >
-              <p className="text-sm font-medium">{date.slice(5)}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Play →</p>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {showArchive && (
+        <section className="mt-12 flex flex-col gap-4 animate-fade-in">
+          <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Past Challenges</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {pastDays.map((date) => (
+              <Link
+                key={date}
+                href={`/daily/${date}`}
+                className="rounded-xl border border-black/10 dark:border-white/10 px-4 py-3 text-center hover:border-black/30 dark:hover:border-white/30 transition-colors"
+              >
+                <p className="text-sm font-medium">{date.slice(5)}</p>
+                <p className="text-xs text-zinc-500 mt-0.5">Play →</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }
