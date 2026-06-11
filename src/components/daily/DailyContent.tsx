@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import DailyGame from './DailyGame';
 import { getDailyQuestions } from '@/lib/daily';
@@ -22,12 +22,15 @@ function getPastDays(todayStr: string, count: number): string[] {
 export default function DailyContent() {
   const [dateStr, setDateStr] = useState<string>('');
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [showArchive, setShowArchive] = useState(false);
 
   useEffect(() => {
     const d = getLocalDateStr();
     setDateStr(d);
     setQuestions(getDailyQuestions(d));
   }, []);
+
+  const handleComplete = useCallback(() => setShowArchive(true), []);
 
   if (!dateStr) return null;
 
@@ -44,8 +47,12 @@ export default function DailyContent() {
           10 questions from all categories · Same for everyone · Resets at midnight
         </p>
       </div>
-      <DailyGame questions={questions} dateStr={dateStr} />
-      <section className="mt-12 flex flex-col gap-4">
+      <DailyGame questions={questions} dateStr={dateStr} onComplete={handleComplete} />
+      <section
+        className={`mt-12 flex flex-col gap-4 transition-all duration-500 ${
+          showArchive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+      >
         <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Past Challenges</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {pastDays.map((date) => (

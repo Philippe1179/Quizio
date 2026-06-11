@@ -223,10 +223,12 @@ export default function DailyGame({
   questions,
   dateStr,
   isArchive = false,
+  onComplete,
 }: {
   questions: Question[];
   dateStr: string;
   isArchive?: boolean;
+  onComplete?: () => void;
 }) {
   const { user, username, loading: authLoading } = useAuth();
   const scoreSaved = useRef(false);
@@ -272,6 +274,9 @@ export default function DailyGame({
   useEffect(() => {
     if (phase === 'playing' && startTime.current === null) {
       startTime.current = Date.now();
+    }
+    if ((phase === 'done' || phase === 'already-played') && !isArchive) {
+      onComplete?.();
     }
   }, [phase]);
 
