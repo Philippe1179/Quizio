@@ -48,11 +48,7 @@ export default function DailyContent() {
         </p>
       </div>
       <DailyGame questions={questions} dateStr={dateStr} onComplete={handleComplete} />
-      <section
-        className={`mt-12 flex flex-col gap-4 transition-all duration-500 ${
-          showArchive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
-        }`}
-      >
+      {showArchive && <section className="mt-12 flex flex-col gap-4 animate-fade-in">
         <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Past Challenges</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {pastDays.map((date) => (
