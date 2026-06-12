@@ -82,8 +82,12 @@ export default function QuizGame({
   }, [done, user, score, round.length, category, categoryLabel]);
 
   useEffect(() => {
-    if (selected !== null) {
-      feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (selected !== null && feedbackRef.current) {
+      const rect = feedbackRef.current.getBoundingClientRect();
+      const clearance = window.innerHeight - 88;
+      if (rect.bottom > clearance) {
+        window.scrollBy({ top: rect.bottom - clearance, behavior: 'smooth' });
+      }
     }
   }, [selected]);
 

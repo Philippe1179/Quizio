@@ -99,8 +99,12 @@ export default function SurvivalGame({
   }, [category, user, username, personalBest]);
 
   useEffect(() => {
-    if (phase === 'answered') {
-      feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (phase === 'answered' && feedbackRef.current) {
+      const rect = feedbackRef.current.getBoundingClientRect();
+      const clearance = window.innerHeight - 88;
+      if (rect.bottom > clearance) {
+        window.scrollBy({ top: rect.bottom - clearance, behavior: 'smooth' });
+      }
     }
   }, [phase]);
 
