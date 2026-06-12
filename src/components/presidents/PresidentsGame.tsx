@@ -134,6 +134,7 @@ export default function PresidentsGame() {
     } else {
       setQIndex(qIndex + 1);
       setSelected(null);
+      window.scrollTo({ top: 0, behavior: 'instant' });
     }
   }
 
@@ -247,78 +248,88 @@ export default function PresidentsGame() {
     const answered = selected !== null;
     const progress = (qIndex / QUIZ_ROUNDS) * 100;
 
-    return (
-      <div className="flex flex-col gap-5">
-        <div className="flex items-center justify-between text-sm text-zinc-400">
-          <span>Question {qIndex + 1} of {QUIZ_ROUNDS}</span>
-          <span>{score} correct</span>
-        </div>
-        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-          <div
-            className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+    const isCorrect = selected === current.president.name;
 
-        <div className="flex flex-col items-center gap-4 py-2">
-          <p className="text-xs text-zinc-500 uppercase tracking-widest">Who is this president?</p>
-          <div className="w-44 h-56 rounded-xl overflow-hidden border border-white/10 bg-zinc-900 flex-shrink-0">
-            <PortraitImg
-              src={current.president.portrait}
-              alt="Presidential portrait"
-              className="w-full h-full object-cover object-top"
+    return (
+      <>
+        <div className={`flex flex-col gap-5 ${answered ? 'pb-28' : 'pb-4'}`}>
+          <div className="flex items-center justify-between text-sm text-zinc-400">
+            <span>Question {qIndex + 1} of {QUIZ_ROUNDS}</span>
+            <span>{score} correct</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+            <div
+              className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
             />
           </div>
-          {answered && (
-            <div className={`rounded-xl border px-5 py-4 text-center max-w-sm w-full ${
-              selected === current.president.name
-                ? 'border-green-500/30 bg-green-950/20'
-                : 'border-red-500/30 bg-red-950/20'
-            }`}>
-              <p className="font-semibold">{current.president.name}</p>
-              <p className="text-sm text-zinc-400 mt-1">
-                {current.president.number} president · {current.president.years}
-              </p>
-              <p className="text-sm text-zinc-500">{current.president.party}</p>
-              <p className="text-sm text-zinc-300 mt-3 italic leading-relaxed">
-                &ldquo;{current.president.fact}&rdquo;
-              </p>
-            </div>
-          )}
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {current.options.map((name) => {
-            let cls = 'border border-white/10 hover:border-white/30 cursor-pointer';
-            if (answered) {
-              if (name === current.president.name) cls = 'border-2 border-green-500 bg-green-950/40 text-green-400';
-              else if (name === selected) cls = 'border-2 border-red-500 bg-red-950/40 text-red-400';
-              else cls = 'border border-white/5 opacity-40';
-            }
-            return (
-              <button
-                key={name}
-                onClick={() => handleQuizSelect(name)}
-                disabled={answered}
-                className={`rounded-xl p-4 text-left font-medium transition-all ${cls}`}
-              >
-                {name}
-              </button>
-            );
-          })}
+          <div className="flex flex-col items-center gap-4 py-2">
+            <p className="text-xs text-zinc-500 uppercase tracking-widest">Who is this president?</p>
+            <div className="w-44 h-56 rounded-xl overflow-hidden border border-white/10 bg-zinc-900 flex-shrink-0">
+              <PortraitImg
+                src={current.president.portrait}
+                alt="Presidential portrait"
+                className="w-full h-full object-cover object-top"
+              />
+            </div>
+            {answered && (
+              <div className={`rounded-xl border px-5 py-4 text-center max-w-sm w-full ${
+                isCorrect ? 'border-green-500/30 bg-green-950/20' : 'border-red-500/30 bg-red-950/20'
+              }`}>
+                <p className="font-semibold">{current.president.name}</p>
+                <p className="text-sm text-zinc-400 mt-1">
+                  {current.president.number} president · {current.president.years}
+                </p>
+                <p className="text-sm text-zinc-500">{current.president.party}</p>
+                <p className="text-sm text-zinc-300 mt-3 italic leading-relaxed">
+                  &ldquo;{current.president.fact}&rdquo;
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {current.options.map((name) => {
+              let cls = 'border border-white/10 hover:border-white/30 cursor-pointer';
+              if (answered) {
+                if (name === current.president.name) cls = 'border-2 border-green-500 bg-green-950/40 text-green-400';
+                else if (name === selected) cls = 'border-2 border-red-500 bg-red-950/40 text-red-400';
+                else cls = 'border border-white/5 opacity-40';
+              }
+              return (
+                <button
+                  key={name}
+                  onClick={() => handleQuizSelect(name)}
+                  disabled={answered}
+                  className={`rounded-xl p-5 text-left font-medium transition-all ${cls}`}
+                >
+                  {name}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {answered && (
-          <div className="flex justify-end">
+          <div
+            className={`fixed bottom-0 left-0 right-0 z-50 border-t px-4 py-3 flex items-center justify-between gap-4 animate-fade-in ${
+              isCorrect ? 'border-green-500/30 bg-green-950/90' : 'border-red-500/30 bg-red-950/90'
+            }`}
+            style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+          >
+            <p className={`font-semibold text-sm ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+              {isCorrect ? 'Correct!' : `Answer: ${current.president.name}`}
+            </p>
             <button
               onClick={handleQuizNext}
-              className="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium transition-colors text-sm"
+              className="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 font-medium transition-colors text-sm shrink-0"
             >
               {qIndex + 1 >= QUIZ_ROUNDS ? 'See Results' : 'Next Question'}
             </button>
           </div>
         )}
-      </div>
+      </>
     );
   }
 

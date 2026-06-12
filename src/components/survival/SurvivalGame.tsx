@@ -81,6 +81,7 @@ export default function SurvivalGame({
           setSelected(null);
           setPhase('playing');
           setFading(false);
+          window.scrollTo({ top: 0, behavior: 'instant' });
         }
       } else {
         setPhase('done');
@@ -106,7 +107,8 @@ export default function SurvivalGame({
   // ── Playing ──
   if (phase === 'playing' || phase === 'answered') {
     return (
-      <div className="flex flex-col gap-6">
+    <>
+      <div className={`flex flex-col gap-6 ${phase === 'answered' ? 'pb-28' : 'pb-4'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-3xl">🔥</span>
@@ -124,53 +126,69 @@ export default function SurvivalGame({
         </div>
 
         <div className={`flex flex-col gap-6 transition-opacity duration-150 ${fading ? 'opacity-0' : 'opacity-100'}`}>
-        <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-6 py-8">
-          <p className="text-lg font-semibold leading-snug">{current.question}</p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {current.options.map((option) => {
-            let cls = 'border-black/10 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30';
-            if (phase === 'answered') {
-              if (isCorrectAnswer(option, current)) {
-                cls = 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-300';
-              } else if (option === selected) {
-                cls = 'border-red-500 bg-red-500/10 text-red-600 dark:text-red-300';
-              } else {
-                cls = 'border-black/5 dark:border-white/5 text-zinc-400 dark:text-zinc-600';
-              }
-            }
-            return (
-              <button
-                key={option}
-                onClick={() => handleAnswer(option)}
-                disabled={phase === 'answered'}
-                className={`w-full text-left px-5 py-4 rounded-xl border text-sm font-medium transition-all duration-300 ${cls}`}
-              >
-                {option}
-              </button>
-            );
-          })}
-        </div>
-
-        {phase === 'answered' && (
-          <div className="flex flex-col gap-3 mt-1">
-            {current.explanation && (
-              <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300 leading-relaxed">
-                {current.explanation}
-              </div>
-            )}
-            {current.geoName && <CountryMap geoName={current.geoName} />}
-            <button
-              onClick={handleNext}
-              className="self-end px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium transition-colors text-sm"
-            >
-              {selected && isCorrectAnswer(selected, current) ? 'Next Question' : 'See Results'}
-            </button>
+          <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-6 py-8">
+            <p className="text-lg font-semibold leading-snug">{current.question}</p>
           </div>
-        )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {current.options.map((option) => {
+              let cls = 'border-black/10 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30';
+              if (phase === 'answered') {
+                if (isCorrectAnswer(option, current)) {
+                  cls = 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-300';
+                } else if (option === selected) {
+                  cls = 'border-red-500 bg-red-500/10 text-red-600 dark:text-red-300';
+                } else {
+                  cls = 'border-black/5 dark:border-white/5 text-zinc-400 dark:text-zinc-600';
+                }
+              }
+              return (
+                <button
+                  key={option}
+                  onClick={() => handleAnswer(option)}
+                  disabled={phase === 'answered'}
+                  className={`w-full text-left px-5 py-5 rounded-xl border text-sm font-medium transition-all duration-300 ${cls}`}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+
+          {phase === 'answered' && (
+            <div className="flex flex-col gap-3">
+              {current.explanation && (
+                <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300 leading-relaxed">
+                  {current.explanation}
+                </div>
+              )}
+              {current.geoName && <CountryMap geoName={current.geoName} />}
+            </div>
+          )}
         </div>
       </div>
+
+      {phase === 'answered' && (
+        <div
+          className={`fixed bottom-0 left-0 right-0 z-50 border-t px-4 py-3 flex items-center justify-between gap-4 animate-fade-in ${
+            selected && isCorrectAnswer(selected, current)
+              ? 'border-green-500/30 bg-green-950/90'
+              : 'border-red-500/30 bg-red-950/90'
+          }`}
+          style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+        >
+          <p className={`font-semibold text-sm ${selected && isCorrectAnswer(selected, current) ? 'text-green-400' : 'text-red-400'}`}>
+            {selected && isCorrectAnswer(selected, current) ? 'Correct!' : `Answer: ${current.answer}`}
+          </p>
+          <button
+            onClick={handleNext}
+            className="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 font-medium transition-colors text-sm shrink-0"
+          >
+            {selected && isCorrectAnswer(selected, current) ? 'Next Question' : 'See Results'}
+          </button>
+        </div>
+      )}
+    </>
     );
   }
 

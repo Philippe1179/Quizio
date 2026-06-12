@@ -120,6 +120,7 @@ export default function QuizGame({
         setIndex((i) => i + 1);
         setSelected(null);
         setFading(false);
+        window.scrollTo({ top: 0, behavior: 'instant' });
       }
     }, 150);
   }, [fading, index, round.length, selected, current]);
@@ -197,92 +198,109 @@ export default function QuizGame({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between text-sm text-zinc-400">
-        <div className="flex items-center gap-2">
-          <span>Question {index + 1} of {round.length}</span>
-          {resumed && (
-            <span className="text-xs text-indigo-400 border border-indigo-500/30 rounded px-1.5 py-0.5">
-              resumed
-            </span>
+    <>
+      <div className={`flex flex-col gap-6 ${selected !== null ? 'pb-28' : 'pb-4'}`}>
+        <div className="flex items-center justify-between text-sm text-zinc-400">
+          <div className="flex items-center gap-2">
+            <span>Question {index + 1} of {round.length}</span>
+            {resumed && (
+              <span className="text-xs text-indigo-400 border border-indigo-500/30 rounded px-1.5 py-0.5">
+                resumed
+              </span>
+            )}
+          </div>
+          <div className="relative">
+            <span>{score} correct</span>
+            {showPlus && (
+              <span className="absolute inset-x-0 -top-5 text-center text-green-400 font-bold pointer-events-none animate-float-up">
+                +1
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center justify-center gap-1.5 py-0.5">
+          {round.map((_, i) => {
+            const result = answers[i];
+            return (
+              <div
+                key={i}
+                className={`rounded-full transition-all duration-300 ${
+                  i < index
+                    ? result === true
+                      ? 'w-2.5 h-2.5 bg-green-500'
+                      : result === false
+                      ? 'w-2.5 h-2.5 bg-red-500'
+                      : 'w-2.5 h-2.5 bg-white/20'
+                    : i === index
+                    ? 'w-3 h-3 bg-white/50'
+                    : 'w-2 h-2 bg-white/10'
+                }`}
+              />
+            );
+          })}
+        </div>
+
+        <div className={`flex flex-col gap-6 transition-opacity duration-150 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+          <p className="text-xl font-semibold leading-snug">{current.question}</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {current.shuffledOptions.map((option) => {
+              let style = 'border border-white/10 hover:border-white/30 cursor-pointer';
+              if (selected !== null) {
+                if (option === current.answer) {
+                  style = 'border-2 border-green-500 bg-green-950/40 text-green-400';
+                } else if (option === selected) {
+                  style = 'border-2 border-red-500 bg-red-950/40 text-red-400';
+                } else {
+                  style = 'border border-white/5 opacity-40';
+                }
+              }
+              return (
+                <button
+                  key={option}
+                  onClick={() => handleSelect(option)}
+                  disabled={selected !== null}
+                  className={`rounded-xl p-5 text-left font-medium transition-all duration-300 ${style}`}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+
+          {selected !== null && (
+            <div className="flex flex-col gap-3">
+              {current.explanation && (
+                <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300 leading-relaxed">
+                  {current.explanation}
+                </div>
+              )}
+              {current.geoName && <CountryMap geoName={current.geoName} />}
+            </div>
           )}
         </div>
-        <div className="relative">
-          <span>{score} correct</span>
-          {showPlus && (
-            <span className="absolute inset-x-0 -top-5 text-center text-green-400 font-bold pointer-events-none animate-float-up">
-              +1
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center justify-center gap-1.5 py-0.5">
-        {round.map((_, i) => {
-          const result = answers[i];
-          return (
-            <div
-              key={i}
-              className={`rounded-full transition-all duration-300 ${
-                i < index
-                  ? result === true
-                    ? 'w-2.5 h-2.5 bg-green-500'
-                    : result === false
-                    ? 'w-2.5 h-2.5 bg-red-500'
-                    : 'w-2.5 h-2.5 bg-white/20'
-                  : i === index
-                  ? 'w-3 h-3 bg-white/50'
-                  : 'w-2 h-2 bg-white/10'
-              }`}
-            />
-          );
-        })}
-      </div>
-
-      <div className={`flex flex-col gap-6 transition-opacity duration-150 ${fading ? 'opacity-0' : 'opacity-100'}`}>
-      <p className="text-xl font-semibold leading-snug">{current.question}</p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {current.shuffledOptions.map((option) => {
-          let style = 'border border-white/10 hover:border-white/30 cursor-pointer';
-          if (selected !== null) {
-            if (option === current.answer) {
-              style = 'border-2 border-green-500 bg-green-950/40 text-green-400';
-            } else if (option === selected) {
-              style = 'border-2 border-red-500 bg-red-950/40 text-red-400';
-            } else {
-              style = 'border border-white/5 opacity-40';
-            }
-          }
-          return (
-            <button
-              key={option}
-              onClick={() => handleSelect(option)}
-              disabled={selected !== null}
-              className={`rounded-xl p-4 text-left font-medium transition-all duration-300 ${style}`}
-            >
-              {option}
-            </button>
-          );
-        })}
       </div>
 
       {selected !== null && (
-        <div className="flex flex-col gap-3 mt-1">
-          {current.explanation && (
-            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300 leading-relaxed">
-              {current.explanation}
-            </div>
-          )}
-          {current.geoName && <CountryMap geoName={current.geoName} />}
+        <div
+          className={`fixed bottom-0 left-0 right-0 z-50 border-t px-4 py-3 flex items-center justify-between gap-4 animate-fade-in ${
+            selected === current.answer
+              ? 'border-green-500/30 bg-green-950/90'
+              : 'border-red-500/30 bg-red-950/90'
+          }`}
+          style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+        >
+          <p className={`font-semibold text-sm ${selected === current.answer ? 'text-green-400' : 'text-red-400'}`}>
+            {selected === current.answer ? 'Correct!' : `Answer: ${current.answer}`}
+          </p>
           <button
             onClick={handleNext}
-            className="self-end px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium transition-colors text-sm"
+            className="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 font-medium transition-colors text-sm shrink-0"
           >
             {index + 1 >= round.length ? 'See Results' : 'Next Question'}
           </button>
         </div>
       )}
-      </div>
-    </div>
+    </>
   );
 }
