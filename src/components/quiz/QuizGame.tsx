@@ -47,6 +47,7 @@ export default function QuizGame({
 }) {
   const { user, username } = useAuth();
   const scoreSaved = useRef(false);
+  const feedbackRef = useRef<HTMLDivElement>(null);
 
   const [round, setRound] = useState<GameQuestion[]>(() => {
     const saved = loadProgress(category, questions);
@@ -79,6 +80,12 @@ export default function QuizGame({
       pct: Math.round((score / round.length) * 100),
     }, username).catch(() => {});
   }, [done, user, score, round.length, category, categoryLabel]);
+
+  useEffect(() => {
+    if (selected !== null) {
+      feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selected]);
 
   useEffect(() => {
     if (done) {
@@ -269,7 +276,7 @@ export default function QuizGame({
           </div>
 
           {selected !== null && (
-            <div className="flex flex-col gap-3">
+            <div ref={feedbackRef} className="flex flex-col gap-3">
               {current.explanation && (
                 <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300 leading-relaxed">
                   {current.explanation}

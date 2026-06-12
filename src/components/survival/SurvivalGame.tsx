@@ -44,6 +44,7 @@ export default function SurvivalGame({
   const [personalBest, setPersonalBest] = useState(0);
   const [newBest, setNewBest] = useState(false);
   const savedRef = useRef(false);
+  const feedbackRef = useRef<HTMLDivElement>(null);
 
   const current = shuffled[index];
 
@@ -96,6 +97,12 @@ export default function SurvivalGame({
       saveSurvivalScore(user.uid, category, finalStreak, username ?? null).catch(() => {});
     }
   }, [category, user, username, personalBest]);
+
+  useEffect(() => {
+    if (phase === 'answered') {
+      feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [phase]);
 
   // Save score + load leaderboard when game ends
   useEffect(() => {
@@ -156,7 +163,7 @@ export default function SurvivalGame({
           </div>
 
           {phase === 'answered' && (
-            <div className="flex flex-col gap-3">
+            <div ref={feedbackRef} className="flex flex-col gap-3">
               {current.explanation && (
                 <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300 leading-relaxed">
                   {current.explanation}

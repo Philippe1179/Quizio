@@ -233,6 +233,7 @@ export default function DailyGame({
   const { user, username, loading: authLoading } = useAuth();
   const scoreSaved = useRef(false);
   const startTime = useRef<number | null>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
   const [elapsed, setElapsed] = useState(0);
 
   const [round] = useState<GameQuestion[]>(() =>
@@ -279,6 +280,12 @@ export default function DailyGame({
       onComplete?.();
     }
   }, [phase]);
+
+  useEffect(() => {
+    if (selected !== null) {
+      feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selected]);
 
   useEffect(() => {
     if (phase !== 'playing') return;
@@ -440,7 +447,7 @@ export default function DailyGame({
           </div>
 
           {answered && (
-            <div className="flex flex-col gap-3">
+            <div ref={feedbackRef} className="flex flex-col gap-3">
               {current.explanation && (
                 <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300 leading-relaxed">
                   {current.explanation}

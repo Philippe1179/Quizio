@@ -48,6 +48,7 @@ type Phase = 'select' | 'quiz' | 'type' | 'done';
 export default function PresidentsGame() {
   const { user, username } = useAuth();
   const scoreSaved = useRef(false);
+  const feedbackRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<Phase>('select');
   const [doneMode, setDoneMode] = useState<'quiz' | 'type'>('quiz');
 
@@ -81,6 +82,12 @@ export default function PresidentsGame() {
       pct: Math.round((finalScore / total) * 100),
     }, username).catch(() => {});
   }, [phase, user, doneMode, finalScore]);
+
+  useEffect(() => {
+    if (selected !== null) {
+      feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selected]);
 
   // Type mode countdown — runs every second; reads current found when time=0 since timeLeft changes each tick
   useEffect(() => {
@@ -274,7 +281,7 @@ export default function PresidentsGame() {
               />
             </div>
             {answered && (
-              <div className={`rounded-xl border px-5 py-4 text-center max-w-sm w-full ${
+              <div ref={feedbackRef} className={`rounded-xl border px-5 py-4 text-center max-w-sm w-full ${
                 isCorrect ? 'border-green-500/30 bg-green-950/20' : 'border-red-500/30 bg-red-950/20'
               }`}>
                 <p className="font-semibold">{current.president.name}</p>
