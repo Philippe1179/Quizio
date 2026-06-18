@@ -125,9 +125,9 @@ function LeaderboardPageInner() {
   // Past daily challenges
   const pastDates30 = getPastDays(today, 30);
   const [userPastScores, setUserPastScores] = useState<Record<string, { entry: DailyLeaderboardEntry; rank: number }>>({});
-  const [expandedDate, setExpandedDate] = useState<string | null>(null);
-  const [expandedEntries, setExpandedEntries] = useState<DailyLeaderboardEntry[]>([]);
-  const [expandedLoading, setExpandedLoading] = useState(false);
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
+  const [expandedEntriesMap, setExpandedEntriesMap] = useState<Record<string, DailyLeaderboardEntry[]>>({});
+  const [expandedLoadingSet, setExpandedLoadingSet] = useState<Set<string>>(new Set());
 
   // Friends
   const [friends, setFriends] = useState<FriendEntry[]>([]);
@@ -179,15 +179,32 @@ function LeaderboardPageInner() {
     }
   }, [authLoading, user, today]);
 
-  function handleDateClick(date: string) {
-    if (expandedDate === date) { setExpandedDate(null); return; }
-    setExpandedDate(date);
-    setExpandedEntries([]);
-    setExpandedLoading(true);
+  function fetchDateEntries(date: string) {
+    if (expandedEntriesMap[date] !== undefined) return;
+    setExpandedLoadingSet((prev) => new Set([...prev, date]));
     getDailyLeaderboard(date)
-      .then(setExpandedEntries)
-      .catch(() => {})
-      .finally(() => setExpandedLoading(false));
+      .then((entries) => setExpandedEntriesMap((prev) => ({ ...prev, [date]: entries })))
+      .catch(() => setExpandedEntriesMap((prev) => ({ ...prev, [date]: [] })))
+      .finally(() => setExpandedLoadingSet((prev) => { const n = new Set(prev); n.delete(date); return n; }));
+  }
+
+  function handleDateClick(date: string) {
+    if (expandedDates.has(date)) {
+      setExpandedDates((prev) => { const n = new Set(prev); n.delete(date); return n; });
+      return;
+    }
+    setExpandedDates((prev) => new Set([...prev, date]));
+    fetchDateEntries(date);
+  }
+
+  function handleToggleAll() {
+    const allExpanded = pastDates30.every((d) => expandedDates.has(d));
+    if (allExpanded) {
+      setExpandedDates(new Set());
+    } else {
+      setExpandedDates(new Set(pastDates30));
+      pastDates30.forEach(fetchDateEntries);
+    }
   }
 
   function filterByFriends<T extends { userId: string }>(list: T[]): T[] {
@@ -380,11 +397,21 @@ function LeaderboardPageInner() {
             })()}
 
             <section className="flex flex-col gap-3">
-              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Past Daily Challenges</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Past Daily Challenges</h2>
+                <button
+                  onClick={handleToggleAll}
+                  className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  {pastDates30.every((d) => expandedDates.has(d)) ? 'Hide all' : 'Show all'}
+                </button>
+              </div>
               <div className="flex flex-col gap-2">
                 {pastDates30.map((date) => {
                   const userScore = userPastScores[date];
-                  const isExpanded = expandedDate === date;
+                  const isExpanded = expandedDates.has(date);
+                  const isLoading = expandedLoadingSet.has(date);
+                  const dateEntries = expandedEntriesMap[date] ?? [];
                   return (
                     <div key={date} className="rounded-xl border border-black/10 dark:border-white/10 overflow-hidden">
                       <button
@@ -409,12 +436,12 @@ function LeaderboardPageInner() {
                             Play this challenge &rarr;
                           </Link>
                           <div className="flex flex-col gap-2">
-                            {expandedLoading ? (
+                            {isLoading ? (
                               [...Array(3)].map((_, i) => (
                                 <div key={i} className="h-12 rounded-lg bg-white/5 animate-pulse" />
                               ))
                             ) : (() => {
-                              const filtered = filterByFriends(expandedEntries);
+                              const filtered = filterByFriends(dateEntries);
                               if (filtered.length === 0) return <p className="text-sm text-zinc-600 py-2">No scores for this day.</p>;
                               return filtered.slice(0, 10).map((entry, i) => {
                                 const isYou = user?.uid === entry.userId;
