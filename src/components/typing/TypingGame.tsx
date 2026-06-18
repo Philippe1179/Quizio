@@ -31,6 +31,9 @@ export default function TypingGame() {
   const [errorFlash, setErrorFlash] = useState(false);
   const [focused, setFocused] = useState(false);
 
+  const passageTextRef = useRef(passage.text);
+  useEffect(() => { passageTextRef.current = passage.text; }, [passage.text]);
+
   const done = endTime !== null;
   const elapsedSeconds = done
     ? (endTime - (startTime ?? endTime)) / 1000
@@ -57,6 +60,26 @@ export default function TypingGame() {
 
   useEffect(() => {
     inputRef.current?.focus();
+  }, []);
+
+  // Esc = new passage from anywhere on the page
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      scoreSaved.current = false;
+      typedRef.current = '';
+      setPassage(pickPassage(passageTextRef.current));
+      setTyped('');
+      setErrorCount(0);
+      setStartTime(null);
+      setEndTime(null);
+      setElapsed(0);
+      setErrorFlash(false);
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -138,6 +161,7 @@ export default function TypingGame() {
         </div>
 
         <p className="text-center text-zinc-400">{wpmMsg}</p>
+        <p className="text-center text-xs text-zinc-600">Press Esc for a new passage</p>
 
         <div className="flex gap-3 flex-wrap justify-center">
           <button
@@ -216,6 +240,9 @@ export default function TypingGame() {
         )}
         {!focused && !startTime && (
           <p className="text-xs text-zinc-600 mt-4 text-center">Click to start typing</p>
+        )}
+        {(focused || startTime) && (
+          <p className="text-xs text-zinc-700 mt-4 text-right">Esc for new passage</p>
         )}
       </div>
 
