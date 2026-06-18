@@ -9,14 +9,14 @@ import PlayerActionSheet from '@/components/ui/PlayerActionSheet';
 import { useAuth } from '@/context/AuthContext';
 import {
   getDailyLeaderboard, getStreak, getHallOfFame,
-  getFriends, getFriendDailyScores, getAllSurvivalLeaderboards,
+  getFriends, getAllSurvivalLeaderboards,
   getUserDailyScoresWithRank, getTypingLeaderboard,
   type DailyLeaderboardEntry, type StreakInfo, type HallOfFameEntry,
   type FriendEntry, type SurvivalEntry, type TypingEntry,
 } from '@/lib/db';
 import { categories } from '@/lib/categories';
 
-type Tab = 'today' | 'all-time' | 'survival' | 'typing' | 'friends';
+type Tab = 'today' | 'all-time' | 'survival' | 'typing';
 
 function medal(rank: number) {
   if (rank === 1) return '🥇';
@@ -100,8 +100,9 @@ export default function LeaderboardPage() {
 
   const [tab, setTab] = useState<Tab>(() => {
     const t = searchParams.get('tab');
-    return (t === 'today' || t === 'all-time' || t === 'survival' || t === 'typing' || t === 'friends') ? t : 'today';
+    return (t === 'today' || t === 'all-time' || t === 'survival' || t === 'typing') ? t : 'today';
   });
+  const [friendsOnly, setFriendsOnly] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<import('@/components/ui/PlayerActionSheet').PlayerTarget | null>(null);
 
   // Today
@@ -117,6 +118,10 @@ export default function LeaderboardPage() {
   const [survivalBoards, setSurvivalBoards] = useState<Record<string, SurvivalEntry[]>>({});
   const [survivalLoading, setSurvivalLoading] = useState(true);
 
+  // Typing
+  const [typingEntries, setTypingEntries] = useState<TypingEntry[]>([]);
+  const [typingLoading, setTypingLoading] = useState(true);
+
   // Past daily challenges
   const pastDates30 = getPastDays(today, 30);
   const [userPastScores, setUserPastScores] = useState<Record<string, { entry: DailyLeaderboardEntry; rank: number }>>({});
@@ -124,14 +129,14 @@ export default function LeaderboardPage() {
   const [expandedEntries, setExpandedEntries] = useState<DailyLeaderboardEntry[]>([]);
   const [expandedLoading, setExpandedLoading] = useState(false);
 
-  // Typing
-  const [typingEntries, setTypingEntries] = useState<TypingEntry[]>([]);
-  const [typingLoading, setTypingLoading] = useState(true);
-
   // Friends
   const [friends, setFriends] = useState<FriendEntry[]>([]);
-  const [friendScores, setFriendScores] = useState<DailyLeaderboardEntry[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
+
+  const friendUidSet = new Set([
+    ...(user ? [user.uid] : []),
+    ...friends.map((f) => f.uid),
+  ]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -164,16 +169,9 @@ export default function LeaderboardPage() {
       getUserDailyScoresWithRank(user.uid, getPastDays(today, 30))
         .then(setUserPastScores)
         .catch(() => {});
-    }
 
-    if (user) {
       getFriends(user.uid)
-        .then(async (f) => {
-          setFriends(f);
-          const allUids = [user.uid, ...f.map((fr) => fr.uid)];
-          const scores = await getFriendDailyScores(today, allUids);
-          setFriendScores(scores);
-        })
+        .then(setFriends)
         .catch(() => {})
         .finally(() => setFriendsLoading(false));
     } else {
@@ -190,6 +188,29 @@ export default function LeaderboardPage() {
       .then(setExpandedEntries)
       .catch(() => {})
       .finally(() => setExpandedLoading(false));
+  }
+
+  function filterByFriends<T extends { userId: string }>(list: T[]): T[] {
+    if (!friendsOnly || !user) return list;
+    return list.filter((e) => friendUidSet.has(e.userId));
+  }
+
+  function FriendsEmptyState() {
+    if (friendsLoading) return (
+      <div className="flex flex-col gap-3">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-16 rounded-xl border border-white/10 animate-pulse bg-white/5" />
+        ))}
+      </div>
+    );
+    return (
+      <div className="rounded-xl border border-white/10 p-10 text-center flex flex-col gap-2">
+        <p className="text-zinc-500 text-sm">None of your friends have scores here yet.</p>
+        <Link href="/friends" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
+          Manage friends &rarr;
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -213,7 +234,7 @@ export default function LeaderboardPage() {
 
         {/* Tab bar */}
         <div className="flex border-b border-white/10">
-          {(['today', 'all-time', 'survival', 'typing', 'friends'] as Tab[]).map((t) => (
+          {(['today', 'all-time', 'survival', 'typing'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -227,6 +248,33 @@ export default function LeaderboardPage() {
             </button>
           ))}
         </div>
+
+        {/* Friends filter */}
+        {user && (
+          <div className="flex items-center justify-between -mt-4">
+            <div className="flex items-center gap-1 bg-white/5 rounded-full p-1">
+              <button
+                onClick={() => setFriendsOnly(false)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  !friendsOnly ? 'bg-white/15 text-white' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                Everyone
+              </button>
+              <button
+                onClick={() => setFriendsOnly(true)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  friendsOnly ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                Friends
+              </button>
+            </div>
+            <Link href="/friends" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+              Manage friends &rarr;
+            </Link>
+          </div>
+        )}
 
         {/* ── Today ── */}
         {tab === 'today' && (
@@ -255,68 +303,82 @@ export default function LeaderboardPage() {
                     <div key={i} className="h-16 rounded-xl border border-white/10 animate-pulse bg-white/5" />
                   ))}
                 </div>
-              ) : entries.length === 0 ? (
-                <div className="rounded-xl border border-white/10 p-12 text-center flex flex-col gap-3">
-                  <p className="text-zinc-500">No scores yet for today</p>
-                  <Link href="/daily" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
-                    Be the first to play →
-                  </Link>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {entries.slice(0, 10).map((entry, i) => (
-                    <DailyEntryRow key={entry.userId} entry={entry} rank={i + 1} selfUid={user?.uid} onPlayerClick={setSelectedPlayer} />
-                  ))}
-                </div>
-              )}
+              ) : (() => {
+                const filtered = filterByFriends(entries);
+                if (filtered.length === 0) {
+                  return friendsOnly ? <FriendsEmptyState /> : (
+                    <div className="rounded-xl border border-white/10 p-12 text-center flex flex-col gap-3">
+                      <p className="text-zinc-500">No scores yet for today</p>
+                      <Link href="/daily" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
+                        Be the first to play &rarr;
+                      </Link>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="flex flex-col gap-2">
+                    {filtered.slice(0, 10).map((entry, i) => (
+                      <DailyEntryRow key={entry.userId} entry={entry} rank={i + 1} selfUid={user?.uid} onPlayerClick={setSelectedPlayer} />
+                    ))}
+                  </div>
+                );
+              })()}
             </section>
-
           </>
         )}
 
         {/* ── All-time ── */}
         {tab === 'all-time' && (
           <>
-            {hallOfFame.length > 0 && (
-              <section className="flex flex-col gap-4">
-                <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">🏆 Hall of Fame — Longest Streaks</h2>
-                <div className="flex flex-col gap-2">
-                  {hallOfFame.map((entry, i) => {
-                    const isYou = user?.uid === entry.userId;
-                    const clickable = !!entry.username;
-                    const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
-                      isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
-                    }`;
-                    const inner = (
-                      <>
-                        <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">{medal(i + 1)}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className={`font-medium text-sm truncate ${isYou ? 'text-indigo-400' : ''}`}>
-                            {entry.username ?? 'Anonymous'}
-                            {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
-                          </p>
-                          {entry.currentStreak > 0 && (
-                            <p className="text-xs text-amber-400 mt-0.5">🔥 {entry.currentStreak} day streak active</p>
-                          )}
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-2xl font-bold text-amber-400 tabular-nums">{entry.longestStreak}</p>
-                          <p className="text-xs text-zinc-500">best streak</p>
-                        </div>
-                      </>
-                    );
-                    if (clickable) {
-                      return (
-                        <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
-                          {inner}
-                        </button>
+            {allTimeLoading ? (
+              <div className="flex flex-col gap-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-16 rounded-xl border border-white/10 animate-pulse bg-white/5" />
+                ))}
+              </div>
+            ) : (() => {
+              const filtered = filterByFriends(hallOfFame);
+              return filtered.length > 0 ? (
+                <section className="flex flex-col gap-4">
+                  <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">🏆 Hall of Fame — Longest Streaks</h2>
+                  <div className="flex flex-col gap-2">
+                    {filtered.map((entry, i) => {
+                      const isYou = user?.uid === entry.userId;
+                      const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
+                        isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
+                      }`;
+                      const inner = (
+                        <>
+                          <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">{medal(i + 1)}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-medium text-sm truncate ${isYou ? 'text-indigo-400' : ''}`}>
+                              {entry.username ?? 'Anonymous'}
+                              {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
+                            </p>
+                            {entry.currentStreak > 0 && (
+                              <p className="text-xs text-amber-400 mt-0.5">🔥 {entry.currentStreak} day streak active</p>
+                            )}
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-2xl font-bold text-amber-400 tabular-nums">{entry.longestStreak}</p>
+                            <p className="text-xs text-zinc-500">best streak</p>
+                          </div>
+                        </>
                       );
-                    }
-                    return <div key={entry.userId} className={baseCls}>{inner}</div>;
-                  })}
-                </div>
-              </section>
-            )}
+                      if (entry.username) {
+                        return (
+                          <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
+                            {inner}
+                          </button>
+                        );
+                      }
+                      return <div key={entry.userId} className={baseCls}>{inner}</div>;
+                    })}
+                  </div>
+                </section>
+              ) : friendsOnly ? <FriendsEmptyState /> : null;
+            })()}
+
             <section className="flex flex-col gap-3">
               <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Past Daily Challenges</h2>
               <div className="flex flex-col gap-2">
@@ -344,43 +406,39 @@ export default function LeaderboardPage() {
                             href={`/daily/${date}`}
                             className="self-start text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
                           >
-                            Play this challenge →
+                            Play this challenge &rarr;
                           </Link>
                           <div className="flex flex-col gap-2">
-                          {expandedLoading ? (
-                            [...Array(3)].map((_, i) => (
-                              <div key={i} className="h-12 rounded-lg bg-white/5 animate-pulse" />
-                            ))
-                          ) : expandedEntries.length === 0 ? (
-                            <p className="text-sm text-zinc-600 py-2">No scores for this day.</p>
-                          ) : (
-                            expandedEntries.slice(0, 10).map((entry, i) => {
-                              const isYou = user?.uid === entry.userId;
-                              const baseCls = `flex items-center gap-3 rounded-lg px-4 py-2.5 w-full text-left transition-colors ${isYou ? 'bg-indigo-950/30 border border-indigo-500/30' : 'bg-white/[0.03] hover:bg-white/[0.07]'}`;
-                              const inner = (
-                                <>
-                                  <span className="w-6 text-center text-xs font-bold text-zinc-500 flex-shrink-0">{medal(i + 1)}</span>
-                                  <p className={`flex-1 text-sm truncate ${isYou ? 'text-indigo-400 font-medium' : ''}`}>
-                                    {entry.username ?? 'Anonymous'}
-                                    {isYou && <span className="ml-2 text-xs">you</span>}
-                                  </p>
-                                  <span className={`text-sm font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>{entry.pct}%</span>
-                                </>
-                              );
-                              if (entry.username) {
-                                return (
-                                  <button
-                                    key={entry.userId}
-                                    onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }}
-                                    className={baseCls}
-                                  >
-                                    {inner}
-                                  </button>
+                            {expandedLoading ? (
+                              [...Array(3)].map((_, i) => (
+                                <div key={i} className="h-12 rounded-lg bg-white/5 animate-pulse" />
+                              ))
+                            ) : (() => {
+                              const filtered = filterByFriends(expandedEntries);
+                              if (filtered.length === 0) return <p className="text-sm text-zinc-600 py-2">No scores for this day.</p>;
+                              return filtered.slice(0, 10).map((entry, i) => {
+                                const isYou = user?.uid === entry.userId;
+                                const baseCls = `flex items-center gap-3 rounded-lg px-4 py-2.5 w-full text-left transition-colors ${isYou ? 'bg-indigo-950/30 border border-indigo-500/30' : 'bg-white/[0.03] hover:bg-white/[0.07]'}`;
+                                const inner = (
+                                  <>
+                                    <span className="w-6 text-center text-xs font-bold text-zinc-500 flex-shrink-0">{medal(i + 1)}</span>
+                                    <p className={`flex-1 text-sm truncate ${isYou ? 'text-indigo-400 font-medium' : ''}`}>
+                                      {entry.username ?? 'Anonymous'}
+                                      {isYou && <span className="ml-2 text-xs">you</span>}
+                                    </p>
+                                    <span className={`text-sm font-bold tabular-nums flex-shrink-0 ${pctColor(entry.pct)}`}>{entry.pct}%</span>
+                                  </>
                                 );
-                              }
-                              return <div key={entry.userId} className={baseCls}>{inner}</div>;
-                            })
-                          )}
+                                if (entry.username) {
+                                  return (
+                                    <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }} className={baseCls}>
+                                      {inner}
+                                    </button>
+                                  );
+                                }
+                                return <div key={entry.userId} className={baseCls}>{inner}</div>;
+                              });
+                            })()}
                           </div>
                         </div>
                       )}
@@ -403,17 +461,19 @@ export default function LeaderboardPage() {
           ) : (
             <div className="flex flex-col gap-8">
               {categories.map(({ id, label }) => {
-                const entries = survivalBoards[id] ?? [];
+                const filtered = filterByFriends(survivalBoards[id] ?? []);
                 return (
                   <section key={id} className="flex flex-col gap-3">
                     <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
                       💀 {label}
                     </h2>
-                    {entries.length === 0 ? (
-                      <p className="text-sm text-zinc-600 px-1">No scores yet</p>
+                    {filtered.length === 0 ? (
+                      friendsOnly
+                        ? <p className="text-sm text-zinc-600 px-1">None of your friends have scores here yet.</p>
+                        : <p className="text-sm text-zinc-600 px-1">No scores yet</p>
                     ) : (
                       <div className="flex flex-col gap-2">
-                        {entries.map((entry, i) => {
+                        {filtered.map((entry, i) => {
                           const isYou = user?.uid === entry.userId;
                           const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
                             isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
@@ -435,11 +495,7 @@ export default function LeaderboardPage() {
                           );
                           if (entry.username) {
                             return (
-                              <button
-                                key={entry.userId}
-                                onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }}
-                                className={`${baseCls} hover:border-white/30 w-full text-left`}
-                              >
+                              <button key={entry.userId} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSelectedPlayer({ username: entry.username!, userId: entry.userId, x: r.left, y: r.bottom }); }} className={`${baseCls} hover:border-white/30 w-full text-left`}>
                                 {inner}
                               </button>
                             );
@@ -463,98 +519,48 @@ export default function LeaderboardPage() {
                 <div key={i} className="h-16 rounded-xl border border-white/10 animate-pulse bg-white/5" />
               ))}
             </div>
-          ) : typingEntries.length === 0 ? (
-            <div className="rounded-xl border border-white/10 p-12 text-center flex flex-col gap-3">
-              <p className="text-zinc-500">No scores yet</p>
-              <Link href="/typing" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
-                Be the first to play &rarr;
-              </Link>
-            </div>
-          ) : (
-            <section className="flex flex-col gap-4">
-              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Best WPM</h2>
-              <div className="flex flex-col gap-2">
-                {typingEntries.map((entry, i) => {
-                  const isYou = user?.uid === entry.userId;
-                  const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
-                    isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
-                  }`;
-                  return (
-                    <div key={entry.userId} className={baseCls}>
-                      <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">{medal(i + 1)}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className={`font-medium text-sm truncate ${isYou ? 'text-indigo-400' : ''}`}>
-                          {entry.username ?? 'Anonymous'}
-                          {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
-                        </p>
-                        <p className="text-xs text-zinc-500 mt-0.5">{entry.accuracy}% accuracy</p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-2xl font-bold tabular-nums text-sky-400">{entry.wpm}</p>
-                        <p className="text-xs text-zinc-500">WPM</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )
-        )}
-
-        {/* ── Friends ── */}
-        {tab === 'friends' && (
-          <>
-            {!user ? (
-              <div className="rounded-xl border border-white/10 p-12 text-center flex flex-col gap-3">
-                <p className="text-zinc-400 font-medium">Sign in to see friends&apos; scores</p>
-                <p className="text-sm text-zinc-500">Track how you rank against the people you know.</p>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-zinc-500">
-                    {friends.length === 0 ? 'No friends yet.' : `${friends.length} friend${friends.length === 1 ? '' : 's'}`}
-                  </p>
-                  <Link
-                    href="/friends"
-                    className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-                  >
-                    Manage friends →
+          ) : (() => {
+            const filtered = filterByFriends(typingEntries);
+            if (filtered.length === 0) {
+              return friendsOnly ? <FriendsEmptyState /> : (
+                <div className="rounded-xl border border-white/10 p-12 text-center flex flex-col gap-3">
+                  <p className="text-zinc-500">No scores yet</p>
+                  <Link href="/typing" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
+                    Be the first to play &rarr;
                   </Link>
                 </div>
-
-                {friendsLoading ? (
-                  <div className="flex flex-col gap-3">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="h-16 rounded-xl border border-white/10 animate-pulse bg-white/5" />
-                    ))}
-                  </div>
-                ) : friendScores.length === 0 ? (
-                  <div className="rounded-xl border border-white/10 p-10 text-center flex flex-col gap-2">
-                    {friends.length === 0 ? (
-                      <>
-                        <p className="text-zinc-500 text-sm">Add friends to see how you stack up.</p>
-                        <Link href="/friends" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
-                          Find friends →
-                        </Link>
-                      </>
-                    ) : (
-                      <p className="text-zinc-500 text-sm">None of your friends have played today yet.</p>
-                    )}
-                  </div>
-                ) : (
-                  <section className="flex flex-col gap-4">
-                    <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Today&apos;s Scores</h2>
-                    <div className="flex flex-col gap-2">
-                      {friendScores.map((entry, i) => (
-                        <DailyEntryRow key={entry.userId} entry={entry} rank={i + 1} selfUid={user.uid} />
-                      ))}
-                    </div>
-                  </section>
-                )}
-              </>
-            )}
-          </>
+              );
+            }
+            return (
+              <section className="flex flex-col gap-4">
+                <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Best WPM</h2>
+                <div className="flex flex-col gap-2">
+                  {filtered.map((entry, i) => {
+                    const isYou = user?.uid === entry.userId;
+                    const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
+                      isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
+                    }`;
+                    return (
+                      <div key={entry.userId} className={baseCls}>
+                        <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">{medal(i + 1)}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className={`font-medium text-sm truncate ${isYou ? 'text-indigo-400' : ''}`}>
+                            {entry.username ?? 'Anonymous'}
+                            {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
+                          </p>
+                          <p className="text-xs text-zinc-500 mt-0.5">{entry.accuracy}% accuracy</p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-2xl font-bold tabular-nums text-sky-400">{entry.wpm}</p>
+                          <p className="text-xs text-zinc-500">WPM</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })()
         )}
 
       </main>
