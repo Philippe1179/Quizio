@@ -153,7 +153,7 @@ export default function TypingGame() {
             Next Passage
           </button>
           <Link
-            href="/leaderboard"
+            href="/leaderboard?tab=typing"
             className="px-5 py-2.5 rounded-lg bg-indigo-600 font-medium hover:bg-indigo-500 transition-colors text-white"
           >
             Leaderboard

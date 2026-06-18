@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 import Nav from '@/components/ui/Nav';
 import PlayerActionSheet from '@/components/ui/PlayerActionSheet';
@@ -95,8 +96,12 @@ function DailyEntryRow({
 export default function LeaderboardPage() {
   const { user, loading: authLoading } = useAuth();
   const today = new Date().toISOString().slice(0, 10);
+  const searchParams = useSearchParams();
 
-  const [tab, setTab] = useState<Tab>('today');
+  const [tab, setTab] = useState<Tab>(() => {
+    const t = searchParams.get('tab');
+    return (t === 'today' || t === 'all-time' || t === 'survival' || t === 'typing' || t === 'friends') ? t : 'today';
+  });
   const [selectedPlayer, setSelectedPlayer] = useState<import('@/components/ui/PlayerActionSheet').PlayerTarget | null>(null);
 
   // Today
