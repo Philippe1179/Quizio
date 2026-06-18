@@ -6,9 +6,12 @@ import { useAuth } from '@/context/AuthContext';
 import { saveTypingScore } from '@/lib/db';
 import { passages, type Passage } from '@/data/passages';
 
-function pickPassage(exclude?: string): Passage {
-  const pool = exclude ? passages.filter((p) => p.text !== exclude) : passages;
-  return pool[Math.floor(Math.random() * pool.length)];
+const HISTORY_SIZE = 5;
+
+function pickPassage(seen: string[]): Passage {
+  const pool = passages.filter((p) => !seen.includes(p.text));
+  const available = pool.length > 0 ? pool : passages;
+  return available[Math.floor(Math.random() * available.length)];
 }
 
 function formatTime(s: number): string {
@@ -21,8 +24,9 @@ export default function TypingGame() {
   const scoreSaved = useRef(false);
   const typedRef = useRef('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const seenRef = useRef<string[]>([]);
 
-  const [passage, setPassage] = useState<Passage>(() => pickPassage());
+  const [passage, setPassage] = useState<Passage>(() => pickPassage([]));
   const [typed, setTyped] = useState('');
   const [errorCount, setErrorCount] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -31,8 +35,9 @@ export default function TypingGame() {
   const [errorFlash, setErrorFlash] = useState(false);
   const [focused, setFocused] = useState(false);
 
-  const passageTextRef = useRef(passage.text);
-  useEffect(() => { passageTextRef.current = passage.text; }, [passage.text]);
+  useEffect(() => {
+    seenRef.current = [passage.text, ...seenRef.current].slice(0, HISTORY_SIZE);
+  }, [passage.text]);
 
   const done = endTime !== null;
   const elapsedSeconds = done
@@ -69,7 +74,7 @@ export default function TypingGame() {
       e.preventDefault();
       scoreSaved.current = false;
       typedRef.current = '';
-      setPassage(pickPassage(passageTextRef.current));
+      setPassage(pickPassage(seenRef.current));
       setTyped('');
       setErrorCount(0);
       setStartTime(null);
@@ -114,7 +119,7 @@ export default function TypingGame() {
   function reset(newPassage?: Passage) {
     scoreSaved.current = false;
     typedRef.current = '';
-    setPassage(newPassage ?? pickPassage(passage.text));
+    setPassage(newPassage ?? pickPassage(seenRef.current));
     setTyped('');
     setErrorCount(0);
     setStartTime(null);
