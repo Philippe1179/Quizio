@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
@@ -93,7 +93,7 @@ function DailyEntryRow({
   return <div className={baseCls}>{inner}</div>;
 }
 
-export default function LeaderboardPage() {
+function LeaderboardPageInner() {
   const { user, loading: authLoading } = useAuth();
   const today = new Date().toISOString().slice(0, 10);
   const searchParams = useSearchParams();
@@ -565,5 +565,13 @@ export default function LeaderboardPage() {
 
       </main>
     </div>
+  );
+}
+
+export default function LeaderboardPage() {
+  return (
+    <Suspense>
+      <LeaderboardPageInner />
+    </Suspense>
   );
 }
