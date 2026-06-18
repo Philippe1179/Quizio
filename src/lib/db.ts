@@ -370,6 +370,8 @@ export interface TypingEntry {
   username: string | null;
   wpm: number;
   accuracy: number;
+  attribution?: string | null;
+  wordCount?: number | null;
 }
 
 export async function saveTypingScore(
@@ -377,12 +379,22 @@ export async function saveTypingScore(
   wpm: number,
   accuracy: number,
   username: string | null,
+  attribution?: string | null,
+  wordCount?: number | null,
 ): Promise<void> {
   const ref = doc(db, 'typingScores', 'global', 'entries', uid);
   const existing = await getDoc(ref);
   const best = (existing.data()?.wpm as number) || 0;
   if (wpm > best) {
-    await setDoc(ref, { userId: uid, username: username ?? null, wpm, accuracy, updatedAt: serverTimestamp() });
+    await setDoc(ref, {
+      userId: uid,
+      username: username ?? null,
+      wpm,
+      accuracy,
+      attribution: attribution ?? null,
+      wordCount: wordCount ?? null,
+      updatedAt: serverTimestamp(),
+    });
   }
   await addDoc(collection(db, 'users', uid, 'scores'), {
     game: 'typing',
@@ -403,6 +415,8 @@ export async function getTypingLeaderboard(limitCount = 10): Promise<TypingEntry
       username: (d.data().username as string | undefined) ?? null,
       wpm: (d.data().wpm as number) || 0,
       accuracy: (d.data().accuracy as number) || 0,
+      attribution: (d.data().attribution as string | undefined) ?? null,
+      wordCount: (d.data().wordCount as number | undefined) ?? null,
     }))
     .sort((a, b) => b.wpm - a.wpm)
     .slice(0, limitCount);

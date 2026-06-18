@@ -548,7 +548,11 @@ function LeaderboardPageInner() {
                             {entry.username ?? 'Anonymous'}
                             {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
                           </p>
-                          <p className="text-xs text-zinc-500 mt-0.5">{entry.accuracy}% accuracy</p>
+                          <p className="text-xs text-zinc-500 mt-0.5">
+                          {entry.attribution ?? 'Unknown passage'}
+                          {entry.wordCount ? ` · ${entry.wordCount} words` : ''}
+                          {' · '}{entry.accuracy}% acc
+                        </p>
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className="text-2xl font-bold tabular-nums text-sky-400">{entry.wpm}</p>

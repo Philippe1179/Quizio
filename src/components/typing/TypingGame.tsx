@@ -58,8 +58,9 @@ export default function TypingGame() {
   useEffect(() => {
     if (!done || !user || scoreSaved.current) return;
     scoreSaved.current = true;
-    saveTypingScore(user.uid, wpm, accuracy, username).catch(() => {});
-  }, [done, user, wpm, accuracy, username]);
+    const wordCount = passage.text.trim().split(/\s+/).length;
+    saveTypingScore(user.uid, wpm, accuracy, username, passage.attribution ?? null, wordCount).catch(() => {});
+  }, [done, user, wpm, accuracy, username, passage]);
 
   useEffect(() => {
     inputRef.current?.focus();
