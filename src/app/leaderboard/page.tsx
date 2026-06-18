@@ -9,13 +9,13 @@ import { useAuth } from '@/context/AuthContext';
 import {
   getDailyLeaderboard, getStreak, getHallOfFame,
   getFriends, getFriendDailyScores, getAllSurvivalLeaderboards,
-  getUserDailyScoresWithRank,
+  getUserDailyScoresWithRank, getTypingLeaderboard,
   type DailyLeaderboardEntry, type StreakInfo, type HallOfFameEntry,
-  type FriendEntry, type SurvivalEntry,
+  type FriendEntry, type SurvivalEntry, type TypingEntry,
 } from '@/lib/db';
 import { categories } from '@/lib/categories';
 
-type Tab = 'today' | 'all-time' | 'survival' | 'friends';
+type Tab = 'today' | 'all-time' | 'survival' | 'typing' | 'friends';
 
 function medal(rank: number) {
   if (rank === 1) return '🥇';
@@ -119,6 +119,10 @@ export default function LeaderboardPage() {
   const [expandedEntries, setExpandedEntries] = useState<DailyLeaderboardEntry[]>([]);
   const [expandedLoading, setExpandedLoading] = useState(false);
 
+  // Typing
+  const [typingEntries, setTypingEntries] = useState<TypingEntry[]>([]);
+  const [typingLoading, setTypingLoading] = useState(true);
+
   // Friends
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [friendScores, setFriendScores] = useState<DailyLeaderboardEntry[]>([]);
@@ -145,6 +149,11 @@ export default function LeaderboardPage() {
       .then(setSurvivalBoards)
       .catch(() => {})
       .finally(() => setSurvivalLoading(false));
+
+    getTypingLeaderboard()
+      .then(setTypingEntries)
+      .catch(() => {})
+      .finally(() => setTypingLoading(false));
 
     if (user) {
       getUserDailyScoresWithRank(user.uid, getPastDays(today, 30))
@@ -199,7 +208,7 @@ export default function LeaderboardPage() {
 
         {/* Tab bar */}
         <div className="flex border-b border-white/10">
-          {(['today', 'all-time', 'survival', 'friends'] as Tab[]).map((t) => (
+          {(['today', 'all-time', 'survival', 'typing', 'friends'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -438,6 +447,52 @@ export default function LeaderboardPage() {
                 );
               })}
             </div>
+          )
+        )}
+
+        {/* ── Typing ── */}
+        {tab === 'typing' && (
+          typingLoading ? (
+            <div className="flex flex-col gap-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 rounded-xl border border-white/10 animate-pulse bg-white/5" />
+              ))}
+            </div>
+          ) : typingEntries.length === 0 ? (
+            <div className="rounded-xl border border-white/10 p-12 text-center flex flex-col gap-3">
+              <p className="text-zinc-500">No scores yet</p>
+              <Link href="/typing" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
+                Be the first to play &rarr;
+              </Link>
+            </div>
+          ) : (
+            <section className="flex flex-col gap-4">
+              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Best WPM</h2>
+              <div className="flex flex-col gap-2">
+                {typingEntries.map((entry, i) => {
+                  const isYou = user?.uid === entry.userId;
+                  const baseCls = `flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
+                    isYou ? 'border-indigo-500/40 bg-indigo-950/20' : 'border-black/10 dark:border-white/10'
+                  }`;
+                  return (
+                    <div key={entry.userId} className={baseCls}>
+                      <span className="w-8 text-center text-sm font-bold text-zinc-400 flex-shrink-0">{medal(i + 1)}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-medium text-sm truncate ${isYou ? 'text-indigo-400' : ''}`}>
+                          {entry.username ?? 'Anonymous'}
+                          {isYou && <span className="ml-2 text-xs text-indigo-400">you</span>}
+                        </p>
+                        <p className="text-xs text-zinc-500 mt-0.5">{entry.accuracy}% accuracy</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-2xl font-bold tabular-nums text-sky-400">{entry.wpm}</p>
+                        <p className="text-xs text-zinc-500">WPM</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
           )
         )}
 

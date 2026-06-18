@@ -363,6 +363,51 @@ export async function getAllSurvivalLeaderboards(
   return Object.fromEntries(results);
 }
 
+// ── Typing speed ──────────────────────────────────────────────────────────────
+
+export interface TypingEntry {
+  userId: string;
+  username: string | null;
+  wpm: number;
+  accuracy: number;
+}
+
+export async function saveTypingScore(
+  uid: string,
+  wpm: number,
+  accuracy: number,
+  username: string | null,
+): Promise<void> {
+  const ref = doc(db, 'typingScores', 'global', 'entries', uid);
+  const existing = await getDoc(ref);
+  const best = (existing.data()?.wpm as number) || 0;
+  if (wpm > best) {
+    await setDoc(ref, { userId: uid, username: username ?? null, wpm, accuracy, updatedAt: serverTimestamp() });
+  }
+  await addDoc(collection(db, 'users', uid, 'scores'), {
+    game: 'typing',
+    category: null,
+    label: `Typing Speed — ${wpm} WPM`,
+    score: wpm,
+    total: 150,
+    pct: Math.min(100, Math.round((wpm / 150) * 100)),
+    createdAt: serverTimestamp(),
+  });
+}
+
+export async function getTypingLeaderboard(limitCount = 10): Promise<TypingEntry[]> {
+  const snap = await getDocs(collection(db, 'typingScores', 'global', 'entries'));
+  return snap.docs
+    .map((d) => ({
+      userId: d.id,
+      username: (d.data().username as string | undefined) ?? null,
+      wpm: (d.data().wpm as number) || 0,
+      accuracy: (d.data().accuracy as number) || 0,
+    }))
+    .sort((a, b) => b.wpm - a.wpm)
+    .slice(0, limitCount);
+}
+
 // ── All-time leaderboard ───────────────────────────────────────────────────────
 
 export interface AllTimeEntry {

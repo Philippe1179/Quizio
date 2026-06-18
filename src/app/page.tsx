@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Globe2, BookOpen, FlaskConical, Trophy, Clapperboard, Map, Atom, Earth, Flag, Landmark, Calendar } from 'lucide-react';
+import { Globe2, BookOpen, FlaskConical, Trophy, Clapperboard, Map, Atom, Earth, Flag, Landmark, Calendar, Keyboard } from 'lucide-react';
 import Nav from '@/components/ui/Nav';
 import { categories } from '@/lib/categories';
 import { useAuth } from '@/context/AuthContext';
@@ -23,7 +23,8 @@ const interactiveGames = [
   { href: '/map/world',   icon: Earth,    title: 'World Map',      description: 'Find countries on a blank world map',                     bestKey: 'world-map',  iconCls: 'text-teal-400',    cardCls: 'hover:border-teal-500/40 hover:bg-teal-500/5 hover:shadow-teal-500/10' },
   { href: '/flags',       icon: Flag,     title: 'Flag Quiz',      description: 'Identify countries from their flags',                     bestKey: 'flags',      iconCls: 'text-orange-400',  cardCls: 'hover:border-orange-500/40 hover:bg-orange-500/5 hover:shadow-orange-500/10' },
   { href: '/periodic',    icon: Atom,     title: 'Periodic Table', description: 'Find all 118 elements on an interactive periodic table',  bestKey: 'periodic',   iconCls: 'text-violet-400',  cardCls: 'hover:border-violet-500/40 hover:bg-violet-500/5 hover:shadow-violet-500/10' },
-  { href: '/presidents',  icon: Landmark, title: 'US Presidents',  description: 'Portrait quiz or type all 45 presidents from memory',     bestKey: 'presidents', iconCls: 'text-amber-400',   cardCls: 'hover:border-amber-500/40 hover:bg-amber-500/5 hover:shadow-amber-500/10' },
+  { href: '/presidents',  icon: Landmark, title: 'US Presidents',  description: 'Portrait quiz or type all 45 presidents from memory',     bestKey: 'presidents',  iconCls: 'text-amber-400',   cardCls: 'hover:border-amber-500/40 hover:bg-amber-500/5 hover:shadow-amber-500/10' },
+  { href: '/typing',      icon: Keyboard, title: 'Typing Speed',   description: 'Test your WPM with famous quotes. Fix mistakes to move on.', bestKey: 'typing-wpm', iconCls: 'text-sky-400',     cardCls: 'hover:border-sky-500/40 hover:bg-sky-500/5 hover:shadow-sky-500/10' },
 ];
 
 const categoryColors: Record<string, { iconCls: string; cardCls: string }> = {
